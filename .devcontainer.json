@@ -1,0 +1,20 @@
+{
+    "name": "r-devcontainer",
+    "image": "rocker/r-ver:4.4",
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker": {},
+        "ghcr.io/devcontainers/features/python": {},
+        "ghcr.io/rocker-org/devcontainer-features/pandoc": {}
+      },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "REditorSupport.r",
+                "RDebugger.r-debugger",
+                "GitHub.copilot"
+            ]
+        }
+    },
+    "postCreateCommand": "Rscript -e \"install.packages(c('devtools', 'roxygen2'))\""
+}

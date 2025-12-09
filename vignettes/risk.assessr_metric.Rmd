@@ -1,0 +1,117 @@
+---
+title: "risk.assessr metrics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{risk.assessr metrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(risk.assessr)
+```
+
+```{r acquisition, eval=FALSE}
+here <- risk.assessr::assess_pkg_r_package("here")
+```
+
+# Package Risk Assessment Summary
+
+This report presents a risk assessment of the R package: **here**.
+
+
+## Metadata
+
+```{r, eval=FALSE}
+here$results[c("pkg_name", "pkg_version", "sysname", "release", "date_time")]
+```
+
+
+## Documentation Metrics
+
+```{r, eval=FALSE}
+here$results[c("license_name", "has_examples", "has_vignettes", "has_news", 
+               "has_website", "has_source_control", "export_help", 
+               "export_calc", "covr", "check")]
+```
+
+## Dependencies
+
+```{r, eval=FALSE}
+here$results$dependencies
+```
+
+## Test Coverage
+
+```{r, eval=FALSE}
+here$covr_list$res_cov$coverage$totalcoverage
+```
+
+## CRAN Check Results
+
+```{r, eval=FALSE}
+here$check_list$res_check$errors
+```
+
+
+## Popularity Metrics
+
+### CRAN Downloads
+
+```{r, eval=FALSE}
+here$results$download
+```
+
+### GitHub Statistics
+
+```{r, eval=FALSE}
+here$results$github_data
+```
+
+### Reverse Dependencies (Extended)
+
+```{r, eval=FALSE}
+head(here$results$rev_deps, 10)  
+```
+
+## Authorship
+
+```{r, eval=FALSE}
+here$results$author
+```
+
+## Hosting Information
+
+```{r, eval=FALSE}
+here$results$host
+```
+
+## Suggested Imports Review
+
+```{r, eval=FALSE}
+here$risk_analysis
+```
+
+
+## Advanced feature
+
+### Traceability Matrix
+
+```{r, eval=FALSE}
+here$tm_list
+```
+
+## Suggested Imports Review
+
+```{r, eval=FALSE}
+here$results$suggested_deps
+```
+
+

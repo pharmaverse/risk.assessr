@@ -1,0 +1,69 @@
+name: Package Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: 'R package name to assess'
+        required: true
+        default: 'dplyr'
+      package_version:
+        description: 'Package version to assess'
+        required: true
+        default: '1.1.4' 
+
+jobs:
+  analyse:
+    timeout-minutes: 120
+    runs-on: atmos-aws-arc-runner-set
+    container:
+      image: public-mirror-docker-dockerhub.artifactory.sanofi.com/rocker/r-ver:4.4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup the Sanofi Root CA
+        uses: Sanofi-InnerSource/github-actions-library/setup-root-ca@main
+
+      - name: Install dependencies and run risk assessment
+        shell: Rscript {0}
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          options(repos = c(
+            RSPM = "https://rstudio-pm.prod.p488440267176.aws-emea.sanofi.com/prod-cran/latest",
+            INTERNAL = "https://rstudio-pm.prod.p488440267176.aws-emea.sanofi.com/art-git/latest"
+          ))
+          
+          # Install dependencies
+          install.packages(c("remotes", "jsonlite"))
+          
+          # Install the package to be assessed with specific version and all dependencies
+          package_to_assess <- "${{ github.event.inputs.package_name }}"
+          package_version <- "${{ github.event.inputs.package_version }}"
+          
+          # Install specific version with dependencies
+          remotes::install_version(
+            package = package_to_assess,
+            version = package_version,
+            dependencies = TRUE 
+          )
+          
+          # Install the current branch of risk.assessr
+          remotes::install_local(".")
+          
+          # Run the assessment
+          message("Assessing package: ", package_to_assess, " version: ", package_version)
+          data <- risk.assessr::assess_pkg_r_package(package_to_assess)
+          
+          # Write results to JSON file
+          jsonlite::write_json(data, "results.json", force = TRUE, auto_unbox = TRUE, pretty = TRUE)
+
+      - name: Output results
+        run: cat results.json
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: risk-assessment-results
+          path: results.json

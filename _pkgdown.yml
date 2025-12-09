@@ -1,0 +1,28 @@
+template:
+  bootstrap: 5
+
+development:
+  mode: release
+
+output:
+  assets:
+    - inst/examples/
+
+navbar:
+  structure:
+    left:
+      - home
+      - vignettes
+      - reference
+      - report
+
+  components:
+    home:
+      text: "Home"
+      href: index.html
+    vignettes:
+      text: "Articles"
+      href: articles/index.html
+    reference:
+      text: "Reference"
+      href: reference/index.html

@@ -1,0 +1,55 @@
+---
+title: "Dependency tree"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dependency tree}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+library(risk.assessr)
+
+options(repos = "http://cran.us.r-project.org")
+```
+
+## Dependencies Tree 
+
+The `risk.assessr` package provides a set of functions to get dependencies and visualize dependency trees, allowing users to analyze package dependencies and identify potential conflict. 
+
+Fetch your primary dependencies from your package:
+
+
+```{r}
+download_and_parse_dependencies("stringr")
+```
+
+Create and visualize your dependency tree:
+
+
+```{r}
+dep_data <- fetch_all_dependencies("stringr")
+```
+
+```{r}
+dep_data
+```
+
+```{r}
+print_tree(dep_data)
+```
+
+
+Check for conflicting dependency versions:
+
+
+```{r}
+detect_version_conflicts(dep_data)
+```

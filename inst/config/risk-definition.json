@@ -1,0 +1,95 @@
+[
+  {
+    "label": "dependency count",
+    "id": "dependencies_count",
+    "key": "dependencies_count",
+    "thresholds": [
+      { "level": "low", "max": 20 },
+      { "level": "medium", "max": 40 },
+      { "level": "high", "max": null }
+    ]
+  },
+  {
+    "label": "version deprecation",
+    "id": "version_difference",
+    "key": "later_version",
+    "thresholds": [
+      { "level": "low", "max": 3 },
+      { "level": "high", "max": null }
+    ]
+  },
+  {
+    "label": "code coverage",
+    "id": "code_coverage",
+    "key": "code_coverage",
+    "thresholds": [
+      { "level": "high", "max": 0.6 },
+      { "level": "medium", "max": 0.8 },
+      { "level": "low", "max": 1 }
+    ]
+  },
+  {
+    "label": "popularity",
+    "id": "popularity",
+    "key": "total_download",
+    "thresholds": [
+      { "level": "high", "max": 3500000 },
+      { "level": "medium", "max": 50000000 },
+      { "level": "low", "max": null }
+    ]
+  },
+  {
+    "label": "license",
+    "id": "license",
+    "key": "license",
+    "default": "high",
+    "thresholds": [
+      {
+        "level": "high",
+        "values": [
+          "AGPL", "SSPL", "GNUAFFEROGPL",
+          "CECILL", "OPENSOFTWARELICENCE",
+          "SERVERSIDEPUBLICLICENSE", "NOTAVAILABLE"
+        ]
+      },
+      {
+        "level": "medium",
+        "values": ["GPL", "LGPL", "ARTISTIC"]
+      },
+      {
+        "level": "low",
+        "values": ["MIT", "APACHE"]
+      }
+    ]
+  },
+  {
+    "label": "reverse dependencies",
+    "id": "reverse_dependencies",
+    "key": "reverse_dependencies_count",
+    "thresholds": [
+      { "level": "high", "max": 5 },      
+      { "level": "medium", "max": 15 },  
+      { "level": "low", "max": null }       
+    ]
+  },
+  {
+    "label": "documentation",
+    "id": "documentation",
+    "key": "documentation_score",
+    "thresholds": [
+      { "level": "high", "max": 3 },
+      { "level": "medium", "max": 6 },
+      { "level": "low", "max": null }
+    ]
+  },
+  {
+    "label": "R cmd check",
+    "id": "cmd-check",
+    "key": "cmd_check",
+    "thresholds": [
+      { "level": "high", "max": 0 },
+      { "level": "medium", "max": 0.8 },
+      { "level": "low", "max": 1 }
+    ]
+  }
+]

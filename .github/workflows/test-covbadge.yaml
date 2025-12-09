@@ -1,0 +1,90 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+name: test-coverage badge
+
+permissions: write-all
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::covr, any::xml2
+
+      - name: Test coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          # covr::to_cobertura(cov, file = "coverage.xml")
+          coverage_percentage <- round(covr::percent_coverage(cov), 0)
+          # Export the coverage percentage as an environment variable
+          cat(sprintf("COVERAGE_PERCENTAGE=%s\n", coverage_percentage), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        shell: Rscript {0}
+
+      - name: Create Shields.io badge URL
+        id: create_badge
+        run: |
+          coverage=$COVERAGE_PERCENTAGE
+          if (( $(echo "${coverage} < 50" | bc -l) )); then
+            color="red"
+          elif (( $(echo "${coverage} < 80" | bc -l) )); then
+            color="orange"
+          else
+            color="brightgreen"
+          fi
+          badge_url="https://img.shields.io/badge/coverage-${coverage}%25-${color}.svg"
+          # Print the badge URL to the GitHub Actions log
+          echo "Badge URL: ${badge_url}"
+          # set badge 
+          echo "badge_url=${badge_url}" >> $GITHUB_ENV
+          
+      - name: Update README with coverage badge for PR
+        if: github.ref_name != 'main'
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b ${{ github.head_ref }}
+          git branch
+          git pull --rebase origin ${{ github.head_ref }}
+          git checkout --ours README.md || true 
+          sed -i 's|!\[Coverage\](https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*\.svg)|![Coverage]('"${{ env.badge_url }}"')|g' README.md
+          git status
+          git add README.md
+          git commit -m 'Update README with coverage badge' || echo "No changes to commit"
+          git push origin ${{ github.head_ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update README with coverage badge for main branch
+        if: github.ref_name == 'main'
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout main
+          git branch
+          git pull --rebase origin main
+          git checkout --ours README.md || true 
+          sed -i 's|!\[Coverage\](https://img.shields.io/badge/coverage-[0-9]*%25-[a-z]*\.svg)|![Coverage]('"${{ env.badge_url }}"')|g' README.md
+          git status
+          git add README.md
+          git commit -m 'Update README with coverage badge' || echo "No changes to commit"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

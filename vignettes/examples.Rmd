@@ -1,0 +1,14 @@
+---
+title: "Examples"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Run risk analysis on the `admiral` package:
+
+```bash
+Rscript inst/examples/assessr.R '{"name": "admiral", "version": "1.1.1"}'
+```	

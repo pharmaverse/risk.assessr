@@ -1,0 +1,89 @@
+---
+title: "Get pubmed data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get pubmed data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+This vignette demonstrates how to retrieve citation data from PubMed using:
+
+- `get_pubmed_count()` — to retrieve the total count of articles matching a term.
+- `get_pubmed_by_year()` — to get article counts by publication year.
+
+These functions are part of the `risk.assessr` package.
+
+DISCLAIMER: This feature only works if you choose a good R package name.
+
+---
+
+## Setting Your PubMed API Key
+
+To increase request limits and improve stability, you can use an NCBI API key.
+
+```{r api-key-example, eval = FALSE}
+# Replace with your actual API key
+options(pubmed.api_key = "your_actual_ncbi_api_key")
+
+```
+
+---
+
+## Load Required Libraries
+
+```{r setup}
+library(risk.assessr)
+library(ggplot2)
+
+package_name <- "limma"
+```
+
+---
+
+## Total Number of Articles Matching a Term
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+pubmed_count <- get_pubmed_count(package_name)
+pubmed_count
+```
+
+---
+
+## Number of Articles by Year
+
+```{r, message=FALSE, warning=FALSE, eval=FALSE}
+citation_data <- get_pubmed_by_year(package_name, years_back = 20)
+citation_data
+```
+
+---
+
+## Plotting the Article Trend Over Time
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, eval=FALSE}
+ggplot(citation_data, aes(x = Year, y = Count)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "PubMed Articles per Year",
+    subtitle = paste("Search term:", package_name),
+    x = "Publication Year",
+    y = "Number of Articles"
+  ) +
+  theme_minimal()
+```
+
+
+
+
+
+

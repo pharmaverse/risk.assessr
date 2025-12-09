@@ -1,0 +1,57 @@
+---
+title: "Generate html risk report"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Generate html risk report}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(risk.assessr)
+```
+
+
+```{r, eval=FALSE}
+result <- risk.assessr::assess_pkg_r_package("ggplot2")
+generate_html_report(result)
+```
+
+# Generate the risk report in a specific path
+
+```{r, eval=FALSE}
+generate_html_report(result, output_dir= system.file("examples/", package = "risk.assessr"))
+```
+
+# See the `ggplot2` package risk report in the web browser
+
+## The report includes different types of traceability matrices: 
+
+ - All Exported Functions
+ - High Risk Functions
+ - Medium Risk Functions
+ - Low Risk Functions
+ - Defunct Functions
+ - Imported Functions
+ - Re-exported Functions
+ - Experimental Functions
+
+
+```{r, echo=FALSE, eval=FALSE}
+file_path <- system.file("examples", "risk_report_ggplot2_3.5.2.html", package = "risk.assessr")
+
+
+if (interactive()) browseURL(file_path)
+```
+
+
+
+
+
