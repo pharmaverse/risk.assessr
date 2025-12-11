@@ -116,7 +116,7 @@ This sets up repository sources for R packages allows you to access both public 
 
 When you install or load packages, R will:
 
-First check the RSPM repository for CRAN/Bioconductor packages Then look in the INTERNAL repository for internal-specific packages Finally, search INTERNAL_RSPM if packages aren't found in the previous locations
+First check the RSPM repository for CRAN/Bioconductor packages. Then look in the INTERNAL repository for internal-specific packages. Finally, search INTERNAL_RSPM if packages aren't found in the previous locations
 
 ``` r
 # for local tar.gz R package
