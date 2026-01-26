@@ -31,7 +31,7 @@ Imports:
   rcmdcheck,
   rlang,
   xml2,
-  stringr,
+  stringr (>= 1.5.0),
   tidyr,
   utils,
   curl,
