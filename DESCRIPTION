@@ -45,7 +45,7 @@ Suggests:
   here,
   htmltools,
   htmlwidgets,
-  kableExtra,
+  kableExtra (>= 1.4.0),
   knitr,
   magrittr,
   openxlsx,
