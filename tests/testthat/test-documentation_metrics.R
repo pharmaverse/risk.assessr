@@ -1849,3 +1849,26 @@ test_that("assess code base size for large package works correctly", {
   
 })
 
+
+test_that("assess_size_codebase handles subdirectories in R/ folder (#26)", {
+  # Create a temporary package structure with a subdirectory inside R/
+  pkg_dir <- tempfile("testpkg")
+  r_dir <- file.path(pkg_dir, "R")
+  dir.create(r_dir, recursive = TRUE)
+
+  # Create a regular R file
+  writeLines(c("# A function", "foo <- function() {", "  1 + 1", "}"), 
+             file.path(r_dir, "foo.R"))
+
+  # Create a subdirectory inside R/ (like vdiffr's R/svglite)
+  dir.create(file.path(r_dir, "subdir"))
+
+  # This should not error
+  result <- assess_size_codebase(pkg_dir)
+
+  expect_true(is.numeric(result))
+  expect_true(result > 0)
+
+  # Clean up
+  unlink(pkg_dir, recursive = TRUE)
+})

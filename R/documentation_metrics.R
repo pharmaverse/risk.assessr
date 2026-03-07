@@ -231,6 +231,7 @@ assess_size_codebase <- function(pkg_source_path) {
   
     # create character vector of function files
     files <- list.files(path = file.path(pkg_source_path, "R"), full.names = T)
+    files <- files[!dir.exists(files)]
     
     # define the function for counting code base
     count_lines <- function(x){
