@@ -168,7 +168,7 @@ test_that("get_pkg_author handles missing creator and author", {
   
   result <- get_pkg_author(pkg_name, pkg_source_path)
   
-  expect_null(result$maintainer)
+  expect_identical(result$maintainer, NA_character_)
   expect_null(result$authors)
   expect_null(result$funder)
 })

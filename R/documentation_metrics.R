@@ -109,7 +109,7 @@ assess_description_file_elements <- function(pkg_name, pkg_source_path) {
   has_maintainer <- desc::desc_get_author(role = "cre",
                                        file = pkg_source_path)
   if (length(has_maintainer) == 0) {
-    has_maintainer <-  NULL
+    has_maintainer <- NA_character_
     message(glue::glue("{pkg_name} does not have a maintainer"))
   } else {
     message(glue::glue("{pkg_name} has a maintainer"))
@@ -359,7 +359,7 @@ get_pkg_author <- function(pkg_name, pkg_source_path) {
     pkg_creator <- desc::desc_get_author(role = "cre",
                                          file = pkg_desc_path)
     
-    if (length(pkg_creator) == 0) pkg_creator <-  NULL
+    if (length(pkg_creator) == 0) pkg_creator <- NA_character_
 
     # check for package funder
     pkg_fnd <- desc::desc_get_author(role = "fnd",
