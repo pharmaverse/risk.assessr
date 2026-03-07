@@ -2,6 +2,7 @@
 #'  
 #' @description simplified input to assess package for risk metrics
 #' @param path (optional) path of locally stored package source code
+#' @param force_install logical. If TRUE, forces installation even if package is already installed.
 #' @return list containing results - list containing metrics, covr, tm - trace matrix, and R CMD check
 #' 
 #' @examples
@@ -11,7 +12,7 @@
 #' risk_assess_package <- risk_assess_pkg(path/to/package.tar.gz)
 #' }
 #' @export
-risk_assess_pkg <-function(path = NULL) {
+risk_assess_pkg <-function(path = NULL, force_install = FALSE) {
 
   # save and set user's current working directory
   oldwd <- getwd()  
@@ -43,7 +44,7 @@ risk_assess_pkg <-function(path = NULL) {
   rcmdcheck_args <- install_list$rcmdcheck_args
   
   # check if the package needs to be installed locally
-  package_installed <- install_package_local(pkg_source_path)
+  package_installed <- install_package_local(pkg_source_path, force_install = force_install)
   
   # Check if the package was installed successfully
   if (package_installed == TRUE) {

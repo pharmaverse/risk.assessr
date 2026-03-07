@@ -1,6 +1,7 @@
 #' Install package locally
 #'
 #' @param pkg_source_path - source path for install local
+#' @param force_install logical. If TRUE, forces installation even if package is already installed.
 #'
 #' @return logical - package_installed 
 #' @examples
@@ -9,7 +10,7 @@
 #' print(results)
 #' }
 #' @export
-install_package_local <- function(pkg_source_path) {
+install_package_local <- function(pkg_source_path, force_install = FALSE) {
   
   pkg_disp <- basename(pkg_source_path)
   message(glue::glue("installing {pkg_disp} locally"))
@@ -18,7 +19,7 @@ install_package_local <- function(pkg_source_path) {
   if (!dir.exists(pkg_source_path)) {
     message(glue::glue("No such file or directory: {pkg_source_path}"))
     package_installed <- FALSE
-  } else if (requireNamespace(pkg_disp, quietly = TRUE)) {
+  } else if (!force_install && requireNamespace(pkg_disp, quietly = TRUE)) {
     message(glue::glue("{pkg_disp} is already installed"))
     package_installed <- TRUE
   } else {

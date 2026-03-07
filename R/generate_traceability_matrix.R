@@ -6,6 +6,7 @@
 #' @param version A character string specifying the version of the package to assess. Default is `NA`, which assesses the latest version.
 #' @param repos A character string specifying the repo directly. Default is NULL, which uses the mirrors
 #' @param execute_coverage Logical (`TRUE`/`FALSE`). If `TRUE`, execute test coverage.
+#' @param force_install logical. If TRUE, forces installation even if package is already installed.
 #' 
 #'
 #' @return The function returns package traceability_matrix
@@ -42,7 +43,7 @@
 #' 
 #' @importFrom remotes download_version
 #' @export
-generate_traceability_matrix <- function(package_name, version=NA, repos = NULL, execute_coverage = FALSE) {
+generate_traceability_matrix <- function(package_name, version=NA, repos = NULL, execute_coverage = FALSE, force_install = FALSE) {
   
   # Save current repo options
   old_repos <- getOption("repos")
@@ -115,7 +116,7 @@ generate_traceability_matrix <- function(package_name, version=NA, repos = NULL,
   pkg_source_path <- install_list$pkg_source_path
   
   # Check if the package needs to be installed locally
-  package_installed <- install_package_local(pkg_source_path)
+  package_installed <- install_package_local(pkg_source_path, force_install = force_install)
   
   
   if (execute_coverage) {
