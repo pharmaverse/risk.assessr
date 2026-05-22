@@ -1,0 +1,74 @@
+# Retrieve Bioconductor Package URL
+
+This function fetches the source package URL for a given Bioconductor
+package. If no version is specified, it retrieves the latest available
+version.
+
+## Usage
+
+``` r
+get_bioconductor_package_url(
+  package_name,
+  package_version = NULL,
+  release_data
+)
+```
+
+## Arguments
+
+- package_name:
+
+  A character string specifying the name of the Bioconductor package.
+
+- package_version:
+
+  (Optional) A character string specifying the package version. Defaults
+  to \`NULL\`, which retrieves the latest version.
+
+- release_data:
+
+  A list containing Bioconductor release information.
+
+## Value
+
+A list containing:
+
+- url:
+
+  The URL of the source package (if available).
+
+- version:
+
+  The specified or latest available package version.
+
+- last_version:
+
+  A list with version, date, and Bioconductor version.
+
+- all_versions:
+
+  A list of all discovered versions with version, date, and Bioconductor
+  version.
+
+- bioconductor_version_package:
+
+  The Bioconductor version matched to the selected version.
+
+- archived:
+
+  A logical value indicating whether the package is archived.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+release_data <- list(
+  list(release = "3.17", date = "October 14, 2005"),
+  list(release = "3.18", date = "October 4, 2006"),
+  list(release = "3.19", date = "October 8, 2007")
+)
+
+get_bioconductor_package_url("GenomicRanges", release_data = release_data)
+
+} # }
+```

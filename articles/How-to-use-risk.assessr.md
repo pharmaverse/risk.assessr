@@ -1,0 +1,78 @@
+# Using Risk Assessment Functions
+
+### Introduction
+
+This vignette demonstrates how to use the
+[`risk_assess_pkg()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/risk_assess_pkg.md)
+and
+[`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+functions from the `risk.assessr` package to assess the risk of R
+packages.
+
+You can assess:
+
+- A local `.tar.gz` source package (by upload and using path)
+- A package from CRAN or Bioconductor
+- A package defined by an `renv.lock` file
+
+### 1. Assessing a Local Source Package
+
+To assess your own package:
+
+#### Step 1: Build your package
+
+Use RStudio: `Build > More > Build Source Package` to generate a
+`.tar.gz` file.
+
+#### Step 2: Upload the package (optional)
+
+If using a web interface or app built on top of the risk engine, upload
+the `.tar.gz` file through the UI.
+
+#### Step 3: Run the assessment
+
+    # Assess a local .tar.gz R package by tar file upload
+
+    # risk_result <- risk_assess_pkg()
+
+    # OR by providing a path
+
+    risk_result <- risk_assess_pkg(path/to/my/package)
+
+### 2. Assessing via renv.lock
+
+You can assess risks for all packages defined in an `renv.lock` or
+`pak.lock` file. This is helpful for auditing projects.
+
+    # Assess based on renv.lock
+    risk_result <- risk_assess_pkg("path/to/project/with/renv.lock") # or pak.lock
+
+**Note:** This can be slow and is it better to run as a batch job or in
+CI (e.g., GitHub Actions).
+
+### 3. Assessing a CRAN or Bioconductor Package
+
+Use this method to check a remote package and version directly from
+public repositories.
+
+## Assess the latest version from CRAN
+
+    risk_result <- assess_pkg_r_package("stringr")
+
+## Or a specific version
+
+    risk_result <- assess_pkg_r_package("stringr", version = "1.5.0")
+
+### Summary
+
+These functions provide a consistent interface to assess risk for:
+
+- Locally built packages
+- renv or pak-based project dependencies
+- Published open source packages from CRAN or Bioconductor
+
+You can extend functionality by passing a custom `risk_config` to
+override default.
+
+See more
+[Here](https://probable-chainsaw-kgro2o7.pages.github.io/articles/define_custom_risk_rules.md)
