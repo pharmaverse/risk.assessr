@@ -1,0 +1,109 @@
+---
+title: Summary
+params:
+  name: test
+  version: 1
+  analysis: 1
+  tool_version: 1
+  data: ""
+---
+
+```{r, include = FALSE, warning=FALSE}
+library(dplyr)
+library(kableExtra)
+library(knitr)
+library(htmltools)
+library(htmlwidgets)
+library(risk.assessr)
+```
+
+
+## Info
+
+```{r, echo=FALSE}
+df <- data.frame(
+  v = c("Name", "Version", "Date", "Risk.assessr version"),
+  k = c(params$name, params$version, format(Sys.Date(), "%d-%b-%Y", tz = "CET"), params$tool_version)
+)
+names(df) <- NULL
+knitr::kable(df)
+```
+
+
+## Results
+
+```{r echo=FALSE}
+# Define the desired order of metrics
+ordered_metrics <- c(
+  "CMD Check",
+  "Code Coverage",
+  "Dependencies Count",
+  "License Risk",
+  "URL Documentation Score",
+  "Percentage of functions with examples",
+  "Percentage of functions with documentation",
+  "Combined Examples Documentation Score",
+  "Reverse Dependencies Count",
+  "Later Version Available",
+  "Total Downloads"
+)
+
+df <- params$analysis[match(ordered_metrics, params$analysis$Metric), , drop = FALSE]
+
+# Apply conditional formatting for each row based on Risk Level
+for (i in seq_len(nrow(df))) {
+  risk_level <- tolower(df$Risk_Level[i])
+  cell_color <- switch(risk_level,
+    low = "green",
+    medium = "yellow",
+    high = "red"
+  )
+  df[i, 2] <- kableExtra::cell_spec(df[i, 2], background = cell_color)
+}
+
+knitr::kable(df, col.names = c("Metric", "Risk Level", "Risk Value"))
+```
+
+## Recommendation
+
+`r evaluate_risk_highlighting(params$analysis)`
+
+```{r approver, echo=FALSE}
+
+approvers_df <- data.frame(
+  Approvers = "",
+  stringsAsFactors = FALSE
+)
+
+# Render as a pandoc table (portable across md/docx/pdf/html)
+knitr::kable(
+  approvers_df,
+  format = "pandoc",
+  col.names = c("Approvers"),
+  align = "l")
+
+```
+
+```{r signature_table, echo=FALSE}
+signature_df <- data.frame(
+  `Electronic Signature` = "",
+  `Date` = "",
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(
+  signature_df,
+  format = "pandoc",
+  col.names = c("Electronic Signature", "Date"),
+  align = c("l", "l")
+)
+```
+
+## Raw data
+
+```{r results='asis', echo=FALSE}
+json <- jsonlite::toJSON(params$data, pretty = TRUE, force = TRUE)
+
+cat('<details><summary><strong>Show / Hide raw data</strong></summary>\n\n')
+cat("```json\n", json, "\n```\n")
+```

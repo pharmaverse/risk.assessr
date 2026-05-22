@@ -1,0 +1,121 @@
+---
+title: "Get available versions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get available versions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(risk.assessr)
+```
+
+## Get package version from CRAN
+
+**risk.assessr** can fetch the version available for an R package along with the release date.
+
+```{r check and fetch, eval=FALSE}
+result_cran <- check_and_fetch_cran_package("admiral", "1.0.0")
+```
+
+```{r url, eval=FALSE}
+result_cran$package_url
+```
+
+```{r last_version, eval=FALSE}
+result_cran$last_version
+```
+
+
+```{r all_versions, eval=FALSE}
+head(result_cran$all_versions, n = 2) 
+```
+
+
+```{r version_history, echo=FALSE, eval=FALSE}
+# Example: flatten result$all_versions
+version_history <- do.call(rbind, lapply(result_cran$all_versions, function(entry) {
+  data.frame(
+    Version = entry$version,
+    Date = as.Date(entry$date),
+    stringsAsFactors = FALSE
+  )
+}))
+
+# Show nicely
+knitr::kable(version_history, caption = "CRAN Version History")
+```
+
+
+## Get package version from Bioconductor
+
+**risk.assessr** can fetch the version available for an R package stored on [bioconductor](https://www.bioconductor.org/) 
+
+
+```{r bio_fetch, eval=FALSE}
+html_content <- fetch_bioconductor_releases()
+release_data <- parse_bioconductor_releases(html_content)
+```
+
+
+```{r bio_release, echo=FALSE, eval=FALSE}
+# Example: flatten result$all_versions
+release <- do.call(rbind, lapply(release_data, function(entry) {
+  data.frame(
+    Version = entry$release,
+    Date = entry$date,
+    software_packages = entry$software_packages,
+    r_version = entry$r_version,
+    stringsAsFactors = FALSE
+  )
+}))
+
+# Show nicely
+knitr::kable(release, caption = "release Bioconductor versions")
+```
+
+The function below will retrieve the versions of bioconductor package corresponding to bioconductor version. In the example below, we find the versions **2.20.0** of **flowCore** package for the bioconductor version **3.21**
+
+Note: This function is not able to find all the archived versions for a Bioconductor package 
+
+```{r flowCore, eval=FALSE}
+fetch_bioconductor_package_info("3.21", "flowCore")
+```
+
+This function below gets the **flowCore** package version for all version of Bioconductor
+
+```{r result_flowCore, eval=FALSE}
+html_content <- fetch_bioconductor_releases()
+release_data <- parse_bioconductor_releases(html_content)
+result_bio <- get_bioconductor_package_url("flowCore", "2.18.0", release_data)
+```
+
+```{r bio_all_versions, eval=FALSE}
+head(result_bio$all_versions, n=2)
+```
+
+```{r bio_last_version, eval=FALSE}
+result_bio$last_version
+```
+
+```{r bio_package_versions, eval=FALSE}
+result_bio$bioconductor_version_package
+```
+
+
+```{r bio_url, eval=FALSE}
+result_bio$url
+```
+
+
+```{r bio_archived, eval=FALSE}
+result_bio$archived
+```

@@ -1,0 +1,67 @@
+name: "✨ Feature request"
+description: "Suggest an improvement or new capability"
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!TIP]
+        > **Thanks for the idea! 🚀**
+        > A good feature request explains *why it matters* and what “done” looks like.
+        > If something similar already exists, link it — refinements are welcome.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "✅ Quick checks"
+      options:
+        - label: "I searched existing issues / PRs for something similar"
+          required: true
+
+  - type: input
+    id: related
+    attributes:
+      label: "🔗 Related issues / PRs (if any)"
+      description: "If you found something similar but still want to refine it, link it here."
+      placeholder: "#123, #456"
+    validations:
+      required: false
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: "🎯 Summary / motivation"
+      description: "What user need does this address? Who benefits and why?"
+      placeholder: "This would help because..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "💡 Proposed solution"
+      description: "What should we build/change?"
+      placeholder: "I propose that we..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "🔁 Alternatives (optional)"
+      description: "Other approaches you considered (if any)."
+      placeholder: "- Alternative A...\n- Alternative B..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "✅ Acceptance criteria (optional)"
+      description: "Bullet list of what “done” looks like."
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: false

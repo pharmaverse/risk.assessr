@@ -1,0 +1,9 @@
+/* styles.css */
+.core-metrics .green-background {
+  background-color: #dff0d8; /* light green color */
+}
+
+/* Define other styles for different sections as needed */
+.rcmd-check .blue-background {
+  background-color: #d0e7f9; /* light blue color */
+}

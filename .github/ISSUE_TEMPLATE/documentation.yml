@@ -1,0 +1,101 @@
+name: "📚 Documentation"
+description: "Create or update documentation"
+title: "[Docs]: "
+labels: ["documentation", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!TIP]
+        > Documentation issues help everyone move faster.
+        > Share what needs to be documented and who it helps — we’ll take it from there.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "📝 What documentation is needed?"
+      description: "Describe what should be created/updated and what it should cover."
+      placeholder: "We need docs for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: modules
+    attributes:
+      label: "📦 Modules / functions"
+      description: "List the modules/functions involved (table format is welcome)."
+      value: |
+        | Module / Function | Comments |
+        |---|---|
+        | | |
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: "🚦 Priority"
+      description: "How urgent is this?"
+      options:
+        - "High"
+        - "Medium"
+        - "Low"
+    validations:
+      required: true
+
+  - type: input
+    id: deadline
+    attributes:
+      label: "📅 Deadline (if any)"
+      description: "If there’s a hard deadline, specify it. Otherwise, leave blank."
+      placeholder: "YYYY-MM-DD (optional)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: effort
+    attributes:
+      label: "⏱️ Estimated effort"
+      description: "Rough estimate (example: 1–2 days)."
+      placeholder: "e.g., 1–2 days"
+    validations:
+      required: false
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: "🎯 Use case"
+      description: "How will this documentation help? Any scenarios it should support?"
+      placeholder: "This helps users by..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: semver
+    attributes:
+      label: "🔖 Semantic Versioning (target release)"
+      description: "Which kind of release should include this docs work?"
+      options:
+        - "PATCH (docs-only / small updates)"
+        - "MINOR (new docs for new features)"
+        - "MAJOR (docs for breaking changes)"
+        - "Not sure"
+    validations:
+      required: false
+
+  - type: input
+    id: target_version
+    attributes:
+      label: "🏷️ Target version (optional)"
+      description: "If you know the intended version (example: 0.0.1), add it here."
+      placeholder: "X.Y.Z"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: "📎 Additional information (optional)"
+      description: "Examples, screenshots, links to pages/code, draft text, etc."
+    validations:
+      required: false

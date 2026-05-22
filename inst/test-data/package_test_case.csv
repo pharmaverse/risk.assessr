@@ -1,0 +1,20 @@
+test package,tar name,Comments;
+test.package.0001,test.package.0001_0.1.0.tar.gz,1 note for new submission to CRAN;
+test.package.0002,test.package.0002_0.1.0.tar.gz,2 notes - new submission to CRAN; problems with License
+test.package.0003,test.package.0003_0.1.0.tar.gz,1 note  - new submission to CRAN; 1 Error - test failure
+test.package.0004,test.package.0004_0.1.0.tar.gz,no notes - no tests
+test.package.0005,test.package.0005_0.1.0.tar.gz,1 notes - no testable functions
+test.package.0006,test.package.0006_0.1.0.tar.gz,1 notes - no R directory
+test.package.0007,test.package.0007_0.1.0.tar.gz,8 notes - DESCRIPTION elements
+test.package.0008,test.package.0008_0.1.0.tar.gz,DESCRIPTION file with "Config/build/clean-inst-doc: FALSE"
+test.package.0009,test.package.0009_0.1.0.tar.gz,Package with S3 functions from Suggested package
+test.package.0010,test.package.0010_0.1.0.tar.gz,Package with S4 functions from Suggested package
+test.package.0011,test.package.0011_0.1.0.tar.gz,Package with R6 and other functions from Suggested package
+test.package.0012,test.package.0012_0.1.0.tar.gz,Package with nonstandard NAMESPACE
+test.package.0013,test.package.0013_0.1.0.tar.gz,Package with undocumented functions and datasets
+no_vignette.tar.gz , no_vignette.tar.gz, Package with no vignette
+test.package.0014,test.package.0014_0.1.0.tar.gz,Package with passing and failing tests
+no_vignette.tar.gz , no_vignette.tar.gz, Package with no vignette
+just_vignette_folder.tar.gz , just_vignette_folder.tar.gz, Package with "vignette" folder, but no vignette
+got_vignette.teeeeeeear , got_vignette.teeeeeeear.tar.gz, Package with wrong and non tar extension
+got_vignette.tar.gz , got_vignette.tar.gz, Package with vignette folder and vignette inside

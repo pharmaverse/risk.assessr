@@ -1,0 +1,57 @@
+name: "❓ Question"
+description: "Ask a question or request clarification"
+title: "[Question]: "
+labels: ["question", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!NOTE]
+        > **Questions are welcome — and important. 🙌**
+        > They help us explain the package better and improve usability over time.
+
+  - type: textarea
+    id: mind
+    attributes:
+      label: "🧠 What’s on your mind?"
+      description: "Ask the question as you’d ask a teammate."
+      placeholder: "I’m wondering if..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: "🎯 What are you trying to achieve?"
+      placeholder: "My goal is to..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: blocked
+    attributes:
+      label: "🧱 If something is blocking you, what have you tried?"
+      description: "Share what you tried, what happened, and where you got stuck."
+      placeholder: "I tried..., but..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "📎 Helpful context (optional)"
+      description: "Code, config, screenshots, or a small example."
+      render: r
+    validations:
+      required: false
+
+  - type: textarea
+    id: session
+    attributes:
+      label: "🧾 Session info (optional)"
+      description: "If version/environment matters, paste `sessionInfo()`."
+      render: r
+      placeholder: |
+        sessionInfo()
+    validations:
+      required: false

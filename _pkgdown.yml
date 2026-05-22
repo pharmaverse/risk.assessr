@@ -1,0 +1,140 @@
+template:
+  bootstrap: 5
+development:
+  mode: release
+url: https://probable-chainsaw-kgro2o7.pages.github.io/
+output:
+  assets:
+    - inst/examples/
+articles:
+  - title: Getting started
+    desc: >
+      Run assessments from local tarballs, CRAN/Bioconductor, or renv lockfiles; command-line examples; and optional custom risk rules.
+
+    contents:
+      - How-to-use-risk.assessr
+      - examples
+      - define_custom_risk_rules
+  - title: Reports & metric walkthroughs
+    desc: Generate HTML risk reports and explore metric outputs with a full package example.
+    contents:
+      - generate_html_report
+      - risk.assessr_metric
+  - title: Traceability matrix
+    desc: Map exported functions with coverage and documentation
+    contents:
+      - Traceability_matrix
+  - title: Dependencies
+    desc: Build and inspect dependency trees for CRAN and Bioconductor packages.
+    contents:
+      - dependency_tree
+  - title: Package hosting & versions
+    desc: Discover where packages are hosted and list available versions and download URLs.
+    contents:
+      - get-package-host
+      - get-available-version
+  - title: Popularity & literature
+    desc: Download-based popularity signals and PubMed-linked citation counts.
+    contents:
+      - Popularity_metric
+      - Pubmed_data
+navbar:
+  structure:
+    left:
+      - home
+      - vignettes
+      - reference
+      - report
+  components:
+    home:
+      text: "Home"
+      href: index.html
+    vignettes:
+      text: Articles
+      href: articles/index.html
+    reference:
+      text: "Reference"
+      href: reference/index.html
+    report:
+      text: "Report"
+      href: examples/risk_report_ggplot2_3.5.2.html
+reference:
+  - title: Risk assessment
+    desc: Run a full risk assessment on a package (local archive or from repositories).
+    contents:
+      - risk_assess_pkg
+      - risk_assess_pkg_lock_files
+  - title: Reports & risk definitions
+    desc: HTML reports, summaries, and risk metadata.
+    contents:
+      - generate_html_report
+      - write_summary_report
+      - get_risk_analysis
+      - get_risk_definition
+      - list_badges
+  - title: Traceability matrix
+    desc: Coverage mapping between tests and exported code.
+    contents:
+      - create_traceability_matrix
+      - generate_traceability_matrix
+  - title: Package hosting & downloads
+    desc: Resolve tarballs from CRAN, Bioconductor, and internal mirrors.
+    contents:
+      - get_package_tarfile
+      - get_host_package
+      - get_internal_package_url
+      - get_cran_package_url
+      - get_cran_total_downloads
+      - get_package_download_cran
+      - get_package_download_bioconductor
+      - check_cran_package
+      - check_and_fetch_cran_package
+      - get_versions
+      - get_bioconductor_package_url
+      - fetch_bioconductor_releases
+      - parse_bioconductor_releases
+      - fetch_bioconductor_package_info
+  - title: Dependencies & reverse dependencies
+    desc: Dependency trees, session deps, and CRAN/Bioconductor reverse deps.
+    contents:
+      - build_dependency_tree
+      - download_and_parse_dependencies
+      - fetch_all_dependencies
+      - print_tree
+      - cran_revdep
+      - bioconductor_reverse_deps
+      - cran_packages
+      - extract_package_version
+      - parse_package_info
+  - title: GitHub & repository activity
+    desc: GitHub metadata and commit/issue activity.
+    contents:
+      - get_github_data
+      - get_commits_since
+      - count_commits_last_months
+      - average_issue_close_time
+  - title: PubMed
+    desc: Literature counts for packages linked to PubMed.
+    contents:
+      - get_pubmed_count
+      - get_pubmed_by_year
+  - title: Helper functions
+    desc: >
+      Low-level and programmatic helpers (coverage runners, test mapping, package inspection, thresholds).
+
+    contents:
+      - assess_pkg_r_package
+      - dependsOnPkgs
+      - detect_version_conflicts
+      - extract_thresholds_by_id
+      - extract_thresholds_by_key
+      - extract_version
+      - get_exports
+      - get_pkg_name
+      - get_session_dependencies
+      - get_suggested_exp_funcs
+      - install_package_local
+      - is_base
+      - modify_description_file
+      - parse_html_version
+      - set_up_pkg

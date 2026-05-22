@@ -1,0 +1,2419 @@
+test_that("test doc_riskmetrics", {
+  
+  # set CRAN repo 
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup: remove test package from temp dirs
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    pkg_desc <- get_pkg_desc(pkg_source_path, 
+                             fields = c("Package", 
+                                        "Version"))
+    
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    doc_riskmetric_test <- 
+      doc_riskmetric(pkg_name, pkg_ver, pkg_source_path)
+    
+    expect_identical(length(doc_riskmetric_test), 12L)
+    expect_true(checkmate::check_list(doc_riskmetric_test, all.missing = FALSE))
+    expect_true(checkmate::check_list(doc_riskmetric_test, any.missing = TRUE))
+  }
+})
+
+
+test_that("doc_riskmetric handles missing R folder", {
+  
+  # Stub fs::dir_exists to simulate missing R folder
+  mockery::stub(doc_riskmetric, "fs::dir_exists", function(path) FALSE)
+  
+  # Stub fs::path to return a dummy path
+  mockery::stub(doc_riskmetric, "fs::path", function(...) "mock/path/R")
+  
+  # Stub assess_description_file_elements to return expected structure
+  mockery::stub(doc_riskmetric, "assess_description_file_elements", function(pkg_name, pkg_source_path) {
+    list(
+      has_bug_reports_url = TRUE,
+      has_source_control = TRUE,
+      has_maintainer = TRUE,
+      has_website = TRUE
+    )
+  })
+  
+  # Stub other assess_* functions to return dummy values
+  mockery::stub(doc_riskmetric, "assess_export_help", function(...) TRUE)
+  mockery::stub(doc_riskmetric, "assess_vignettes", function(...) TRUE)
+  mockery::stub(doc_riskmetric, "assess_examples", function(...) TRUE)
+  mockery::stub(doc_riskmetric, "assess_news", function(...) TRUE)
+  mockery::stub(doc_riskmetric, "assess_news_current", function(...) TRUE)
+  
+  
+  # Stub assess_examples to avoid tools::Rd_db
+  mockery::stub(doc_riskmetric, "assess_examples", function(...) {
+    list(data = data.frame(function_name = "fun", example = "no example"), example_score = 50)
+  })
+  
+  
+  # Stub assess_exported_functions_docs to avoid tools::Rd_db
+  mockery::stub(doc_riskmetric, "assess_exported_functions_docs", function(...) {
+    list(data = data.frame(function_name = "fun", documentation_name = "topic", documentation_location = "man/topic.Rd"),
+         documentation_score = 75)
+  })
+  
+  
+  pkg_name <- "mockpkg"
+  pkg_ver <- "0.1.0"
+  pkg_source_path <- "mock/path"
+  
+  expect_message(
+    doc_scores <- doc_riskmetric(pkg_name, pkg_ver, pkg_source_path),
+    glue::glue("{pkg_name} has no R folder to assess codebase size"),
+    fixed = TRUE
+  )
+  
+  expect_equal(doc_scores$size_codebase, 0)
+})
+
+test_that("get_pkg_author returns correct structure without funder", {
+  # Mocked return values
+  mock_creator <- list(list(email = "krlmlr+r@mailbox.org"))
+  mock_authors <- list(
+    list(email = "krlmlr+r@mailbox.org"),
+    list(email = "jenny@rstudio.com")
+  )
+  
+  # Create a fake description object with the required methods
+  fake_desc <- list(
+    has_fields = function(field) TRUE
+  )
+  class(fake_desc) <- "description"
+  
+  # Stub all necessary functions
+  mockery::stub(get_pkg_author, "description$new", function(file) fake_desc)
+  mockery::stub(get_pkg_author, "desc::desc_get_author", function(role, file) {
+    if (role == "cre") return(mock_creator)
+    if (role == "fnd") return(NULL)
+  })
+  mockery::stub(get_pkg_author, "desc::desc_get_authors", function(file) mock_authors)
+  
+  result <- get_pkg_author("test", "fake/path")
+  
+  expect_equal(result$maintainer[[1]]$email, "krlmlr+r@mailbox.org")
+  expect_null(result$funder)
+  expect_equal(length(result$authors), 2)
+  expect_equal(result$authors[[1]]$email, "krlmlr+r@mailbox.org")
+  expect_equal(result$authors[[2]]$email, "jenny@rstudio.com")
+  
+})
+
+
+test_that("get_pkg_author returns correct structure with funder", {
+  # Mocked return values
+  mock_creator <- list(list(email = "hadley@posit.co"))
+  mock_funder <- "Posit Software, PBC [cph, fnd]"
+  mock_authors <- list(
+    list(email = "hadley@posit.co"),
+    list(email = "another@posit.co")
+  )
+  
+  # Create a fake description object with the required methods
+  fake_desc <- list(
+    has_fields = function(field) TRUE
+  )
+  class(fake_desc) <- "description"
+  
+  # Stub all necessary functions
+  mockery::stub(get_pkg_author, "description$new", function(file) fake_desc)
+  mockery::stub(get_pkg_author, "desc::desc_get_author", function(role, file) {
+    if (role == "cre") return(mock_creator)
+    if (role == "fnd") return(mock_funder)
+  })
+  mockery::stub(get_pkg_author, "desc::desc_get_authors", function(file) mock_authors)
+  
+  result <- get_pkg_author("test", "fake/path")
+  
+  
+  expect_equal(result$maintainer[[1]]$email, "hadley@posit.co")
+  expect_equal(as.character(result$funder), mock_funder)
+  expect_equal(length(result$authors), 2)
+  expect_equal(result$authors[[1]]$email, "hadley@posit.co")
+})
+
+
+test_that("get_pkg_author handles missing creator and author", {
+  
+  # Stub description$new to return an object with has_fields method
+  mock_desc_obj <- list(
+    has_fields = function(field) FALSE
+  )
+  class(mock_desc_obj) <- "description"
+  
+  mockery::stub(get_pkg_author, "description$new", function(file) mock_desc_obj)
+  
+  # Stub desc_coerce_authors_at_r to do nothing
+  mockery::stub(get_pkg_author, "desc_coerce_authors_at_r", function(file) NULL)
+  
+  # Stub desc::desc_get_author to return empty vector for both roles
+  mockery::stub(get_pkg_author, "desc::desc_get_author", function(role, file) character(0))
+  
+  # Stub desc::desc_get_authors to return empty vector
+  mockery::stub(get_pkg_author, "desc::desc_get_authors", function(file) character(0))
+  
+  pkg_name <- "mockpkg"
+  pkg_source_path <- "mock/path"
+  
+  result <- get_pkg_author(pkg_name, pkg_source_path)
+  
+  expect_null(result$maintainer)
+  expect_null(result$authors)
+  expect_null(result$funder)
+})
+
+
+
+test_that("parse authors for mocked package folder works correctly", {
+  mock_dir <- withr::local_tempdir()
+  dir.create(file.path(mock_dir, "R"), showWarnings = FALSE)
+  
+  desc_text <- "Package: here
+Title: A Simpler Way to Find Your Files
+Version: 1.0.2.9000
+Date: 2025-09-15
+Authors@R:
+    c(person(given = \"Kirill\",
+             family = \"M\\u00fcller\",
+             role = c(\"aut\", \"cre\"),
+             email = \"kirill@cynkra.com\",
+             comment = c(ORCID = \"0000-0002-1416-3412\")),
+      person(given = \"Jennifer\",
+             family = \"Bryan\",
+             role = \"ctb\",
+             email = \"jenny@rstudio.com\",
+             comment = c(ORCID = \"0000-0002-6983-2759\")))
+Description: Constructs paths to your project's files.
+    Declare the relative path of a file within your project with 'i_am()'.
+    Use the 'here()' function as a drop-in replacement for 'file.path()',
+    it will always locate the files relative to your project root.
+License: MIT + file LICENSE
+URL: https://here.r-lib.org/, https://github.com/r-lib/here
+BugReports: https://github.com/r-lib/here/issues
+Imports:
+    rprojroot (>= 2.1.0)
+Suggests:
+    conflicted,
+    covr,
+    fs,
+    knitr,
+    palmerpenguins,
+    plyr,
+    readr,
+    rlang,
+    rmarkdown,
+    testthat,
+    uuid,
+    withr
+VignetteBuilder:
+    knitr
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3.9000
+Config/testthat/edition: 3
+Config/Needs/website: tidyverse/tidytemplate
+"
+  
+  writeLines(desc_text, file.path(mock_dir, "DESCRIPTION"), useBytes = TRUE)
+  writeLines("exportPattern(\"^[[:alpha:]]+\")", file.path(mock_dir, "NAMESPACE"))
+  
+  result <- get_pkg_author("test", mock_dir)
+  
+  expect_equal(result$maintainer[[1]]$email, "kirill@cynkra.com")
+  expect_null(result$funder)
+  
+  expect_true(!is.null(result$authors))
+  expect_equal(length(result$authors), 2)
+  expect_equal(result$authors[[1]]$email, "kirill@cynkra.com")
+  expect_equal(result$authors[[2]]$email, "jenny@rstudio.com")
+})
+
+
+
+test_that("parse authors for mocked package folder works correctly 2", {
+  mock_dir <- withr::local_tempdir()
+  dir.create(file.path(mock_dir, "R"), showWarnings = FALSE)
+  
+  desc_text <- "Package: stringr
+Title: Simple, Consistent Wrappers for Common String Operations
+Version: 1.5.2.9000
+Authors@R: c(
+    person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = c(\"aut\", \"cre\", \"cph\")),
+    person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"))
+  )
+Description: A consistent, simple and easy to use set of wrappers around
+    the fantastic 'stringi' package. All function and argument names (and
+    positions) are consistent, all functions deal with \"NA\"'s and zero
+    length vectors in the same way, and the output from one function is
+    easy to feed into the input of another.
+License: MIT + file LICENSE
+URL: https://stringr.tidyverse.org, https://github.com/tidyverse/stringr
+BugReports: https://github.com/tidyverse/stringr/issues
+Depends:
+    R (>= 3.6)
+Imports:
+    cli,
+    glue (>= 1.6.1),
+    lifecycle (>= 1.0.3),
+    magrittr,
+    rlang (>= 1.0.0),
+    stringi (>= 1.5.3),
+    vctrs (>= 0.4.0)
+Suggests:
+    covr,
+    dplyr,
+    gt,
+    htmltools,
+    htmlwidgets,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    tibble
+VignetteBuilder:
+    knitr
+Config/Needs/website: tidyverse/tidytemplate
+Config/potools/style: explicit
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+"
+  
+  writeLines(desc_text, file.path(mock_dir, "DESCRIPTION"), useBytes = TRUE)
+  writeLines("exportPattern(\"^[[:alpha:]]+\")", file.path(mock_dir, "NAMESPACE"))
+  
+  result <- get_pkg_author("test", mock_dir)
+  
+  expect_equal(result$maintainer[[1]]$email, "hadley@posit.co")
+  expect_equal(as.character(result$funder), "Posit Software, PBC [cph, fnd]")
+  
+  expect_equal(length(result$authors), 2)
+  expect_equal(as.character(result$maintainer[[1]]$email), "hadley@posit.co")
+})
+
+test_that("parse license for tar file MIT", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup: remove test package from temp dirs
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    result <- extract_license_from_description(pkg_source_path)
+    expect_equal(result, "MIT + file LICENSE")
+  }
+})
+
+
+test_that("parse authors for tar file Apache License", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    result <- extract_license_from_description(pkg_source_path)
+    expect_equal(result, "Apache License (>= 2)")
+  }
+})
+
+
+test_that("parse license not present", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0007_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    suppressWarnings(result <- extract_license_from_description(pkg_source_path))
+    expect_true(is.na(result))
+  }
+})
+
+
+# clean_license
+
+test_that("clean_license splits and normalizes single license", {
+  expect_equal(clean_license("MIT"), c("MIT"))
+  expect_equal(clean_license("MIT + file LICENSE"), "MIT")
+  expect_equal(clean_license("MIT file LICENSE"), "MIT")
+  expect_equal(clean_license("Apache-2.0"), c("APACHE"))
+  expect_equal(clean_license("NOT AVAILABLE"), c("NOTAVAILABLE"))
+})
+
+test_that("clean_license removes trailing file LICENSE", {
+  expect_equal(clean_license("MIT file LICENSE"), c("MIT"))
+  expect_equal(clean_license("Apache License"), c("APACHE"))
+  expect_equal(clean_license("Apache file LICENSE and stuff"), c("APACHE"))
+})
+
+test_that("clean_license splits on commas, plus, and pipes", {
+  expect_equal(clean_license("MIT, GPL"), c("MIT", "GPL"))
+  expect_equal(clean_license("MIT + GPL"), c("MIT", "GPL"))
+  expect_equal(clean_license("MIT | GPL"), c("MIT", "GPL"))
+})
+
+test_that("clean_license trims whitespace and normalizes to uppercase letters only", {
+  expect_equal(clean_license(" mit "), c("MIT"))
+  expect_equal(clean_license("Apache License 2.0"), c("APACHE"))
+  expect_equal(clean_license("GPL-3.0"), c("GPL"))
+})
+
+test_that("clean_license ignores empty parts", {
+  expect_equal(clean_license(", , MIT"), c("MIT"))
+  expect_equal(clean_license("| | GPL |"), c("GPL"))
+})
+
+test_that("clean_license handles empty string input", {
+  expect_equal(clean_license(""), NULL)
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  # check source control
+  test_source_control_elements <- function() {
+    # Define toy data for testing
+    toy_data <- list(
+      no_source_control = list(
+        pkg_name = "pkg_no_source_control",
+        desc_elements = list(URL = "http://example.com"),
+        expected_message = "pkg_no_source_control does not have a source control",
+        expected_has_source_control = 0
+      ),
+      has_github = list(
+        pkg_name = "pkg_has_github",
+        desc_elements = list(URL = "https://github.com/user/repo"),
+        expected_message = "pkg_has_github has a source control",
+        expected_has_source_control = 1
+      ),
+      has_ac_uk = list(
+        pkg_name = "pkg_has_ac_uk",
+        desc_elements = list(URL = "http://www.stats.ox.ac.uk/pub/MASS4/"),
+        expected_message = "pkg_has_ac_uk has a source control",
+        expected_has_source_control = 1
+      ),
+      has_bitbucket = list(
+        pkg_name = "pkg_has_bitbucket",
+        desc_elements = list(URL = "https://bitbucket.org/user/repo"),
+        expected_message = "pkg_has_bitbucket has a source control",
+        expected_has_source_control = 1
+      ),
+      has_gitlab = list(
+        pkg_name = "pkg_has_gitlab",
+        desc_elements = list(URL = "https://gitlab.com/user/repo"),
+        expected_message = "pkg_has_gitlab has a source control",
+        expected_has_source_control = 1
+      ),
+      has_cambridge_repo = list(
+        pkg_name = "pkg_has_cambridge_repo",
+        desc_elements = list(URL = "https://www.repository.cam.ac.uk/items/da5b9b21-ef5f-4ac8-80e4-553d99014aaf/full"),
+        expected_message = "pkg_has_cambridge_repo has a source control",
+        expected_has_source_control = 1
+      ),
+      has_wehi = list(
+        pkg_name = "pkg_has_wehi",
+        desc_elements = list(URL = "http://bioinf.wehi.edu.au/limma"),
+        expected_message = "pkg_has_wehi has a source control",
+        expected_has_source_control = 1
+      ),
+      has_bioconductor = list(
+        pkg_name = "pkg_has_bioconductor",
+        desc_elements = list(URL = "https://bioconductor.org/packages/IRanges"),
+        expected_message = "pkg_has_bioconductor has a source control",
+        expected_has_source_control = 1
+      ),
+      has_rforge = list(
+        pkg_name = "pkg_has_rforge",
+        desc_elements = list(URL = "https://r-forge.r-project.org/projects/surveillance/"),
+        expected_message = "pkg_has_rforge has a source control",
+        expected_has_source_control = 1
+      ),
+      has_codeberg = list(
+        pkg_name = "pkg_has_codeberg",
+        desc_elements = list(URL = "https://codeberg.org/episensr/episensr"),
+        expected_message = "pkg_has_codeberg has a source control",
+        expected_has_source_control = 1
+      ),
+      has_sourceforge = list(
+        pkg_name = "pkg_has_sourceforge",
+        desc_elements = list(URL = "https://sourceforge.net/projects/mcmc-jags/"),
+        expected_message = "pkg_has_sourceforge has a source control",
+        expected_has_source_control = 1
+      ),
+      has_sourcehut = list(
+        pkg_name = "pkg_has_sourcehut",
+        desc_elements = list(URL = "https://sr.ht/~enno/orgutils/"),
+        expected_message = "pkg_has_sourcehut has a source control",
+        expected_has_source_control = 1
+      ),
+      has_gitlab_selfhosted = list(
+        pkg_name = "pkg_has_gitlab_selfhosted",
+        desc_elements = list(URL = "https://gitlab.opencode.de/bmbf/datenlabor/barrierefrei-r"),
+        expected_message = "pkg_has_gitlab_selfhosted has a source control",
+        expected_has_source_control = 1
+      )
+    )
+
+    # Patterns must stay in sync with documentation_metrics.R
+    patterns <- paste(
+      "github\\.com", "pages\\.github\\.io", "github\\.io",
+      "gitlab\\.com", "gitlab\\.",
+      "bitbucket\\.org",
+      "r-forge\\.r-project\\.org",
+      "codeberg\\.org",
+      "sourceforge\\.net",
+      "sr\\.ht",
+      "bioconductor\\.org",
+      "\\.ac\\.uk", "\\.edu\\.au",
+      sep = "|"
+    )
+  
+  # Test each scenario
+    for (test_case in toy_data) {
+      pkg_name <- test_case$pkg_name
+      desc_elements <- test_case$desc_elements
+      expected_message <- test_case$expected_message
+      expected_has_source_control <- test_case$expected_has_source_control
+      
+      expect_message({
+        if (is.null(desc_elements$URL) | (is.na(desc_elements$URL))) {
+          message(glue::glue("{pkg_name} does not have a source control"))
+          has_source_control <- 0
+        } else {
+          source_matches <- grep(patterns, desc_elements$URL, value = TRUE)
+          if (length(source_matches) == 0) {
+            message(glue::glue("{pkg_name} does not have a source control"))
+            has_source_control <- 0
+          } else {
+            message(glue::glue("{pkg_name} has a source control"))
+            has_source_control <- 1
+          }
+        }
+      }, expected_message)
+      
+      expect_equal(has_source_control, expected_has_source_control)
+    }
+  }  
+  
+  test_source_control_elements()  
+})
+
+test_that("GitHub Pages URLs are detected as source control", {
+  # Create a temporary package directory with DESCRIPTION file
+  pkg_source_path <- tempfile(pattern = "testpkg")
+  dir.create(pkg_source_path)
+  on.exit(unlink(pkg_source_path, recursive = TRUE), add = TRUE)
+  
+  # Create DESCRIPTION with GitHub Pages URL
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  description_text <- paste0(
+    "Package: testpkg\n",
+    "Title: Test Package\n",
+    "Version: 1.0.0\n",
+    "URL: https://probable-chainsaw-kgro2o7.pages.github.io/\n",
+    "BugReports: https://github.com/pharmaverse/risk.assessr/issues\n"
+  )
+  writeLines(description_text, desc_path)
+  
+  # Test that GitHub Pages URL is detected
+  result <- assess_description_file_elements("testpkg", pkg_source_path)
+  expect_false(is.null(result$has_source_control))
+  expect_true(length(result$has_source_control) > 0)
+  expect_true(grepl("pages\\.github\\.io", result$has_source_control))
+})
+
+test_that("BugReports URL is used as fallback when URL field doesn't match", {
+  # Create a temporary package directory with DESCRIPTION file
+  pkg_source_path <- tempfile(pattern = "testpkg")
+  dir.create(pkg_source_path)
+  on.exit(unlink(pkg_source_path, recursive = TRUE), add = TRUE)
+  
+  # Create DESCRIPTION with non-matching URL but GitHub BugReports
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  description_text <- paste0(
+    "Package: testpkg\n",
+    "Title: Test Package\n",
+    "Version: 1.0.0\n",
+    "URL: https://example.com/package\n",
+    "BugReports: https://github.com/user/repo/issues\n"
+  )
+  writeLines(description_text, desc_path)
+  
+  # Test that BugReports URL is used as fallback
+  result <- assess_description_file_elements("testpkg", pkg_source_path)
+  expect_false(is.null(result$has_source_control))
+  expect_true(length(result$has_source_control) > 0)
+  expect_true(grepl("github\\.com", result$has_source_control))
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  
+  library(risk.assessr)
+  # set CRAN repo 
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup: remove test package from temp dirs
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has bug reports URL"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a source control"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a maintainer"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a website"),
+      fixed = TRUE
+    )
+    desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path)
+    expect_identical(length(desc_elements_test), 4L)
+    expect_true(checkmate::check_list(desc_elements_test, all.missing = FALSE))
+    expect_true(checkmate::check_list(desc_elements_test, any.missing = TRUE))
+  }
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  
+  library(risk.assessr)
+  # set CRAN repo 
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0007_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have bug reports URL"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have a source control"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a maintainer"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have a website"),
+      fixed = TRUE
+    )
+    
+    desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path)
+    expect_identical(length(desc_elements_test), 4L)
+    expect_true(checkmate::check_list(desc_elements_test, all.missing = FALSE))
+    expect_true(checkmate::check_list(desc_elements_test, any.missing = TRUE))
+  }
+})
+
+
+test_that("assess_description_file_elements handles missing maintainer", {
+  
+  
+  # Stub desc_get_author to simulate no maintainer
+  mockery::stub(assess_description_file_elements, "desc::desc_get_author", function(role, file) {
+    character(0)
+  })
+  
+  # Stub get_pkg_desc to return all required fields
+  mockery::stub(assess_description_file_elements, "get_pkg_desc", function(path, fields) {
+    list(
+      Package = "mockpkg",
+      BugReports = "https://example.com/bugs",
+      Maintainer = NULL,
+      URL = "https://example.com"
+    )
+  })
+  
+  pkg_name <- "mockpkg"
+  pkg_source_path <- "mock/path"
+  
+  testthat::expect_message(
+    desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+    glue::glue("{pkg_name} does not have a maintainer"),
+    fixed = TRUE
+  )
+  
+  # Optional: check output structure
+  expect_true(checkmate::check_list(desc_elements_test, any.missing = TRUE))
+})
+
+
+
+# Authors
+
+test_that("get_pkg_author retrieves all authors correctly", {
+  # Create a temporary directory to simulate the package folder
+  temp_dir <- tempdir()
+  pkg_source_path <- file.path(temp_dir, "limma")
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  dir.create(pkg_source_path, recursive = TRUE, showWarnings = FALSE)
+  
+  # Provided DESCRIPTION text
+  description_text <- "Package: here
+Title: A Simpler Way to Find Your Files
+Version: 1.0.1
+Date: 2020-12-13
+Authors@R: 
+    c(person(given = 'Kirill',
+             family = 'M\u00fcller',
+             role = c('aut', 'cre'),
+             email = 'krlmlr+r@mailbox.org',
+             comment = c(ORCID = '0000-0002-1416-3412')),
+      person(given = 'Jennifer',
+             family = 'Bryan',
+             role = 'ctb',
+             email = 'jenny@rstudio.com',
+             comment = c(ORCID = '0000-0002-6983-2759')))
+Description: Constructs paths to your project's files.
+    Declare the relative path of a file within your project with 'i_am()'.
+    Use the 'here()' function as a drop-in replacement for 'file.path()',
+    it will always locate the files relative to your project root.
+License: MIT + file LICENSE
+URL: https://here.r-lib.org/, https://github.com/r-lib/here
+BugReports: https://github.com/r-lib/here/issues
+Imports: rprojroot (>= 2.0.2)
+Suggests: conflicted, covr, fs, knitr, palmerpenguins, plyr, readr,
+        rlang, rmarkdown, testthat, uuid, withr
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1.9000
+Config/testthat/edition: 3
+NeedsCompilation: no
+Packaged: 2020-12-13 06:59:33 UTC; kirill
+Author: Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),
+  Jennifer Bryan [ctb] (<https://orcid.org/0000-0002-6983-2759>)
+Maintainer: Kirill Müller <krlmlr+r@mailbox.org>
+Repository: CRAN
+Date/Publication: 2020-12-13 07:30:02 UTC
+"
+  
+  # Write the DESCRIPTION text to a file
+  writeLines(description_text, desc_path)
+  
+  # Run the function with the mocked package path
+  result <- get_pkg_author("limma", pkg_source_path)
+  
+  # Assertions
+  expect_type(result, "list")
+  expect_true(!is.null(result$maintainer))
+  expect_true(!is.null(result$authors))
+  expect_equal(result$maintainer[[1]]$given, "Kirill")
+  expect_equal(result$maintainer[[1]]$family, "Müller")
+  
+  # Clean up the temporary directory
+  unlink(pkg_source_path, recursive = TRUE)
+})
+
+test_that("get_pkg_author retrieves all authors correctly without @Author", {
+  # Create a temporary directory to simulate the package folder
+  temp_dir <- tempdir()
+  pkg_source_path <- file.path(temp_dir, "limma")
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  dir.create(pkg_source_path, recursive = TRUE, showWarnings = FALSE)
+  
+  # Provided DESCRIPTION text
+  description_text <- "Package: limma
+Version: 2.10.7
+Date: 2007/09/24
+Title: Linear Models for Microarray Data
+Author: Gordon Smyth with contributions from Matthew Ritchie, Jeremy Silver, James Wettenhall, Natalie Thorne, Mette Langaas, Egil Ferkingstad, Marcus Davy, Francois Pepin and Dongseok Choi.
+Maintainer: Gordon Smyth <smyth@wehi.edu.au>
+Depends: R (<= 2.5.1), methods
+Suggests: affy, marray, MASS, splines, sma, statmod (>= 1.2.2), vsn
+LazyLoad: yes
+Description:  Data analysis, linear models and differential expression for microarray data.
+License: LGPL
+URL: http://bioinf.wehi.edu.au/limma
+biocViews: Microarray, OneChannel, TwoChannel, DataImport, QualityControl, Preprocessing, Statistics, DifferentialExpression, MultipleComparisons, TimeCourse
+Packaged: Mon Sep 24 13:01:39 2007; smyth
+"
+  
+  # Write the DESCRIPTION text to a file
+  writeLines(description_text, desc_path)
+  
+  # Run the function with the mocked package path
+  result <- get_pkg_author("limma", pkg_source_path)
+  
+  # Assertions
+  expect_type(result, "list")
+  expect_true(!is.null(result$maintainer))
+  expect_true(!is.null(result$authors))
+  expect_equal(result$maintainer[[1]]$given, "Gordon")
+  expect_equal(result$maintainer[[1]]$family, "Smyth")
+  
+  # Clean up the temporary directory
+  unlink(pkg_source_path, recursive = TRUE)
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  # check source control
+  test_source_control_elements <- function() {
+    # Define toy data for testing
+    toy_data <- list(
+      no_source_control = list(
+        pkg_name = "pkg_no_source_control",
+        desc_elements = list(URL = "http://example.com"),
+        expected_message = "pkg_no_source_control does not have a source control",
+        expected_has_source_control = 0
+      ),
+      has_github = list(
+        pkg_name = "pkg_has_github",
+        desc_elements = list(URL = "https://github.com/user/repo"),
+        expected_message = "pkg_has_github has a source control",
+        expected_has_source_control = 1
+      ),
+      has_ac_uk = list(
+        pkg_name = "pkg_has_ac_uk",
+        desc_elements = list(URL = "http://www.stats.ox.ac.uk/pub/MASS4/"),
+        expected_message = "pkg_has_ac_uk has a source control",
+        expected_has_source_control = 1
+      ),
+      has_bitbucket = list(
+        pkg_name = "pkg_has_bitbucket",
+        desc_elements = list(URL = "https://bitbucket.org/user/repo"),
+        expected_message = "pkg_has_bitbucket has a source control",
+        expected_has_source_control = 1
+      ),
+      has_gitlab = list(
+        pkg_name = "pkg_has_gitlab",
+        desc_elements = list(URL = "https://gitlab.com/user/repo"),
+        expected_message = "pkg_has_gitlab has a source control",
+        expected_has_source_control = 1
+      ),
+      has_cambridge_repo = list(
+        pkg_name = "pkg_has_cambridge_repo",
+        desc_elements = list(URL = "https://www.repository.cam.ac.uk/items/da5b9b21-ef5f-4ac8-80e4-553d99014aaf/full"),
+        expected_message = "pkg_has_cambridge_repo has a source control",
+        expected_has_source_control = 1
+      ),
+      has_wehi = list(
+        pkg_name = "pkg_has_wehi",
+        desc_elements = list(URL = "http://bioinf.wehi.edu.au/limma"),
+        expected_message = "pkg_has_wehi has a source control",
+        expected_has_source_control = 1
+      ),
+      has_bioconductor = list(
+        pkg_name = "pkg_has_bioconductor",
+        desc_elements = list(URL = "https://bioconductor.org/packages/IRanges"),
+        expected_message = "pkg_has_bioconductor has a source control",
+        expected_has_source_control = 1
+      )
+    )
+    
+    # Define the patterns
+    patterns <- "github\\.com|bitbucket\\.org|gitlab\\.com|\\.ac\\.uk|\\.edu\\.au|bioconductor\\.org"
+    
+    # Test each scenario
+    for (test_case in toy_data) {
+      pkg_name <- test_case$pkg_name
+      desc_elements <- test_case$desc_elements
+      expected_message <- test_case$expected_message
+      expected_has_source_control <- test_case$expected_has_source_control
+      
+      expect_message({
+        if (is.null(desc_elements$URL) | (is.na(desc_elements$URL))) {
+          message(glue::glue("{pkg_name} does not have a source control"))
+          has_source_control <- 0
+        } else {
+          source_matches <- grep(patterns, desc_elements$URL, value = TRUE)
+          if (length(source_matches) == 0) {
+            message(glue::glue("{pkg_name} does not have a source control"))
+            has_source_control <- 0
+          } else {
+            message(glue::glue("{pkg_name} has a source control"))
+            has_source_control <- 1
+          }
+        }
+      }, expected_message)
+      
+      expect_equal(has_source_control, expected_has_source_control)
+    }
+  }  
+  
+  test_source_control_elements()  
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  
+  library(risk.assessr)
+  # set CRAN repo 
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has bug reports URL"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a source control"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a maintainer"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a website"),
+      fixed = TRUE
+    )
+    desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path)
+    expect_identical(length(desc_elements_test), 4L)
+    expect_true(checkmate::check_list(desc_elements_test, all.missing = FALSE))
+    expect_true(checkmate::check_list(desc_elements_test, any.missing = TRUE))
+  }
+})
+
+test_that("test assess_description_file_elements for all elements present", {
+  
+  library(risk.assessr)
+  # set CRAN repo 
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0007_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have bug reports URL"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have a source control"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} has a maintainer"),
+      fixed = TRUE
+    )
+    
+    testthat::expect_message(
+      desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path),
+      glue::glue("{pkg_name} does not have a website"),
+      fixed = TRUE
+    )
+    
+    desc_elements_test <- assess_description_file_elements(pkg_name, pkg_source_path)
+    expect_identical(length(desc_elements_test), 4L)
+    expect_true(checkmate::check_list(desc_elements_test, all.missing = FALSE))
+    expect_true(checkmate::check_list(desc_elements_test, any.missing = TRUE))
+  }
+})
+
+# Authors
+
+test_that("get_pkg_author retrieves all authors correctly", {
+  # Create a temporary directory to simulate the package folder
+  temp_dir <- tempdir()
+  pkg_source_path <- file.path(temp_dir, "limma")
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  dir.create(pkg_source_path, recursive = TRUE, showWarnings = FALSE)
+  
+  # Provided DESCRIPTION text
+  description_text <- "Package: here
+Title: A Simpler Way to Find Your Files
+Version: 1.0.1
+Date: 2020-12-13
+Authors@R: 
+    c(person(given = 'Kirill',
+             family = 'M\u00fcller',
+             role = c('aut', 'cre'),
+             email = 'krlmlr+r@mailbox.org',
+             comment = c(ORCID = '0000-0002-1416-3412')),
+      person(given = 'Jennifer',
+             family = 'Bryan',
+             role = 'ctb',
+             email = 'jenny@rstudio.com',
+             comment = c(ORCID = '0000-0002-6983-2759')))
+Description: Constructs paths to your project's files.
+    Declare the relative path of a file within your project with 'i_am()'.
+    Use the 'here()' function as a drop-in replacement for 'file.path()',
+    it will always locate the files relative to your project root.
+License: MIT + file LICENSE
+URL: https://here.r-lib.org/, https://github.com/r-lib/here
+BugReports: https://github.com/r-lib/here/issues
+Imports: rprojroot (>= 2.0.2)
+Suggests: conflicted, covr, fs, knitr, palmerpenguins, plyr, readr,
+        rlang, rmarkdown, testthat, uuid, withr
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1.9000
+Config/testthat/edition: 3
+NeedsCompilation: no
+Packaged: 2020-12-13 06:59:33 UTC; kirill
+Author: Kirill Müller [aut, cre] (<https://orcid.org/0000-0002-1416-3412>),
+  Jennifer Bryan [ctb] (<https://orcid.org/0000-0002-6983-2759>)
+Maintainer: Kirill Müller <krlmlr+r@mailbox.org>
+Repository: CRAN
+Date/Publication: 2020-12-13 07:30:02 UTC
+"
+  
+  # Write the DESCRIPTION text to a file
+  writeLines(description_text, desc_path)
+  
+  # Run the function with the mocked package path
+  result <- get_pkg_author("limma", pkg_source_path)
+  
+  # Assertions
+  expect_type(result, "list")
+  expect_true(!is.null(result$maintainer))
+  expect_true(!is.null(result$authors))
+  expect_equal(result$maintainer[[1]]$given, "Kirill")
+  expect_equal(result$maintainer[[1]]$family, "Müller")
+  
+  # Clean up the temporary directory
+  unlink(pkg_source_path, recursive = TRUE)
+})
+
+test_that("get_pkg_author retrieves all authors correctly without @Author", {
+  # Create a temporary directory to simulate the package folder
+  temp_dir <- tempdir()
+  pkg_source_path <- file.path(temp_dir, "limma")
+  desc_path <- file.path(pkg_source_path, "DESCRIPTION")
+  dir.create(pkg_source_path, recursive = TRUE, showWarnings = FALSE)
+  
+  # Provided DESCRIPTION text
+  description_text <- "Package: limma
+Version: 2.10.7
+Date: 2007/09/24
+Title: Linear Models for Microarray Data
+Author: Gordon Smyth with contributions from Matthew Ritchie, Jeremy Silver, James Wettenhall, Natalie Thorne, Mette Langaas, Egil Ferkingstad, Marcus Davy, Francois Pepin and Dongseok Choi.
+Maintainer: Gordon Smyth <smyth@wehi.edu.au>
+Depends: R (<= 2.5.1), methods
+Suggests: affy, marray, MASS, splines, sma, statmod (>= 1.2.2), vsn
+LazyLoad: yes
+Description:  Data analysis, linear models and differential expression for microarray data.
+License: LGPL
+URL: http://bioinf.wehi.edu.au/limma
+biocViews: Microarray, OneChannel, TwoChannel, DataImport, QualityControl, Preprocessing, Statistics, DifferentialExpression, MultipleComparisons, TimeCourse
+Packaged: Mon Sep 24 13:01:39 2007; smyth
+"
+  
+  # Write the DESCRIPTION text to a file
+  writeLines(description_text, desc_path)
+  
+  # Run the function with the mocked package path
+  result <- get_pkg_author("limma", pkg_source_path)
+  
+  # Assertions
+  expect_type(result, "list")
+  expect_true(!is.null(result$maintainer))
+  expect_true(!is.null(result$authors))
+  expect_equal(result$maintainer[[1]]$given, "Gordon")
+  expect_equal(result$maintainer[[1]]$family, "Smyth")
+  
+  # Clean up the temporary directory
+  unlink(pkg_source_path, recursive = TRUE)
+})
+
+test_that("assess exports for tar file works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    export_calc <- assess_exports(pkg_source_path)
+    
+    expect_identical(length(export_calc), 1L)
+    
+    expect_vector(export_calc)
+    
+    expect_true(checkmate::check_numeric(export_calc, 
+                                         any.missing = FALSE)
+    )
+    testthat::expect_equal(export_calc, 1)
+  }
+})
+
+test_that("assess exports for tar file works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0006_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    export_calc <- assess_exports(pkg_source_path)
+    
+    expect_identical(length(export_calc), 1L)
+    
+    expect_vector(export_calc)
+    
+    expect_true(checkmate::check_numeric(export_calc, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(export_calc, 0) 
+  }
+  
+})
+
+test_that("assess exports for examples works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    
+    testthat::expect_message(
+      has_examples <- assess_examples(pkg_name, pkg_source_path),
+      glue::glue("{(pkg_name)}: 75.00% of exported functions have examples"),
+      fixed = TRUE
+    )
+    
+    has_examples <- assess_examples(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_examples), 2L)
+    
+    expect_vector(has_examples)
+    
+    expect_true(checkmate::check_list(has_examples, 
+                                      any.missing = TRUE)
+    )
+    
+    testthat::expect_length(has_examples, 2L) 
+  }
+  
+})
+
+
+test_that("assess_examples returns 'No documentation found' and 'no Rd file' when find_rd_for_fun() returns NULL", {
+  # Bind the function object
+  fn <- assess_examples
+  
+  # Stub tools::Rd_db to return an empty Rd database (or minimal)
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  
+  # Stub build_rd_index to return a dummy index
+  mockery::stub(fn, "build_rd_index", function(db) list(alias_index = new.env(), topic_by_file = character(0)))
+  
+  # Stub find_rd_for_fun to always return NULL (simulate missing Rd doc)
+  mockery::stub(fn, "find_rd_for_fun", function(fun, db, idx) NULL)
+  
+  # Stub extract_examples_text (won't be called because hit is NULL)
+  mockery::stub(fn, "extract_examples_text", function(rd_doc) stop("Should not be called"))
+  
+  # Stub rd_name (won't be called because hit is NULL)
+  mockery::stub(fn, "rd_name", function(rd) stop("Should not be called"))
+  
+  # Stub asNamespace and getNamespaceExports to simulate exported functions
+  mockery::stub(fn, "asNamespace", function(pkg) pkg)
+  mockery::stub(fn, "getNamespaceExports", function(ns) c("funA", "funB"))
+  
+  # Stub getExportedValue to return dummy functions
+  mockery::stub(fn, "getExportedValue", function(ns, name) function() NULL)
+  
+  # Run the function
+  result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path")
+  
+  # Assertions
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 2) # two exported functions
+  expect_true(all(result$data$documentation_name == "No documentation found"))
+  expect_true(all(result$data$example == "no Rd file"))
+  expect_true(all(is.na(result$data$documentation_location)))
+  expect_equal(result$example_score, 0) # no examples found
+})
+
+
+test_that("assess_exported_functions_docs returns empty data frame when no exported functions", {
+  fn <- assess_exported_functions_docs
+  
+  # Stub tools::Rd_db to return an empty Rd database
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  
+  # Stub asNamespace and getNamespaceExports to simulate no exports
+  mockery::stub(fn, "asNamespace", function(pkg) pkg)
+  mockery::stub(fn, "getNamespaceExports", function(ns) character(0))
+  
+  # Run the function
+  expect_message(
+    result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path"),
+    regexp = "mockpkg: no exported functions found; documentation score = 0.00%"
+  )
+  
+  # Assertions
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 0)
+  expect_equal(result$has_docs_score, 0)
+})
+
+
+test_that("assess_exported_functions_docs returns 'No documentation found' when find_rd_for_fun returns NULL", {
+  fn <- assess_exported_functions_docs
+  
+  # Stub tools::Rd_db to return a dummy Rd database
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  
+  # Stub build_rd_index to return a dummy index
+  mockery::stub(fn, "build_rd_index", function(db) list(alias_index = new.env(), topic_by_file = character(0)))
+  
+  # Stub find_rd_for_fun to always return NULL
+  mockery::stub(fn, "find_rd_for_fun", function(fun, db, idx) NULL)
+  
+  # Stub asNamespace and getNamespaceExports to simulate exported functions
+  mockery::stub(fn, "asNamespace", function(pkg) pkg)
+  mockery::stub(fn, "getNamespaceExports", function(ns) c("funA", "funB"))
+  
+  # Stub getExportedValue to return dummy functions
+  mockery::stub(fn, "getExportedValue", function(ns, name) function() NULL)
+  
+  # Run the function
+  expect_message(
+    result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path"),
+    regexp = "mockpkg: 0.00% of exported functions have documentation"
+  )
+  
+  # Assertions
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 2)
+  expect_true(all(result$data$documentation_name == "No documentation found"))
+  expect_true(all(is.na(result$data$documentation_location)))
+  expect_equal(result$has_docs_score, 0)
+})
+
+
+test_that("assess exports for missing examples works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  
+  # Ensure installs during this test go to a temp lib that stays on .libPaths()
+  temp_lib <- file.path(tempdir(), "testthat-lib")
+  dir.create(temp_lib, recursive = TRUE, showWarnings = FALSE)
+  withr::local_libpaths(new = temp_lib, action = "prefix")
+  
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  testthat::skip_if(identical(dp_orig, ""), "Bundled test tarball not found")
+  
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    
+    
+    # First attempt: should be found on .libPaths() because we prefixed temp_lib
+    available <- requireNamespace(pkg_name, quietly = TRUE)
+    
+    # Fallback: load from source if not found (use pkgload if available)
+    if (!available && dir.exists(pkg_source_path)) {
+      testthat::skip_if_not_installed("pkgload")
+      pkgload::load_all(pkg_source_path, quiet = TRUE, helpers = FALSE)
+      available <- requireNamespace(pkg_name, quietly = TRUE)
+    }
+    
+    testthat::skip_if_not(
+      available,
+      message = paste("Package", pkg_name, "not available in .libPaths() in CI")
+    )
+    
+    
+    testthat::expect_message(
+      has_examples <- assess_examples(pkg_name, pkg_source_path),
+      glue::glue("{(pkg_name)}: 0.00% of exported functions have examples"),
+      fixed = TRUE
+    )
+    
+    has_examples <- assess_examples(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_examples), 2L)
+    
+    expect_vector(has_examples)
+    
+    expect_true(checkmate::check_list(has_examples, 
+                                      any.missing = TRUE)
+    )
+    
+    testthat::expect_length(has_examples, 2L) 
+  }
+  
+})
+
+test_that("assess exports for packages - no exported functions works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0005_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    
+    testthat::expect_message(
+      has_examples <- assess_examples(pkg_name, pkg_source_path),
+      glue::glue("{(pkg_name)}: no exported functions found; example score = 0.00%"),
+      fixed = TRUE
+    )
+    
+    has_examples <- assess_examples(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_examples), 2L)
+    
+    expect_vector(has_examples)
+    
+    expect_true(checkmate::check_list(has_examples, 
+                                      any.missing = TRUE)
+    )
+    
+    testthat::expect_length(has_examples, 2L) 
+  }
+  
+})
+
+test_that("assess exports for help files works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      export_help <- assess_export_help(pkg_name, pkg_source_path),
+      glue::glue("All exported functions have corresponding help files in {(pkg_name)}"),
+      fixed = TRUE
+    )
+    
+    export_help <- assess_export_help(pkg_name, pkg_source_path)
+    
+    expect_identical(length(export_help), 1L)
+    expect_vector(export_help)
+    expect_true(checkmate::check_numeric(export_help, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(export_help, 1L) 
+  }
+  
+})
+
+test_that("assess exports for missing help files works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      export_help <- assess_export_help(pkg_name, pkg_source_path),
+      glue::glue("Some exported functions are missing help files in {(pkg_name)}"),
+      fixed = TRUE
+    )
+    
+    export_help <- assess_export_help(pkg_name, pkg_source_path)
+    
+    expect_identical(length(export_help), 1L)
+    expect_vector(export_help)
+    expect_true(checkmate::check_numeric(export_help, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(export_help, 0L) 
+  }
+  
+})
+
+test_that("assess exports for no help files works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0006_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # install package locally to ensure test works
+  package_installed <- 
+    install_package_local(pkg_source_path)
+  package_installed <- TRUE
+  
+  if (package_installed == TRUE ) {	
+    
+    # ensure path is set to package source path
+    rcmdcheck_args$path <- pkg_source_path
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    testthat::expect_message(
+      export_help <- assess_export_help(pkg_name, pkg_source_path),
+      glue::glue("No exported functions in {(pkg_name)}"),
+      fixed = TRUE
+    )
+    
+    export_help <- assess_export_help(pkg_name, pkg_source_path)
+    
+    expect_identical(length(export_help), 1L)
+    expect_vector(export_help)
+    expect_true(checkmate::check_numeric(export_help, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(export_help, 0L) 
+  }
+  
+})
+
+test_that("assess exports for news works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    
+    testthat::expect_message(
+      has_news <- assess_news(pkg_name, pkg_source_path),
+      glue::glue("{(pkg_name)} has news"),
+      fixed = TRUE
+    )
+    
+    has_news <- assess_news(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_news), 1L)
+    
+    expect_vector(has_news)
+    
+    expect_true(checkmate::check_numeric(has_news, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(has_news, 1L) 
+  }
+  
+})
+
+test_that("assess exports for missing news works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, 
+                             fields = c("Package", 
+                                        "Version"))
+    pkg_name <- pkg_desc$Package
+    
+    testthat::expect_message(
+      has_news <- assess_news(pkg_name, pkg_source_path),
+      glue::glue("{(pkg_name)} has no news"),
+      fixed = TRUE
+    )
+    
+    has_news <- assess_news(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_news), 1L)
+    
+    expect_vector(has_news)
+    
+    expect_true(checkmate::check_numeric(has_news, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(has_news, 0L) 
+  }
+  
+})
+
+test_that("assess exports for current news works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <-get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    
+    testthat::expect_message(
+      news_current <- assess_news_current(pkg_name, pkg_ver,pkg_source_path),
+      glue::glue("{(pkg_name)} has current news"),
+      fixed = TRUE
+    )
+    
+    news_current <- assess_news_current(pkg_name, pkg_ver, pkg_source_path)
+    
+    expect_identical(length(news_current), 1L)
+    
+    expect_vector(news_current)
+    
+    expect_true(checkmate::check_numeric(news_current, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(news_current, 1L) 
+  }
+  
+})
+
+test_that("assess exports for missing news works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    
+    # Get package name and version
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    
+    testthat::expect_message(
+      news_current <- assess_news_current(pkg_name, pkg_ver, pkg_source_path),
+      glue::glue("{(pkg_name)} has no current news"),
+      fixed = TRUE
+    )
+    
+    news_current <- assess_news_current(pkg_name, pkg_ver, pkg_source_path)
+    
+    expect_identical(length(news_current), 1L)
+    
+    expect_vector(news_current)
+    
+    expect_true(checkmate::check_numeric(news_current, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(news_current, 0L) 
+  }
+})
+
+test_that("assess_news and assess_news_current find NEWS under inst/", {
+  pkg_root <- tempfile("news_inst")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  dir.create(file.path(pkg_root, "inst"))
+  news_body <- c(
+    "------------------------------------------------------------------------",
+    "VERSIONS mynewsinst 2.1.0 | 2026-04-01 | Last: mynewsinst 2.1.0-5",
+    "FIXED * example"
+  )
+  writeLines(news_body, file.path(pkg_root, "inst", "NEWS"))
+  
+  testthat::expect_message(
+    out <- assess_news("mynewsinst", pkg_root),
+    "mynewsinst has news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 1L)
+  
+  testthat::expect_message(
+    cur <- assess_news_current("mynewsinst", "2.1.0-5", pkg_root),
+    "mynewsinst has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur, 1L)
+})
+
+test_that("assess_news finds plain NEWS at package root", {
+  pkg_root <- tempfile("news_plain")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  writeLines("Changes in version 0.0.1\n", file.path(pkg_root, "NEWS"))
+  
+  testthat::expect_message(
+    out <- assess_news("plainpkg", pkg_root),
+    "plainpkg has news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 1L)
+})
+
+test_that("assess_news_current matches Changes in version in plain NEWS", {
+  pkg_root <- tempfile("news_changes")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  writeLines(
+    c("Changes in version 9.8.7", "  * note"),
+    file.path(pkg_root, "NEWS")
+  )
+  
+  testthat::expect_message(
+    cur <- assess_news_current("chgpkg", "9.8.7", pkg_root),
+    "chgpkg has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur, 1L)
+})
+
+test_that("assess_news_current requires exact version (no prefix match to longer)", {
+  pkg_root <- tempfile("news_ver_prefix")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  writeLines(
+    c("# shortpkg 1.2.3", "more"),
+    file.path(pkg_root, "NEWS.md")
+  )
+  
+  testthat::expect_message(
+    cur <- assess_news_current("shortpkg", "1.2", pkg_root),
+    "shortpkg has no current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur, 0L)
+  
+  testthat::expect_message(
+    cur_ok <- assess_news_current("shortpkg", "1.2.3", pkg_root),
+    "shortpkg has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur_ok, 1L)
+})
+
+test_that("assess_news finds NEWS.md under doc/", {
+  pkg_root <- tempfile("news_doc")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  dir.create(file.path(pkg_root, "doc"))
+  writeLines(
+    c("# docnews 1.0.0", "initial"),
+    file.path(pkg_root, "doc", "NEWS.md")
+  )
+  
+  testthat::expect_message(
+    out <- assess_news("docnews", pkg_root),
+    "docnews has news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 1L)
+  
+  testthat::expect_message(
+    cur <- assess_news_current("docnews", "1.0.0", pkg_root),
+    "docnews has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur, 1L)
+})
+
+test_that("assess_news does not search tests/ (not a utils::news layout path)", {
+  pkg_root <- tempfile("news_tests_skip")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  dir.create(file.path(pkg_root, "tests", "fixtures"), recursive = TRUE)
+  writeLines("noise", file.path(pkg_root, "tests", "fixtures", "NEWS"))
+  
+  testthat::expect_message(
+    out <- assess_news("notestnews", pkg_root),
+    "notestnews has no news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 0L)
+})
+
+test_that("find_news_files picks NEWS under nested inst/ and vignettes/", {
+  pkg_root <- tempfile("news_nested")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  dir.create(file.path(pkg_root, "inst", "ext", "notes"), recursive = TRUE)
+  dir.create(file.path(pkg_root, "vignettes"))
+  writeLines(
+    "Changes in version 4.3.2",
+    file.path(pkg_root, "inst", "ext", "notes", "NEWS")
+  )
+  writeLines(
+    c("\\name{NEWS}", "vignews 0.0.9"),
+    file.path(pkg_root, "vignettes", "NEWS.Rd")
+  )
+  
+  paths <- risk.assessr:::find_news_files(pkg_root)
+  testthat::expect_true(length(paths) >= 2L)
+  testthat::expect_true(any(grepl("inst/ext/notes/NEWS$", paths, perl = TRUE)))
+  testthat::expect_true(any(grepl("vignettes/NEWS\\.Rd$", paths, perl = TRUE)))
+  
+  testthat::expect_message(
+    out <- assess_news("nested", pkg_root),
+    "nested has news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 1L)
+  
+  testthat::expect_message(
+    cur <- assess_news_current("vignews", "0.0.9", pkg_root),
+    "vignews has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur, 1L)
+  
+  testthat::expect_message(
+    cur2 <- assess_news_current("any", "4.3.2", pkg_root),
+    "any has current news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(cur2, 1L)
+})
+
+test_that("assess_news does not match non-utils NEWS filenames", {
+  pkg_root <- tempfile("news_wrong_name")
+  withr::defer(unlink(pkg_root, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  dir.create(pkg_root)
+  writeLines("Changes in version 1", file.path(pkg_root, "NEWS.txt"))
+  
+  testthat::expect_message(
+    out <- assess_news("wrongname", pkg_root),
+    "wrongname has no news",
+    fixed = TRUE
+  )
+  testthat::expect_equal(out, 0L)
+})
+
+
+test_that("assess vignettes for tar file with vignettes works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    has_vignettes <- assess_vignettes(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_vignettes), 1L)
+    
+    expect_vector(has_vignettes)
+    
+    expect_true(checkmate::check_numeric(has_vignettes, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(has_vignettes, 1L) 
+  }
+  
+})
+
+test_that("assess vignettes for tar file with no vignettes works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  
+  if (package_installed == TRUE ) {	
+    
+    pkg_desc <- get_pkg_desc(pkg_source_path, fields = c("Package", "Version"))
+    pkg_name <- pkg_desc$Package
+    pkg_ver <- pkg_desc$Version
+    pkg_name_ver <- paste0(pkg_name, "_", pkg_ver)
+    
+    has_vignettes <- assess_vignettes(pkg_name, pkg_source_path)
+    
+    expect_identical(length(has_vignettes), 1L)
+    
+    expect_vector(has_vignettes)
+    
+    expect_true(checkmate::check_numeric(has_vignettes, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_equal(has_vignettes, 0L) 
+  }
+  
+})
+
+test_that("assess code base size for small package works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  # Copy test package to a temp file
+  dp_orig <- system.file("test-data", 
+                         "test.package.0001_0.1.0.tar.gz", 
+                         package = "risk.assessr")
+  dp <- tempfile(fileext = ".tar.gz")
+  file.copy(dp_orig, dp)
+  
+  # Defer cleanup of copied tarball
+  withr::defer(unlink(dp), envir = parent.frame())
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  if (package_installed == TRUE ) {	
+    size_codebase <- assess_size_codebase(pkg_source_path)
+    
+    expect_identical(length(size_codebase), 1L)
+    
+    expect_vector(size_codebase)
+    
+    expect_true(checkmate::check_numeric(size_codebase, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_gt(size_codebase, 0.010) 
+  }
+  
+})
+
+test_that("assess code base size for large package works correctly", {
+  
+  r = getOption("repos")
+  r["CRAN"] = "http://cran.us.r-project.org"
+  options(repos = r)
+  skip_if_repo_unavailable()
+  
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz", 
+                    package = "risk.assessr")
+  
+  # set up package
+  install_list <- set_up_pkg(dp)
+  
+  build_vignettes <- install_list$build_vignettes
+  package_installed <- install_list$package_installed
+  pkg_source_path <- install_list$pkg_source_path
+  rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  withr::defer({
+    unlink(pkg_source_path, recursive = TRUE, force = TRUE)
+  })
+  
+  if (package_installed == TRUE ) {	
+    size_codebase <- assess_size_codebase(pkg_source_path)
+    
+    expect_identical(length(size_codebase), 1L)
+    
+    expect_vector(size_codebase)
+    
+    expect_true(checkmate::check_numeric(size_codebase, 
+                                         any.missing = FALSE)
+    )
+    
+    testthat::expect_gt(size_codebase, 0.85) 
+  }
+  
+})
+
+test_that("assess_size_codebase returns 0 when R/ has no source files (stubbed list.files)", {
+  # Use a real temp dir with an empty R/ subfolder so contains_r_folder()
+  # returns TRUE and the code reaches the list.files branch.
+  pkg_root <- withr::local_tempdir()
+  dir.create(file.path(pkg_root, "R"))
+  
+  mock_list_files <- mockery::mock(character(0))
+  mockery::stub(assess_size_codebase, "list.files", mock_list_files)
+  
+  out <- assess_size_codebase(pkg_root)
+  expect_equal(out, 0)
+  
+  lf_args <- mockery::mock_args(mock_list_files)[[1]]
+  expect_identical(lf_args$path, file.path(pkg_root, "R"))
+  expect_true(isTRUE(lf_args$full.names))
+  expect_true(isTRUE(lf_args$recursive))
+  expect_false(isTRUE(lf_args$include.dirs))
+})
+
+
+test_that("returns NA when both inputs are NA", {
+  expect_true(is.na(create_has_ex_docs_score(NA_real_, NA_real_)))
+})
+
+test_that("returns the non-NA input when the other is NA", {
+  expect_equal(create_has_ex_docs_score(0.75, NA_real_), 0.75)
+  expect_equal(create_has_ex_docs_score(NA_real_, 1), 1)
+})
+
+test_that("computes the mean for numeric scalars", {
+  expect_equal(create_has_ex_docs_score(0, 0), 0)
+  expect_equal(create_has_ex_docs_score(1, 1), 1)
+  expect_equal(create_has_ex_docs_score(0, 1), 0.5)
+  expect_equal(create_has_ex_docs_score(0.75, 1), 0.875)
+})
+
+test_that("works with integer inputs", {
+  expect_equal(create_has_ex_docs_score(0L, 1L), 0.5)
+  expect_type(create_has_ex_docs_score(0L, 1L), "double")  # result should be double
+})
+
+test_that("vector inputs are concatenated and averaged (not elementwise)", {
+  e <- c(0.2, 0.8)
+  d <- c(0.4, 0.6)
+  expected <- mean(c(e, d), na.rm = TRUE)  # = 0.5
+  expect_equal(create_has_ex_docs_score(e, d), expected)
+})
+
+test_that("handles NA within vectors using na.rm=TRUE", {
+  e <- c(0.2, NA_real_)
+  d <- c(NA_real_, 0.8)
+  # concatenated -> c(0.2, NA, NA, 0.8) -> mean of c(0.2, 0.8) = 0.5
+  expect_equal(create_has_ex_docs_score(e, d), 0.5)
+})
+
+test_that("treats NaN like NA (removed when na.rm=TRUE)", {
+  e <- c(0.2, NaN)
+  d <- c(NA_real_, 0.8)
+  expected <- mean(c(0.2, NaN, NA_real_, 0.8), na.rm = TRUE)  # = 0.5
+  expect_equal(create_has_ex_docs_score(e, d), expected)
+})
+
+test_that("mixed vector + scalar works (scalar just joins the pool)", {
+  e <- c(0.2, 0.8)
+  d <- 0.5
+  expected <- mean(c(e, d), na.rm = TRUE)  # = 0.5
+  expect_equal(create_has_ex_docs_score(e, d), expected)
+})
+
+test_that("symmetry: order of arguments does not change the result", {
+  e <- c(0.1, 0.5, 0.9)
+  d <- c(0.3, NA_real_)
+  expect_equal(create_has_ex_docs_score(e, d),
+               create_has_ex_docs_score(d, e))
+})
+
+test_that("always returns a length-1 double", {
+  res <- create_has_ex_docs_score(c(0.2, 0.3), c(0.4, 0.5))
+  expect_equal(length(res), 1L)
+  expect_type(res, "double")
+})

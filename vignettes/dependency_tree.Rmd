@@ -1,0 +1,89 @@
+---
+title: "Dependency tree"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dependency tree}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+library(risk.assessr)
+
+
+tryCatch({
+  options(repos = c(CRAN = "http://cran.us.r-project.org"))
+}, error = function(e) {
+  message("No CRAN available")
+})
+```
+
+## Dependencies Tree 
+
+The `risk.assessr` package provides a set of functions to get dependencies and visualize dependency trees, allowing users to analyze package dependencies and identify potential conflicts. 
+
+The package also supports license extraction and customizable depth control for exploring dependency layers.
+
+### Basic Usage
+
+Fetch your primary dependencies from your package:
+
+```{r}
+download_and_parse_dependencies("stringr")
+```
+
+Create and visualize your dependency tree:
+
+```{r}
+dep_data <- fetch_all_dependencies("stringr")
+```
+
+```{r}
+dep_data
+```
+
+```{r}
+print_tree(dep_data)
+```
+
+### License Extraction
+
+You can extract license information from package DESCRIPTION files by setting `get_license = TRUE`. 
+
+```{r}
+dep_data_with_license <- fetch_all_dependencies("stringr", get_license = TRUE)
+```
+
+```{r}
+print_tree(dep_data_with_license)
+```
+
+By default, the dependency tree explores up to 3 dependency levels deep. You can control this using the `max_level` parameter:
+
+```{r}
+# Shallow exploration (only 2 levels)
+dep_data_shallow <- fetch_all_dependencies("stringr", get_license = TRUE, max_level = 2)
+print_tree(dep_data_shallow)
+```
+
+```{r}
+# Deeper exploration (5 levels)
+dep_data_deep <- fetch_all_dependencies("stringr", get_license = TRUE, max_level = 5)
+print_tree(dep_data_deep)
+```
+
+### Check for Conflicting Dependency Versions
+
+Detect version conflicts in your dependency tree:
+
+```{r}
+detect_version_conflicts(dep_data)
+```
+

@@ -1,0 +1,126 @@
+---
+title: "Traceability matrix"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Traceability matrix}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Setup environment
+
+Load the necessary package and set CRAN repository.
+
+```{r setup}
+library(risk.assessr)
+options(repos = "http://cran.us.r-project.org")
+```
+
+## Run traceability matrices and risk assessment
+
+Analyze the **stringr** package to create a traceability matrix.
+
+There are a number of ways to do this:
+
+Firstly, if you just want a traceability matrix with no test coverage, you can run the following code:
+
+```{r run_tm_no_test, message=FALSE, warning=FALSE, eval=FALSE}
+stringr_tm_no_test <- risk.assessr::generate_traceability_matrix("stringr", version = "1.5.1" )
+```
+
+```{r tm_list_no_test, eval=FALSE}
+str(stringr_tm_no_test$tm)
+```
+
+Secondly, if you want a traceability matrix with test coverage, you can run the following code:
+
+```{r run_tm_test, message=FALSE, warning=FALSE, eval=FALSE}
+stringr_tm_test <- risk.assessr::generate_traceability_matrix("stringr", version = "1.5.1", execute_coverage = TRUE)
+```
+
+```{r tm_list_test, eval=FALSE}
+str(stringr_tm_test$tm)
+```
+
+If you want a full analysis of the package containing a traceability matrix and ither risk data, you can run the following:
+
+
+```{r run_full_analysis, message=FALSE, warning=FALSE, eval=FALSE}
+stringr <- risk.assessr::assess_pkg_r_package("stringr", version = "1.5.1" )
+```
+This returns a structured list with traceability and function risk information.
+
+## Structure of traceability matrices
+
+```{r tm_list, eval=FALSE}
+str(stringr$tm_list)
+```
+
+## Get coverage summary by risk level
+
+See how functions are mapped to risk and test coverage.
+This shows all the exported functions.
+
+```{r tm_list-tm, eval=FALSE}
+stringr$tm_list$tm
+```
+
+This shows functions categorized as high, medium, or low risk test coverage.
+
+```{r tm_list-coverage, eval=FALSE}
+stringr$tm_list$coverage
+```
+
+### High risk test coverage
+
+```{r high-risk, eval=FALSE}
+stringr$tm_list$coverage$high_risk
+```
+
+### Medium risk test coverage
+
+```{r medium-risk, eval=FALSE}
+stringr$tm_list$coverage$medium_risk
+```
+
+### Low risk test coverage
+
+```{r low-risk, eval=FALSE}
+low_risk <- stringr$tm_list$coverage$low_risk
+low_risk
+```
+
+## View function type summary
+
+This shows functions categorized by higher risk function types.
+
+### Defunct Functions
+
+```{r defunct-functions, eval=FALSE}
+stringr$tm_list$function_type
+```
+
+### Imported functions
+
+```{r imported-summary, eval=FALSE}
+stringr$tm_list$function_type$imported
+```
+
+### Re-exported functions
+
+```{r rexported-summary, eval=FALSE}
+stringr$tm_list$function_type$rexported
+```
+
+### Experimental functions
+
+```{r experimental-summary, eval=FALSE}
+stringr$tm_list$function_type$experimental
+```

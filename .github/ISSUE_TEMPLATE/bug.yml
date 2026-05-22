@@ -1,0 +1,113 @@
+name: "🐛 Bug report"
+description: "Report a bug so we can reproduce it and fix it quickly"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!TIP]
+        > **Thanks for reporting this! ❤️**
+        > The more specific you are, the faster we can reproduce and fix.
+        > If you can share a small reproducible example (reprex) or clear steps + error text, that’s perfect.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: "✅ Quick checks"
+      options:
+        - label: "I searched existing issues to avoid duplicates"
+          required: true
+        - label: "I included clear steps (or a minimal example) to reproduce"
+          required: false
+        - label: "I checked on the latest version (or I can’t upgrade right now)"
+          required: false
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: "🧩 Affected component"
+      description: "Where does this bug appear?"
+      options:
+        - "Initialization (risk.assessr / env)"
+        - "Data loading / ingestion"
+        - "Configuration"
+        - "Data requirements (data specs)"
+        - "Specifications"
+        - "Reporting"
+        - "Import / export (tar)"
+        - "CI / tooling"
+        - "eWISE integration"
+        - "Other / not sure"
+
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "📝 What happened?"
+      description: "A short, clear description of the bug."
+      placeholder: "When I ..., I expected ..., but got ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "🔁 Steps to reproduce"
+      description: "Numbered steps are easiest to follow."
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "✅ Expected result"
+      placeholder: "What should have happened?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "💥 Actual result / error output"
+      description: "Paste the error or unexpected output (full text helps)."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: reprex
+    attributes:
+      label: "🧪 Minimal example (optional)"
+      description: "If you can, share a small reprex (no sensitive data)."
+      render: r
+      placeholder: |
+        # library(risk.assessr)
+        # minimal code that reproduces the bug
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "📎 Screenshots / logs (optional)"
+      description: "Screenshots, short recordings, CI logs, links to runs, etc."
+    validations:
+      required: false
+
+  - type: textarea
+    id: session
+    attributes:
+      label: "🧾 Session info (required)"
+      description: "Paste `sessionInfo()` (or `sessioninfo::session_info()`)."
+      render: r
+      placeholder: |
+        sessionInfo()
+    validations:
+      required: true

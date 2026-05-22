@@ -1,0 +1,147 @@
+name: "🚀 Release"
+description: "Checklist and tracking issue for a risk.assessr release"
+title: "[Release]: <version>"
+labels: ["release"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!NOTE]
+        > Please keep this issue **self-contained**.
+        > Avoid internal URLs or sensitive references.
+        >
+        > This template is meant to help us ship safely, with minimal back-and-forth.
+
+  - type: input
+    id: version
+    attributes:
+      label: "📦 Release version"
+      description: "Target version for this release (example: 0.7.2)."
+      placeholder: "X.Y.Z"
+    validations:
+      required: true
+
+  - type: input
+    id: rcmdcheck_version
+    attributes:
+      label: "🧩 rcmdcheck version used"
+      description: "Record the exact `{rcmdcheck}` version used to test this release (example: 0.16.0)."
+      placeholder: "rcmdcheck X.Y.Z"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: "🎯 Release scope (short)"
+      description: "1–5 bullets: what is included, what is explicitly NOT included."
+      placeholder: |
+        Included:
+        - ...
+        Not included:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: blocked_by
+    attributes:
+      label: "⛔ Blocked by"
+      description: "List any blocking PRs/issues (if none, write 'None')."
+      placeholder: |
+        #### PRs
+        - [ ] #...
+
+        #### Issues
+        - [ ] #...
+    validations:
+      required: true
+
+  - type: textarea
+    id: pre_release
+    attributes:
+      label: "✅ Pre-release checks"
+      description: "Do these before tagging a release."
+      value: |
+        - [ ] Triage open issues labeled **bug** and decide what must land vs can wait.
+        - [ ] Review any long-running PRs and explicitly defer/close if out-of-scope.
+        - [ ] Confirm target version and release scope (this issue).
+        - [ ] Confirm `{rcmdcheck}` version used for testing is recorded above.
+        - [ ] Confirm CI is healthy on the default branch.
+        - [ ] Agree on a soft code-freeze window (what can still merge, what cannot).
+        - [ ] Confirm maintainers for this release (who drives, who reviews).
+    validations:
+      required: true
+
+  - type: textarea
+    id: prepare
+    attributes:
+      label: "🛠️ Prepare the release"
+      description: "Steps to create a release candidate and get it ready."
+      value: |
+        - [ ] Create release branch:
+          - [ ] `git checkout -b release-candidate-vX.Y.Z`
+        - [ ] Update `DESCRIPTION` version to `X.Y.Z`.
+        - [ ] Update `NEWS.md` with a clear summary (highlights + breaking changes if any).
+        - [ ] Confirm dependency versions are correct (minimum versions, especially `{rcmdcheck}`).
+        - [ ] Run documentation generation and check outputs:
+          - [ ] `devtools::document()`
+        - [ ] Run style/lint checks if used in this repo:
+          - [ ] `styler::style_pkg()` (optional, if policy)
+          - [ ] `lintr::lint_package()` (optional, if policy)
+        - [ ] Run package checks:
+          - [ ] `devtools::check()`
+          - [ ] `devtools::check(cran = TRUE)` (if relevant)
+        - [ ] Commit and push release branch:
+          - [ ] `git add -A`
+          - [ ] `git commit -m "[skip vbump] Release vX.Y.Z"`
+          - [ ] `git push origin release-candidate-vX.Y.Z`
+        - [ ] Open PR from `release-candidate-vX.Y.Z` into default branch.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verify
+    attributes:
+      label: "🧪 Verify the release"
+      description: "Make sure it works for real users."
+      value: |
+        - [ ] CI checks are green for the release PR.
+        - [ ] Key workflows tested (add notes below):
+          - [ ] Builder starts without errors
+          - [ ] Config UI renders as expected
+          - [ ] Example modules run (if applicable)
+          - [ ] Import/export (YAML) smoke test (if applicable)
+        - [ ] Notes / evidence (logs, screenshots, commands):
+          - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tag_release
+    attributes:
+      label: "🏷️ Tag and release"
+      description: "Create the final release tag on the correct commit."
+      value: |
+        - [ ] Merge the release PR to the default branch.
+        - [ ] Identify the **merge commit hash** to tag (avoid tagging bot-only commits).
+        - [ ] Tag the release:
+          - [ ] `git checkout <merge-commit-hash>`
+          - [ ] `git tag vX.Y.Z`
+          - [ ] `git push origin vX.Y.Z`
+        - [ ] Confirm the release tag exists on remote.
+    validations:
+      required: true
+
+  - type: textarea
+    id: post_release
+    attributes:
+      label: "📣 Post-release"
+      description: "Follow-ups after the tag is created."
+      value: |
+        - [ ] Confirm package artifacts are available where expected (as per project process).
+        - [ ] Update install instructions / README if needed.
+        - [ ] Create follow-up issues for deferred work discovered during the release.
+        - [ ] Announce release (where applicable).
+    validations:
+      required: true

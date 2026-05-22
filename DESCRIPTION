@@ -1,0 +1,70 @@
+Package: risk.assessr
+Title: Assessing Package Risk Metrics
+Version: 4.0.0
+Authors@R: c(
+    person("Edward", "Gillian", , "edward.gillian-ext@sanofi.com", role = c("cre", "aut"), comment = c(ORCID = "0000-0003-2732-5107")),
+    person("Hugo", "Bottois", , "hugo.bottois@sanofi.com", role = "aut", comment = c(ORCID = "0000-0003-4674-0875")),
+    person("Paulin", "Charliquart", , "paulin.charliquart@sanofi.com", role = "aut"),
+    person("Andre", "Couturier", , "andre.couturier@sanofi.com", role = "aut"),
+    person("Sanofi", role = c("cph", "fnd")))
+Description: A reliable and validated tool that captures detailed risk metrics 
+    such as R 'CMD' check, test coverage, traceability matrix, documentation, dependencies, 
+    reverse dependencies, suggested dependency analysis, repository data, 
+    and enhanced reporting for R packages that are local or stored 
+    on remote repositories such as GitHub, CRAN, and Bioconductor.
+License: GPL (>= 2)
+URL: https://pharmaverse.github.io/risk.assessr/
+BugReports: https://github.com/pharmaverse/risk.assessr/issues
+Depends: 
+  R (>= 4.1.0)
+Imports:
+  remotes,
+  test.assessr (>= 2.1.0),
+  checkmate,
+  desc,
+  dplyr,
+  fs,
+  methods,
+  purrr,
+  rmarkdown,
+  rcmdcheck,
+  rlang,
+  xml2,
+  stringr (>= 1.5.0),
+  tidyr,
+  utils,
+  curl,
+  jsonlite,
+  memoise,
+  BiocManager,
+  glue
+Suggests:
+  devtools,
+  forcats,
+  here,
+  htmltools,
+  htmlwidgets,
+  kableExtra (>= 1.4.0),
+  knitr,
+  magrittr,
+  openxlsx,
+  pkgload,
+  R6,
+  S7,
+  readr,
+  roxygen2,
+  testthat (>= 3.0.0),
+  tibble,
+  tidyselect,
+  tools,
+  withr,
+  mockery,
+  ggplot2,
+  DT
+Encoding: UTF-8
+LazyData: true
+Config/testthat/edition: 3
+Config/build/clean-inst-doc: false
+VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.2
