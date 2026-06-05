@@ -28,16 +28,10 @@ assess_examples <- function(pkg_name, pkg_source_path) {
   # Remove only the package-level Rd file (pkgname-package.Rd)
   db <- db[!names(db) %in% paste0(pkg_name, "-package.Rd")]
   
-  # Namespace and exported objects
-  ns <- asNamespace(pkg_name)
-  exported <- getNamespaceExports(ns)
-  
-  # Keep only exported functions
-  is_fun <- function(name) {
-    obj <- try(getExportedValue(ns, name), silent = TRUE)
-    is.function(obj)
-  }
-  exported_funs <- Filter(is_fun, exported)
+  # Exported function names, resilient to the package not being loadable
+  # (e.g. R CMD INSTALL failed on stricter R versions because the package
+  # has no R/ folder). See `get_exported_function_names()`.
+  exported_funs <- get_exported_function_names(pkg_name, pkg_source_path)
   
   if (length(exported_funs) == 0) {
     df <- data.frame(
@@ -319,16 +313,10 @@ assess_exported_functions_docs <- function(pkg_name, pkg_source_path) {
   # Keep files like "<pkg_name>.Rd" as they may document a function with the same name.
   db <- db[!names(db) %in% paste0(pkg_name, "-package.Rd")]
   
-  # Namespace and exported objects
-  ns <- asNamespace(pkg_name)
-  exported <- getNamespaceExports(ns)
-  
-  # Keep only exported functions
-  is_fun <- function(name) {
-    obj <- try(getExportedValue(ns, name), silent = TRUE)
-    is.function(obj)
-  }
-  exported_funs <- Filter(is_fun, exported)
+  # Exported function names, resilient to the package not being loadable
+  # (e.g. R CMD INSTALL failed on stricter R versions because the package
+  # has no R/ folder). See `get_exported_function_names()`.
+  exported_funs <- get_exported_function_names(pkg_name, pkg_source_path)
   
   # --- Handle packages with NO exported functions ---------------------------
   if (length(exported_funs) == 0) {
@@ -450,6 +438,33 @@ get_exports_from_source <- function(pkg_source_path) {
     }
   }
   unique(c(parsed$exports, pattern_exports))
+}
+
+#' Get exported function names with a NAMESPACE-source fallback.
+#'
+#' Attempts to obtain exported function names from the installed
+#' namespace. If the namespace is not available - for example when
+#' `R CMD INSTALL` failed because the package has no `R/` folder on
+#' stricter R versions - falls back to parsing `NAMESPACE` from
+#' `pkg_source_path` via [get_exports_from_source()]. In the fallback
+#' path the result includes every declared export, because
+#' function-ness cannot be verified without a loaded namespace.
+#'
+#' @param pkg_name Character scalar; package name.
+#' @param pkg_source_path Path to the unpacked package source.
+#' @return Character vector of exported names (possibly empty).
+#' @keywords internal
+get_exported_function_names <- function(pkg_name, pkg_source_path) {
+  ns <- tryCatch(asNamespace(pkg_name), error = function(e) NULL)
+  if (is.null(ns)) {
+    return(get_exports_from_source(pkg_source_path))
+  }
+  exported <- getNamespaceExports(ns)
+  is_fun <- function(name) {
+    obj <- try(getExportedValue(ns, name), silent = TRUE)
+    is.function(obj)
+  }
+  Filter(is_fun, exported)
 }
 
 
