@@ -408,10 +408,50 @@ assess_exports <- function(data) {
     export_calc <- 1L} 
   else { 
     export_calc <-0L
-    }
-
+  }
+  
   return(export_calc)
 } 
+
+#' Parse exported names from a package's NAMESPACE on disk.
+#'
+#' Used as a fallback when the package is not loaded as a namespace
+#' (for example when `R CMD INSTALL` failed because the package has
+#' no R/ folder on stricter R versions).
+#'
+#' @param pkg_source_path Path to the unpacked package source.
+#' @return Character vector of exported names (possibly empty).
+#' @keywords internal
+get_exports_from_source <- function(pkg_source_path) {
+  if (is.null(pkg_source_path) || !nzchar(pkg_source_path) ||
+      !dir.exists(pkg_source_path)) {
+    return(character(0))
+  }
+  ns_file <- file.path(pkg_source_path, "NAMESPACE")
+  if (!file.exists(ns_file)) return(character(0))
+  parsed <- tryCatch(
+    parseNamespaceFile(basename(pkg_source_path),
+                       dirname(pkg_source_path),
+                       mustExist = FALSE),
+    error = function(e) NULL
+  )
+  if (is.null(parsed)) return(character(0))
+  # Expand any export patterns against Rd file names in man/
+  pattern_exports <- character(0)
+  if (length(parsed$exportPatterns) > 0) {
+    rd_dir <- file.path(pkg_source_path, "man")
+    if (dir.exists(rd_dir)) {
+      rd_names <- tools::file_path_sans_ext(
+        list.files(rd_dir, pattern = "\\.Rd$")
+      )
+      pattern_exports <- unlist(lapply(parsed$exportPatterns, function(p) {
+        grep(p, rd_names, value = TRUE)
+      }))
+    }
+  }
+  unique(c(parsed$exports, pattern_exports))
+}
+
 
 #' assess_export_help
 #'
@@ -422,7 +462,16 @@ assess_exports <- function(data) {
 #' @keywords internal
 assess_export_help <- function(pkg_name, pkg_source_path) {
   
-  exported_functions <- getNamespaceExports(pkg_name)
+  # Prefer the installed namespace, but fall back to parsing NAMESPACE
+  # from source so packages that fail to install (e.g. no R/ folder on
+  # stricter R versions) still produce a score instead of erroring.
+  exported_functions <- tryCatch(
+    getNamespaceExports(pkg_name),
+    error = function(e) {
+      get_exports_from_source(pkg_source_path)
+    }
+  )
+  
   if (length(exported_functions) > 0) {
     
     # Use get_func_descriptions to retrieve documentation
