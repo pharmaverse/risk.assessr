@@ -2,9 +2,9 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 name: R-CMD-check
 
@@ -15,22 +15,6 @@ concurrency:
 permissions: read-all
 
 jobs:
-  check-terms:
-    runs-on: atmos-aws-arc-runner-set
-    container:
-      image: docker-innersource-remote.artifactory.sanofi.com/r:4.4
-    steps:
-      - name: Setup the Sanofi Root CA
-        uses: Sanofi-InnerSource/github-actions-library/setup-root-ca@main       
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Scan code
-        run: Rscript inst/tools/terms_scanner.R
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: terms-scanner
-          path: scan-results.csv
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
@@ -55,7 +39,7 @@ jobs:
            contains(github.event.pull_request.body,  '[skip r-cmd-check]')))
       )
       && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
-    
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
@@ -75,8 +59,9 @@ jobs:
         with:
           extra-packages: any::rcmdcheck, any::remotes
           needs: check
-      
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+          
