@@ -1,4 +1,4 @@
-test_that("test doc_riskmetrics", {
+test_that("test doc_riskmetric", {
   
   # set CRAN repo 
   r = getOption("repos")
