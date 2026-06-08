@@ -544,7 +544,7 @@ test_that("test assess_description_file_elements for all elements present", {
         expected_has_source_control = 1
       )
     )
-
+    
     # Patterns must stay in sync with documentation_metrics.R
     patterns <- paste(
       "github\\.com", "pages\\.github\\.io", "github\\.io",
@@ -558,8 +558,8 @@ test_that("test assess_description_file_elements for all elements present", {
       "\\.ac\\.uk", "\\.edu\\.au",
       sep = "|"
     )
-  
-  # Test each scenario
+    
+    # Test each scenario
     for (test_case in toy_data) {
       pkg_name <- test_case$pkg_name
       desc_elements <- test_case$desc_elements
@@ -602,7 +602,7 @@ test_that("GitHub Pages URLs are detected as source control", {
     "Title: Test Package\n",
     "Version: 1.0.0\n",
     "URL: https://probable-chainsaw-kgro2o7.pages.github.io/\n",
-    "BugReports: https://github.com/pharmaverse/risk.assessr/issues\n"
+    "BugReports: https://github.com/Sanofi-GitHub/bp-art-risk.assessr/issues\n"
   )
   writeLines(description_text, desc_path)
   
@@ -2416,4 +2416,316 @@ test_that("always returns a length-1 double", {
   res <- create_has_ex_docs_score(c(0.2, 0.3), c(0.4, 0.5))
   expect_equal(length(res), 1L)
   expect_type(res, "double")
+})
+
+# ---- get_func_descriptions() ------------------------------------------------
+#
+# get_func_descriptions() reads exported function descriptions from an Rd
+# database. The function has three exit paths we want to exercise:
+#
+#   * happy path: tools::Rd_db() succeeds and returns a populated database.
+#   * fallback path: tools::Rd_db() throws, the function emits a message
+#     (line 14), then resorts to find.package() + list.files() + parse_Rd()
+#     to assemble a database manually.
+#   * per-file resilience: an individual parse_Rd() failure emits a message
+#     (line 29) and is dropped from the manual database.
+#
+# All external dependencies (tools::Rd_db, find.package, list.files,
+# tools::parse_Rd) are mocked with mockery::stub() so the tests are
+# deterministic, offline, and CRAN-compliant.
+
+# Helper: build a minimal Rd "document" with the structure get_func_descriptions
+# inspects. Each top-level element is a "block" carrying an Rd_tag attribute,
+# matching what tools::parse_Rd() / tools::Rd_db() return in practice.
+make_fake_rd <- function(name, description = NULL) {
+  blocks <- list(structure(list(name), Rd_tag = "\\name"))
+  if (!is.null(description)) {
+    blocks <- c(
+      blocks,
+      list(structure(list(description), Rd_tag = "\\description"))
+    )
+  }
+  blocks
+}
+
+test_that("get_func_descriptions() returns a named list of descriptions when tools::Rd_db() succeeds", {
+  fake_db <- list(
+    "topicA.Rd" = make_fake_rd("topicA", "Description of topicA."),
+    "topicB.Rd" = make_fake_rd("topicB", "Description of topicB.")
+  )
+  
+  mockery::stub(
+    get_func_descriptions,
+    "tools::Rd_db",
+    function(pkg_name) fake_db
+  )
+  # Defensive guard: the fallback path must not run when Rd_db() succeeds.
+  mockery::stub(
+    get_func_descriptions,
+    "find.package",
+    function(pkg, quiet) stop("find.package() should not be called on the happy path")
+  )
+  
+  out <- get_func_descriptions("mockpkg")
+  
+  expect_type(out, "list")
+  expect_named(out, c("topicA", "topicB"))
+  expect_identical(out$topicA, "Description of topicA.")
+  expect_identical(out$topicB, "Description of topicB.")
+})
+
+test_that("get_func_descriptions() drops Rd topics that have no \\description tag", {
+  fake_db <- list(
+    "withDesc.Rd" = make_fake_rd("withDesc", "I have a description."),
+    # No description block on purpose - this topic should be filtered out.
+    "noDesc.Rd"   = make_fake_rd("noDesc",   description = NULL)
+  )
+  
+  mockery::stub(
+    get_func_descriptions,
+    "tools::Rd_db",
+    function(pkg_name) fake_db
+  )
+  
+  out <- get_func_descriptions("mockpkg")
+  
+  expect_named(out, "withDesc")
+  expect_identical(out$withDesc, "I have a description.")
+})
+
+test_that("get_func_descriptions() falls back to manual parse_Rd() when tools::Rd_db() fails", {
+  parsed_rd <- make_fake_rd("topicX", "Manually parsed description.")
+  
+  mockery::stub(
+    get_func_descriptions,
+    "tools::Rd_db",
+    function(pkg_name) stop("simulated Rd_db failure")
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "find.package",
+    function(pkg, quiet) "mock/pkg/path"
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "list.files",
+    function(path, pattern, full.names) c("mock/pkg/path/man/topicX.Rd")
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "tools::parse_Rd",
+    function(f) parsed_rd
+  )
+  
+  msgs <- testthat::capture_messages(
+    out <- get_func_descriptions("mockpkg")
+  )
+  
+  # The line-14 message records why we entered the fallback path.
+  expect_true(any(grepl(
+    "tools::Rd_db\\(\\) failed for 'mockpkg': simulated Rd_db failure",
+    msgs
+  )))
+  expect_named(out, "topicX")
+  expect_identical(out$topicX, "Manually parsed description.")
+})
+
+test_that("get_func_descriptions() emits a message and drops Rd files that fail parse_Rd()", {
+  good_rd <- make_fake_rd("topicGood", "Description from the good Rd file.")
+  
+  mockery::stub(
+    get_func_descriptions,
+    "tools::Rd_db",
+    function(pkg_name) stop("force fallback")
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "find.package",
+    function(pkg, quiet) "mock/pkg/path"
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "list.files",
+    function(path, pattern, full.names) c(
+      "mock/pkg/path/man/bad.Rd",
+      "mock/pkg/path/man/good.Rd"
+    )
+  )
+  mockery::stub(
+    get_func_descriptions,
+    "tools::parse_Rd",
+    function(f) {
+      if (basename(f) == "bad.Rd") {
+        stop("simulated parse_Rd failure")
+      }
+      good_rd
+    }
+  )
+  
+  msgs <- testthat::capture_messages(
+    out <- get_func_descriptions("mockpkg")
+  )
+  
+  # Both messages should fire: the line-14 Rd_db failure and the line-29
+  # parse_Rd failure for the bad file.
+  expect_true(any(grepl("tools::Rd_db\\(\\) failed for 'mockpkg'", msgs)))
+  expect_true(any(grepl(
+    "Failed to parse bad\\.Rd: simulated parse_Rd failure",
+    msgs
+  )))
+  
+  # Only the successfully-parsed Rd survives into the final result.
+  expect_named(out, "topicGood")
+  expect_identical(out$topicGood, "Description from the good Rd file.")
+})
+
+# ---- find_rd_for_fun() ------------------------------------------------------
+#
+# find_rd_for_fun() resolves a function name to its Rd document by trying,
+# in priority order:
+#   1. on-demand build_rd_index() when idx is NULL (line 229),
+#   2. the conventional filename "fun.Rd" (lines 231-234),
+#   3. an alias-based lookup via idx$alias_index (lines 235-239),
+#   4. a topic-name fallback via idx$topic_by_file (lines 240-245),
+#   5. NULL when nothing matches (line 246).
+#
+# Each branch gets its own test driven by minimal synthetic db / idx objects.
+# build_rd_index() is mocked with mockery::stub() so we can prove the
+# on-demand index build only fires when idx is missing, and so the tests
+# don't depend on the production index-building code. All tests are offline,
+# deterministic, and CRAN-friendly.
+
+# Helper: build a minimal idx of the shape build_rd_index() returns.
+# `alias_map` is a named list mapping alias -> filename.
+# `topic_by_file` is a named character vector mapping filename -> topic name.
+make_rd_idx <- function(alias_map = list(),
+                        topic_by_file = character()) {
+  alias_index <- new.env(parent = emptyenv())
+  for (alias in names(alias_map)) {
+    alias_index[[alias]] <- alias_map[[alias]]
+  }
+  list(alias_index = alias_index, topic_by_file = topic_by_file)
+}
+
+test_that("find_rd_for_fun() returns the direct fun.Rd match (lines 231-234) and never touches the alias/topic paths", {
+  db <- list(
+    "foo.Rd" = list(content = "rd for foo"),
+    "bar.Rd" = list(content = "rd for bar")
+  )
+  # Empty idx: alias_index is empty and topic_by_file has no entries, so the
+  # function MUST resolve via the direct filename match.
+  idx <- make_rd_idx()
+  
+  hit <- find_rd_for_fun("foo", db, idx)
+  
+  expect_type(hit, "list")
+  expect_named(hit, c("rd", "filename"))
+  expect_identical(hit$filename, "foo.Rd")
+  expect_identical(hit$rd, db[["foo.Rd"]])
+})
+
+test_that("find_rd_for_fun() builds the index on demand when idx is NULL (line 229)", {
+  db <- list("foo.Rd" = list(content = "rd for foo"))
+  
+  # Stub build_rd_index() so we can prove it was called exactly once on the
+  # supplied db, without depending on the production index-building code.
+  built_idx <- make_rd_idx()
+  build_calls <- 0L
+  captured_db <- NULL
+  mockery::stub(
+    find_rd_for_fun,
+    "build_rd_index",
+    function(db_arg) {
+      build_calls <<- build_calls + 1L
+      captured_db <<- db_arg
+      built_idx
+    }
+  )
+  
+  hit <- find_rd_for_fun("foo", db)
+  
+  expect_equal(build_calls, 1L)
+  expect_identical(captured_db, db)
+  # Direct filename match still wins after the index is built.
+  expect_identical(hit$filename, "foo.Rd")
+  expect_identical(hit$rd, db[["foo.Rd"]])
+})
+
+test_that("find_rd_for_fun() does NOT call build_rd_index() when idx is supplied", {
+  db <- list("foo.Rd" = list(content = "rd for foo"))
+  idx <- make_rd_idx()
+  
+  mockery::stub(
+    find_rd_for_fun,
+    "build_rd_index",
+    function(db_arg) stop("build_rd_index() should not be called when idx is supplied")
+  )
+  
+  expect_no_error(find_rd_for_fun("foo", db, idx))
+})
+
+test_that("find_rd_for_fun() resolves via alias_index when there is no direct filename match (lines 235-239)", {
+  db <- list(
+    "actual_topic.Rd" = list(content = "rd for actual_topic"),
+    "other.Rd"        = list(content = "rd for other")
+  )
+  # "foo" is not a filename in db, but it is aliased to actual_topic.Rd.
+  idx <- make_rd_idx(
+    alias_map = list(foo = "actual_topic.Rd")
+  )
+  
+  hit <- find_rd_for_fun("foo", db, idx)
+  
+  expect_identical(hit$filename, "actual_topic.Rd")
+  expect_identical(hit$rd, db[["actual_topic.Rd"]])
+})
+
+test_that("find_rd_for_fun() falls back to topic_by_file when no alias matches (lines 240-245)", {
+  db <- list(
+    "weird_filename.Rd" = list(content = "rd for foo (via topic name)"),
+    "other.Rd"          = list(content = "rd for other")
+  )
+  # alias_index has no "foo" entry, but topic_by_file says weird_filename.Rd
+  # has \name == "foo".
+  idx <- make_rd_idx(
+    topic_by_file = c(
+      "weird_filename.Rd" = "foo",
+      "other.Rd"          = "other_topic"
+    )
+  )
+  
+  hit <- find_rd_for_fun("foo", db, idx)
+  
+  expect_identical(hit$filename, "weird_filename.Rd")
+  expect_identical(hit$rd, db[["weird_filename.Rd"]])
+})
+
+test_that("find_rd_for_fun() uses the first match when topic_by_file has duplicates (lines 242-244)", {
+  db <- list(
+    "first.Rd"  = list(content = "first rd"),
+    "second.Rd" = list(content = "second rd")
+  )
+  # Both filenames advertise the same topic name "foo"; the function should
+  # pick the first one via `topic_match[[1]]`.
+  idx <- make_rd_idx(
+    topic_by_file = c("first.Rd" = "foo", "second.Rd" = "foo")
+  )
+  
+  hit <- find_rd_for_fun("foo", db, idx)
+  
+  expect_identical(hit$filename, "first.Rd")
+  expect_identical(hit$rd, db[["first.Rd"]])
+})
+
+test_that("find_rd_for_fun() returns NULL when no path matches (line 246)", {
+  db <- list(
+    "alpha.Rd" = list(content = "rd for alpha"),
+    "beta.Rd"  = list(content = "rd for beta")
+  )
+  idx <- make_rd_idx(
+    alias_map     = list(other_alias = "alpha.Rd"),
+    topic_by_file = c("alpha.Rd" = "alpha_topic", "beta.Rd" = "beta_topic")
+  )
+  
+  expect_null(find_rd_for_fun("not_there", db, idx))
 })
