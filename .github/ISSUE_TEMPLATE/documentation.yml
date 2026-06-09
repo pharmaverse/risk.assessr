@@ -17,7 +17,7 @@ body:
       description: "Describe what should be created/updated and what it should cover."
       placeholder: "We need docs for..."
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: modules
@@ -41,7 +41,7 @@ body:
         - "Medium"
         - "Low"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: deadline
@@ -68,7 +68,7 @@ body:
       description: "How will this documentation help? Any scenarios it should support?"
       placeholder: "This helps users by..."
     validations:
-      required: true
+      required: false
 
   - type: dropdown
     id: semver

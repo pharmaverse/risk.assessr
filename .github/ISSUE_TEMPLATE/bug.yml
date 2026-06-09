@@ -17,7 +17,7 @@ body:
       label: "✅ Quick checks"
       options:
         - label: "I searched existing issues to avoid duplicates"
-          required: true
+          required: false
         - label: "I included clear steps (or a minimal example) to reproduce"
           required: false
         - label: "I checked on the latest version (or I can’t upgrade right now)"
@@ -41,7 +41,7 @@ body:
         - "Other / not sure"
 
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: summary
@@ -50,7 +50,7 @@ body:
       description: "A short, clear description of the bug."
       placeholder: "When I ..., I expected ..., but got ..."
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: steps
@@ -62,7 +62,7 @@ body:
         2. ...
         3. ...
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: expected
@@ -70,7 +70,7 @@ body:
       label: "✅ Expected result"
       placeholder: "What should have happened?"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: actual
@@ -79,7 +79,7 @@ body:
       description: "Paste the error or unexpected output (full text helps)."
       render: shell
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: reprex
@@ -110,4 +110,4 @@ body:
       placeholder: |
         sessionInfo()
     validations:
-      required: true
+      required: false

@@ -17,7 +17,7 @@ body:
       description: "Ask the question as you’d ask a teammate."
       placeholder: "I’m wondering if..."
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: goal

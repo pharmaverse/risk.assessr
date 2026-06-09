@@ -19,7 +19,7 @@ body:
       description: "Target version for this release (example: 0.7.2)."
       placeholder: "X.Y.Z"
     validations:
-      required: true
+      required: false
 
   - type: input
     id: rcmdcheck_version
@@ -28,7 +28,7 @@ body:
       description: "Record the exact `{rcmdcheck}` version used to test this release (example: 0.16.0)."
       placeholder: "rcmdcheck X.Y.Z"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: scope
@@ -41,7 +41,7 @@ body:
         Not included:
         - ...
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: blocked_by
@@ -55,7 +55,7 @@ body:
         #### Issues
         - [ ] #...
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: pre_release
@@ -71,7 +71,7 @@ body:
         - [ ] Agree on a soft code-freeze window (what can still merge, what cannot).
         - [ ] Confirm maintainers for this release (who drives, who reviews).
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: prepare
@@ -98,7 +98,7 @@ body:
           - [ ] `git push origin release-candidate-vX.Y.Z`
         - [ ] Open PR from `release-candidate-vX.Y.Z` into default branch.
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: verify
@@ -115,7 +115,7 @@ body:
         - [ ] Notes / evidence (logs, screenshots, commands):
           - ...
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: tag_release
@@ -131,7 +131,7 @@ body:
           - [ ] `git push origin vX.Y.Z`
         - [ ] Confirm the release tag exists on remote.
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: post_release
@@ -144,4 +144,4 @@ body:
         - [ ] Create follow-up issues for deferred work discovered during the release.
         - [ ] Announce release (where applicable).
     validations:
-      required: true
+      required: false
