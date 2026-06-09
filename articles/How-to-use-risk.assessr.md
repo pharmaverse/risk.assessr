@@ -3,9 +3,9 @@
 ### Introduction
 
 This vignette demonstrates how to use the
-[`risk_assess_pkg()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/risk_assess_pkg.md)
+[`risk_assess_pkg()`](https://pharmaverse.github.io/risk.assessr/reference/risk_assess_pkg.md)
 and
-[`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+[`assess_pkg_r_package()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg_r_package.md)
 functions from the `risk.assessr` package to assess the risk of R
 packages.
 
@@ -75,4 +75,4 @@ You can extend functionality by passing a custom `risk_config` to
 override default.
 
 See more
-[Here](https://probable-chainsaw-kgro2o7.pages.github.io/articles/define_custom_risk_rules.md)
+[Here](https://pharmaverse.github.io/risk.assessr/articles/define_custom_risk_rules.md)

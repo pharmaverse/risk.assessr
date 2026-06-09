@@ -13,7 +13,7 @@ extract_risk_inputs(flat_data)
 - flat_data:
 
   Flat package data as returned by
-  [`normalize_data()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/normalize_data.md).
+  [`normalize_data()`](https://pharmaverse.github.io/risk.assessr/reference/normalize_data.md).
 
 ## Value
 

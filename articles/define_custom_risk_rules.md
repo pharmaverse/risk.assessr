@@ -3,7 +3,7 @@
 ## Introduction
 
 The
-[`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+[`assess_pkg_r_package()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg_r_package.md)
 function in the `risk.assessr` package allows users to evaluate the risk
 of an R package. You can pass a custom risk configuration to control how
 risk levels are interpreted.

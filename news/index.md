@@ -26,9 +26,9 @@ CRAN release: 2026-04-08
 ### New Features
 
 - patch release includes
-  [`risk_assess_pkg()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/risk_assess_pkg.md)
+  [`risk_assess_pkg()`](https://pharmaverse.github.io/risk.assessr/reference/risk_assess_pkg.md)
   and
-  [`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+  [`assess_pkg_r_package()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg_r_package.md)
   feature to retrieve latest package versions
 
 ## risk.assessr 3.1.0
@@ -157,12 +157,12 @@ CRAN release: 2025-07-10
 
 - **Bioconductor compatibility**:
 
-  - [`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+  - [`assess_pkg_r_package()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg_r_package.md)
     function now fetches bioconductor source package
 
 - **renv.lock processing**:
 
-  - [`risk_assess_pkg_lock_files()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/risk_assess_pkg_lock_files.md)
+  - [`risk_assess_pkg_lock_files()`](https://pharmaverse.github.io/risk.assessr/reference/risk_assess_pkg_lock_files.md)
     function now processes `renv.lock` and `pak.lock` files
 
 - **Suggested Dependency Analysis**:
@@ -211,5 +211,5 @@ Package features include:
 - Metadata (Date, system, OS)
 - Quality extraction metrics (documentation, license, examples,
   vignettes)
-- [`assess_pkg_r_package()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/assess_pkg_r_package.md)
+- [`assess_pkg_r_package()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg_r_package.md)
   function fetches source code from CRAN

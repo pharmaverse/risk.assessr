@@ -5,9 +5,9 @@
 This vignette demonstrates how to retrieve citation data from PubMed
 using:
 
-- [`get_pubmed_count()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/get_pubmed_count.md)
+- [`get_pubmed_count()`](https://pharmaverse.github.io/risk.assessr/reference/get_pubmed_count.md)
   — to retrieve the total count of articles matching a term.
-- [`get_pubmed_by_year()`](https://probable-chainsaw-kgro2o7.pages.github.io/reference/get_pubmed_by_year.md)
+- [`get_pubmed_by_year()`](https://pharmaverse.github.io/risk.assessr/reference/get_pubmed_by_year.md)
   — to get article counts by publication year.
 
 These functions are part of the `risk.assessr` package.
