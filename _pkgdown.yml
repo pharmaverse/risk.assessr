@@ -2,7 +2,7 @@ template:
   bootstrap: 5
 development:
   mode: release
-url: https://probable-chainsaw-kgro2o7.pages.github.io/
+url: https://pharmaverse.github.io/risk.assessr/
 output:
   assets:
     - inst/examples/
