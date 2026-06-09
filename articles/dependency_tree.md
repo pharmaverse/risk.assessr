@@ -1,6 +1,7 @@
 # Dependency tree
 
 ``` r
+
 library(risk.assessr)
 
 
@@ -25,6 +26,7 @@ control for exploring dependency layers.
 Fetch your primary dependencies from your package:
 
 ``` r
+
 download_and_parse_dependencies("stringr")
 #> $dependencies
 #>                package    type parent_package
@@ -43,13 +45,13 @@ download_and_parse_dependencies("stringr")
 Create and visualize your dependency tree:
 
 ``` r
+
 dep_data <- fetch_all_dependencies("stringr")
 #> Building dependency tree for: stringr
 #> Dependency tree in progress for stringr package
 #> Dependency tree in progress for cli package
 #> Finished building for cli
 #> Dependency tree in progress for glue package
-#> Failed to download or parse glue - cannot open URL 'http://cran.us.r-project.org/src/contrib/glue_1.8.1.tar.gz'
 #> Finished building for glue
 #> Dependency tree in progress for lifecycle package
 #> Dependency tree in progress for cli package
@@ -79,14 +81,15 @@ dep_data <- fetch_all_dependencies("stringr")
 ```
 
 ``` r
+
 dep_data
 #> $stringr
 #> $stringr$version
-#> [1] "1.5.2"
+#> [1] "1.6.0"
 #> 
 #> $stringr$cli
 #> $stringr$cli$version
-#> [1] "3.6.5"
+#> [1] "3.6.6"
 #> 
 #> $stringr$cli$utils
 #> [1] "base"
@@ -96,6 +99,9 @@ dep_data
 #> $stringr$glue$version
 #> [1] "1.8.1"
 #> 
+#> $stringr$glue$methods
+#> [1] "base"
+#> 
 #> 
 #> $stringr$lifecycle
 #> $stringr$lifecycle$version
@@ -103,7 +109,7 @@ dep_data
 #> 
 #> $stringr$lifecycle$cli
 #> $stringr$lifecycle$cli$version
-#> [1] "3.6.5"
+#> [1] "3.6.6"
 #> 
 #> $stringr$lifecycle$cli$utils
 #> [1] "base"
@@ -111,7 +117,7 @@ dep_data
 #> 
 #> $stringr$lifecycle$rlang
 #> $stringr$lifecycle$rlang$version
-#> [1] "1.1.7"
+#> [1] "1.2.0"
 #> 
 #> $stringr$lifecycle$rlang$utils
 #> [1] "base"
@@ -120,12 +126,12 @@ dep_data
 #> 
 #> $stringr$magrittr
 #> $stringr$magrittr$version
-#> [1] "2.0.4"
+#> [1] "2.0.5"
 #> 
 #> 
 #> $stringr$rlang
 #> $stringr$rlang$version
-#> [1] "1.1.7"
+#> [1] "1.2.0"
 #> 
 #> $stringr$rlang$utils
 #> [1] "base"
@@ -151,7 +157,7 @@ dep_data
 #> 
 #> $stringr$vctrs$cli
 #> $stringr$vctrs$cli$version
-#> [1] "3.6.5"
+#> [1] "3.6.6"
 #> 
 #> $stringr$vctrs$cli$utils
 #> [1] "base"
@@ -172,37 +178,39 @@ dep_data
 #> 
 #> $stringr$vctrs$rlang
 #> $stringr$vctrs$rlang$version
-#> [1] "1.1.7"
+#> [1] "1.2.0"
 #> 
 #> $stringr$vctrs$rlang$utils
 #> [1] "base"
 ```
 
 ``` r
+
 print_tree(dep_data)
-#> └── stringr (v1.5.2)
-#>     ├── cli (v3.6.5)
+#> └── stringr (v1.6.0)
+#>     ├── cli (v3.6.6)
 #>     │   └── utils (base)
 #>     ├── glue (v1.8.1)
+#>     │   └── methods (base)
 #>     ├── lifecycle (v1.0.5)
-#>     │   ├── cli (v3.6.5)
+#>     │   ├── cli (v3.6.6)
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.1.7)
+#>     │   └── rlang (v1.2.0)
 #>     │       └── utils (base)
-#>     ├── magrittr (v2.0.4)
-#>     ├── rlang (v1.1.7)
+#>     ├── magrittr (v2.0.5)
+#>     ├── rlang (v1.2.0)
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7)
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
 #>     └── vctrs (v0.7.3)
-#>         ├── cli (v3.6.5)
+#>         ├── cli (v3.6.6)
 #>         │   └── utils (base)
 #>         ├── glue (v1.8.1)
 #>         │   └── methods (base)
 #>         ├── lifecycle (v1.0.5)
-#>         └── rlang (v1.1.7)
+#>         └── rlang (v1.2.0)
 #>             └── utils (base)
 ```
 
@@ -212,6 +220,7 @@ You can extract license information from package DESCRIPTION files by
 setting `get_license = TRUE`.
 
 ``` r
+
 dep_data_with_license <- fetch_all_dependencies("stringr", get_license = TRUE)
 #> Building dependency tree for: stringr
 #> Dependency tree in progress for stringr package
@@ -247,31 +256,32 @@ dep_data_with_license <- fetch_all_dependencies("stringr", get_license = TRUE)
 ```
 
 ``` r
+
 print_tree(dep_data_with_license)
-#> └── stringr (v1.5.2) MIT + file LICENSE license
-#>     ├── cli (v3.6.5) MIT + file LICENSE
+#> └── stringr (v1.6.0) MIT + file LICENSE license
+#>     ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── glue (v1.8.1) MIT + file LICENSE
 #>     │   └── methods (base)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>     │   ├── cli (v3.6.5) MIT + file LICENSE
+#>     │   ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.1.7) MIT + file LICENSE
+#>     │   └── rlang (v1.2.0) MIT + file LICENSE
 #>     │       └── utils (base)
-#>     ├── magrittr (v2.0.4) MIT + file LICENSE
-#>     ├── rlang (v1.1.7) MIT + file LICENSE
+#>     ├── magrittr (v2.0.5) MIT + file LICENSE
+#>     ├── rlang (v1.2.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
 #>     └── vctrs (v0.7.3) MIT + file LICENSE
-#>         ├── cli (v3.6.5) MIT + file LICENSE
+#>         ├── cli (v3.6.6) MIT + file LICENSE
 #>         │   └── utils (base)
 #>         ├── glue (v1.8.1) MIT + file LICENSE
 #>         │   └── methods (base)
 #>         ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>         └── rlang (v1.1.7) MIT + file LICENSE
+#>         └── rlang (v1.2.0) MIT + file LICENSE
 #>             └── utils (base)
 ```
 
@@ -279,6 +289,7 @@ By default, the dependency tree explores up to 3 dependency levels deep.
 You can control this using the `max_level` parameter:
 
 ``` r
+
 # Shallow exploration (only 2 levels)
 dep_data_shallow <- fetch_all_dependencies("stringr", get_license = TRUE, max_level = 2)
 #> Building dependency tree for: stringr
@@ -305,14 +316,14 @@ dep_data_shallow <- fetch_all_dependencies("stringr", get_license = TRUE, max_le
 #> Finished building for vctrs
 #> Finished building for stringr
 print_tree(dep_data_shallow)
-#> └── stringr (v1.5.2) MIT + file LICENSE license
-#>     ├── cli (v3.6.5) MIT + file LICENSE
+#> └── stringr (v1.6.0) MIT + file LICENSE license
+#>     ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── glue (v1.8.1) MIT + file LICENSE
 #>     │   └── methods (base)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>     ├── magrittr (v2.0.4) MIT + file LICENSE
-#>     ├── rlang (v1.1.7) MIT + file LICENSE
+#>     ├── magrittr (v2.0.5) MIT + file LICENSE
+#>     ├── rlang (v1.2.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
@@ -322,6 +333,7 @@ print_tree(dep_data_shallow)
 ```
 
 ``` r
+
 # Deeper exploration (5 levels)
 dep_data_deep <- fetch_all_dependencies("stringr", get_license = TRUE, max_level = 5)
 #> Building dependency tree for: stringr
@@ -358,34 +370,34 @@ dep_data_deep <- fetch_all_dependencies("stringr", get_license = TRUE, max_level
 #> Finished building for vctrs
 #> Finished building for stringr
 print_tree(dep_data_deep)
-#> └── stringr (v1.5.2) MIT + file LICENSE license
-#>     ├── cli (v3.6.5) MIT + file LICENSE
+#> └── stringr (v1.6.0) MIT + file LICENSE license
+#>     ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── glue (v1.8.1) MIT + file LICENSE
 #>     │   └── methods (base)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>     │   ├── cli (v3.6.5) MIT + file LICENSE
+#>     │   ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.1.7) MIT + file LICENSE
+#>     │   └── rlang (v1.2.0) MIT + file LICENSE
 #>     │       └── utils (base)
-#>     ├── magrittr (v2.0.4) MIT + file LICENSE
-#>     ├── rlang (v1.1.7) MIT + file LICENSE
+#>     ├── magrittr (v2.0.5) MIT + file LICENSE
+#>     ├── rlang (v1.2.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
 #>     └── vctrs (v0.7.3) MIT + file LICENSE
-#>         ├── cli (v3.6.5) MIT + file LICENSE
+#>         ├── cli (v3.6.6) MIT + file LICENSE
 #>         │   └── utils (base)
 #>         ├── glue (v1.8.1) MIT + file LICENSE
 #>         │   └── methods (base)
 #>         ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>         │   ├── cli (v3.6.5) MIT + file LICENSE
+#>         │   ├── cli (v3.6.6) MIT + file LICENSE
 #>         │   │   └── utils (base)
-#>         │   └── rlang (v1.1.7) MIT + file LICENSE
+#>         │   └── rlang (v1.2.0) MIT + file LICENSE
 #>         │       └── utils (base)
-#>         └── rlang (v1.1.7) MIT + file LICENSE
+#>         └── rlang (v1.2.0) MIT + file LICENSE
 #>             └── utils (base)
 ```
 
@@ -394,6 +406,7 @@ print_tree(dep_data_deep)
 Detect version conflicts in your dependency tree:
 
 ``` r
+
 detect_version_conflicts(dep_data)
 #> NULL
 ```

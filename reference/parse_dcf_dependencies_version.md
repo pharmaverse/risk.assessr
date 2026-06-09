@@ -24,6 +24,7 @@ package. - \`type\`: The type of dependency (e.g., "Imports").
 ## Examples
 
 ``` r
+
 if (FALSE) { # \dontrun{
 parse_dcf_dependencies_version("/path/to/package")
 } # }

@@ -5,6 +5,7 @@
 Load the necessary package and set CRAN repository.
 
 ``` r
+
 library(risk.assessr)
 options(repos = "http://cran.us.r-project.org")
 ```
@@ -19,10 +20,12 @@ Firstly, if you just want a traceability matrix with no test coverage,
 you can run the following code:
 
 ``` r
+
 stringr_tm_no_test <- risk.assessr::generate_traceability_matrix("stringr", version = "1.5.1" )
 ```
 
 ``` r
+
 str(stringr_tm_no_test$tm)
 ```
 
@@ -30,10 +33,12 @@ Secondly, if you want a traceability matrix with test coverage, you can
 run the following code:
 
 ``` r
+
 stringr_tm_test <- risk.assessr::generate_traceability_matrix("stringr", version = "1.5.1", execute_coverage = TRUE)
 ```
 
 ``` r
+
 str(stringr_tm_test$tm)
 ```
 
@@ -41,6 +46,7 @@ If you want a full analysis of the package containing a traceability
 matrix and ither risk data, you can run the following:
 
 ``` r
+
 stringr <- risk.assessr::assess_pkg_r_package("stringr", version = "1.5.1" )
 ```
 
@@ -50,6 +56,7 @@ information.
 ## Structure of traceability matrices
 
 ``` r
+
 str(stringr$tm_list)
 ```
 
@@ -59,6 +66,7 @@ See how functions are mapped to risk and test coverage. This shows all
 the exported functions.
 
 ``` r
+
 stringr$tm_list$tm
 ```
 
@@ -66,24 +74,28 @@ This shows functions categorized as high, medium, or low risk test
 coverage.
 
 ``` r
+
 stringr$tm_list$coverage
 ```
 
 ### High risk test coverage
 
 ``` r
+
 stringr$tm_list$coverage$high_risk
 ```
 
 ### Medium risk test coverage
 
 ``` r
+
 stringr$tm_list$coverage$medium_risk
 ```
 
 ### Low risk test coverage
 
 ``` r
+
 low_risk <- stringr$tm_list$coverage$low_risk
 low_risk
 ```
@@ -95,23 +107,27 @@ This shows functions categorized by higher risk function types.
 ### Defunct Functions
 
 ``` r
+
 stringr$tm_list$function_type
 ```
 
 ### Imported functions
 
 ``` r
+
 stringr$tm_list$function_type$imported
 ```
 
 ### Re-exported functions
 
 ``` r
+
 stringr$tm_list$function_type$rexported
 ```
 
 ### Experimental functions
 
 ``` r
+
 stringr$tm_list$function_type$experimental
 ```

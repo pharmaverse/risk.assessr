@@ -13,18 +13,15 @@ download URL.
 ## CRAN
 
 ``` r
+
 library(DT)
-```
-
-    ## Warning: package 'DT' was built under R version 4.2.3
-
-``` r
 library(risk.assessr)
 ```
 
 ### Check if the Package Exists on CRAN
 
 ``` r
+
 risk.assessr:::check_cran_package("here")
 ```
 
@@ -34,6 +31,7 @@ fetch information from
 “<https://cran.r-project.org/src/contrib/Archive/here/>”
 
 ``` r
+
 html <- risk.assessr:::parse_package_info("here")
 html
 ```
@@ -48,6 +46,7 @@ Create table with `package_name`, `package_version`, `link`, `date`,
 ### Get All Versions and the Latest Version
 
 ``` r
+
 version_info <- risk.assessr:::get_versions(table, "here")
 version_info$last_version
 ```
@@ -55,6 +54,7 @@ version_info$last_version
 ### Get CRAN package URL source code
 
 ``` r
+
 url <- risk.assessr:::get_cran_package_url(
   package_name = "here",
   version = NULL,
@@ -69,14 +69,17 @@ url
 `risk.assessr` can also provide similar information from Internal mirror
 
 ``` r
+
 result_intern <- risk.assessr:::get_internal_package_url("herald")
 ```
 
 ``` r
+
 result_intern$url
 ```
 
 ``` r
+
 result_intern$last_version
 ```
 
@@ -85,12 +88,14 @@ result_intern$last_version
 Steps to get an R package stored on Bioconductor
 
 ``` r
+
 html_content <- fetch_bioconductor_releases()
 release_data <- parse_bioconductor_releases(html_content)
 result_bio <- get_bioconductor_package_url("flowCore", "2.18.0", release_data)
 ```
 
 ``` r
+
 result_bio$url
 ```
 
@@ -101,6 +106,7 @@ in DESCRIPTION file to find a owner. github link are then created such
 as below and used to request Github API.
 
 ``` r
+
 urls <- c(
   "https://github.com/tidyverse/ggplot2"
 )
@@ -129,11 +135,12 @@ github_links
 ## Get R package source code
 
 ``` r
+
 tarball_path <- get_package_tarfile("dplyr", version = "1.0.0")
 ```
 
     ## Checking dplyr in configured repositories...
 
-    ## Trying https://cran.rstudio.com/
+    ## Trying https://packagemanager.posit.co/cran/__linux__/noble/latest
 
-    ## Package tarball saved at: C:\Users\I0555262\AppData\Local\Temp\RtmpKa3kbi\file74c014db7948
+    ## Package tarball saved at: /tmp/Rtmp0krHaf/file25e87f837e35

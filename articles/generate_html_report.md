@@ -1,10 +1,12 @@
 # Generate html risk report
 
 ``` r
+
 library(risk.assessr)
 ```
 
 ``` r
+
 result <- risk.assessr::assess_pkg_r_package("ggplot2")
 generate_html_report(result)
 ```
@@ -12,6 +14,7 @@ generate_html_report(result)
 ## Generate the risk report in a specific path
 
 ``` r
+
 generate_html_report(result, output_dir= system.file("examples/", package = "risk.assessr"))
 ```
 

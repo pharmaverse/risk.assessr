@@ -16,6 +16,7 @@ This vignette demonstrates:
 ## Load the Package
 
 ``` r
+
 library(risk.assessr)
 options(repos = c(CRAN = "http://cran.us.r-project.org"))
 ```
@@ -23,16 +24,19 @@ options(repos = c(CRAN = "http://cran.us.r-project.org"))
 ## Example 1: Use Default Configuration
 
 ``` r
+
 result_default <- risk.assessr::assess_pkg_r_package("stringr")
 ```
 
 ``` r
+
 str(result_default$risk_analysis)
 ```
 
 ## Example 2: Use Custom Configuration (Strict Code Coverage)
 
 ``` r
+
 
 strict_coverage_config <- list(
   list(
@@ -62,6 +66,7 @@ result_strict <- risk.assessr::assess_pkg_r_package("stringr")
 ```
 
 ``` r
+
 str(result_strict$risk_analysis)
 ```
 

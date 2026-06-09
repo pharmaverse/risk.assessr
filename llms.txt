@@ -48,6 +48,7 @@ This package executes the following tasks:
 From Sanofi repo:
 
 ``` r
+
 options(repos="https://cloud.r-project.org")
 install.packages("risk.assessr")
 ```
@@ -55,6 +56,7 @@ install.packages("risk.assessr")
 Development version:
 
 ``` r
+
 devtools::install_github("pharmaverse/risk.assessr")
 ```
 
@@ -70,6 +72,7 @@ To assess your package, do the following steps:
     your `tar.gz` package source code
 
 ``` r
+
 options(repos="https://cloud.r-project.org")
 
 library(risk.assessr)
@@ -92,12 +95,12 @@ performed as a batch job or within a GitHub Action.
 
 ## Metrics and Risk assessment
 
-| Key Metrics         | Reason                                                                            | where to find them in Metrics and Risk assessment |
-|---------------------|-----------------------------------------------------------------------------------|---------------------------------------------------|
-| RCMD check          | series of 45 package checks of tests, package structure, documentation            | `check` element in `results` list, check_list     |
-| test coverage       | unit test coverage                                                                | `covr` element in `results` list, covr_list       |
-| risk analysis       | rules and thresholds to identify risks                                            | risk_analysis                                     |
-| traceability matrix | maps exported functions to test coverage, documentation by risk and function type | tm_list                                           |
+| Key Metrics | Reason | where to find them in Metrics and Risk assessment |
+|----|----|----|
+| RCMD check | series of 45 package checks of tests, package structure, documentation | `check` element in `results` list, check_list |
+| test coverage | unit test coverage | `covr` element in `results` list, covr_list |
+| risk analysis | rules and thresholds to identify risks | risk_analysis |
+| traceability matrix | maps exported functions to test coverage, documentation by risk and function type | tm_list |
 
 ## Publication/presentation
 
@@ -111,10 +114,12 @@ performed as a batch job or within a GitHub Action.
     Couturier  
     **Company:** Sanofi  
     **Materials**
+
     - [Presentation
       (PDF)](https://phuse.s3.eu-central-1.amazonaws.com/Archive/2025/Connect/US/Orlando/PRE_OS17.pdf)  
     - [Paper
       (PDF)](https://phuse.s3.eu-central-1.amazonaws.com/Archive/2025/Connect/US/Orlando/PAP_OS17.pdf)
+
 2.  **Conference:** PHUSE SDE 2025  
     **Location:** Beijing, China  
     **Title:** *CI/CD in R Package Development with Integrated Risk
@@ -124,8 +129,10 @@ performed as a batch job or within a GitHub Action.
     Couturier  
     **Company:** Sanofi  
     **Materials**
+
     - [Presentation
       (PDF)](https://phuse.s3.eu-central-1.amazonaws.com/Archive/2025/SDE/APAC/Beijing/PRE_Beijing07.pdf)
+
 3.  **Conference:** EU Connect 2025  
     **Location:** Hamburg, Germany  
     **Session ID:** CT10  
@@ -133,9 +140,8 @@ performed as a batch job or within a GitHub Action.
     **Presenter:** Edward Gillian  
     **Authors:** Edward Gillian, Hugo Bottois, Paulin Charliquart, Andre
     Couturier  
-    **Company:** Sanofi  
-    **Materials / Status:**
-    - *Ongoing*
+    **Company:** Sanofi
+
 4.  **Conference:** R/Pharma 2025 APAC  
     **Location:** Online  
     **Session ID:** Ongoing  
@@ -144,9 +150,7 @@ performed as a batch job or within a GitHub Action.
     **Presenter:** Hugo Bottois  
     **Authors:** Edward Gillian, Hugo Bottois, Paulin Charliquart, Andre
     Couturier  
-    **Company:** Sanofi  
-    **Materials / Status:**
-    - *Ongoing*
+    **Company:** Sanofi
 
 ## Citation
 

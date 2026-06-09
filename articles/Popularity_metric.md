@@ -3,22 +3,26 @@
 ## CRAN download
 
 ``` r
+
 download_cran_df <- get_package_download_cran("admiral", years = 5)
 head(download_cran_df)
 ```
 
 ``` r
+
 version_infos <- check_and_fetch_cran_package("admiral")
 ```
 
 ## GitHub commit activity
 
 ``` r
+
 repo_info <- get_github_data("tidyverse", "ggplot2")
 repo_info
 ```
 
 ``` r
+
 df_commit <- get_commits_since("tidyverse", "ggplot2", years = 1)
 head(df_commit)
 ```
@@ -26,6 +30,7 @@ head(df_commit)
 ## Bioconductor download
 
 ``` r
+
 download_bio_df <- get_package_download_bioconductor("limma")
 head(download_bio_df$all_data)
 #>         Date Year Month Nb_of_distinct_IPs Nb_of_downloads Cumulative_downloads
@@ -45,6 +50,7 @@ head(download_bio_df$all_data)
 ```
 
 ``` r
+
 download_bio_df <- get_package_download_bioconductor("DESeq2")
 head(download_bio_df$all_data)
 ```
