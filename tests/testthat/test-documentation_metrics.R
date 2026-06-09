@@ -1,4 +1,4 @@
-test_that("test doc_riskmetrics", {
+test_that("test doc_riskmetric", {
   
   # set CRAN repo 
   r = getOption("repos")
@@ -1363,6 +1363,110 @@ test_that("assess exports for examples works correctly", {
   
 })
 
+# ---------------------------------------------------------------------------
+# Tests for find_rd_for_fun() - branch 3 (topic-name fallback) and NULL return
+#
+# These tests cover the rare-fallback branch of find_rd_for_fun() where a
+# function is resolved only because a topic in `idx$topic_by_file` matches
+# its name. Branches 1 (`<fun>.Rd` exists in `db`) and 2 (`alias_index`
+# hit) are deliberately defeated by the synthetic `db` / `idx` so that
+# only branch 3 (or the final NULL fallthrough) can produce the result.
+#
+# build_rd_index() is stubbed with mockery to make the test for the
+# `idx = NULL` code path deterministic. No installed package, no internet
+# access, and no filesystem access are required, keeping these tests
+# CRAN-safe.
+# ---------------------------------------------------------------------------
+
+test_that("find_rd_for_fun returns the Rd via topic-name fallback when neither file nor alias match", {
+  fun_name <- "myfun"
+  rd_object <- list(name = "myfun", tag = "rd-1")
+  
+  # Conventional filename ("myfun.Rd") and alias index both *miss* on
+  # purpose: only the topic-name fallback can return a hit.
+  db <- list(
+    "weird_topic.Rd" = rd_object,
+    "unrelated.Rd"   = list(name = "unrelated")
+  )
+  idx <- list(
+    alias_index   = new.env(parent = emptyenv()),
+    topic_by_file = c(
+      "weird_topic.Rd" = "myfun",
+      "unrelated.Rd"   = "unrelated"
+    )
+  )
+  
+  res <- find_rd_for_fun(fun_name, db, idx)
+  
+  expect_type(res, "list")
+  expect_named(res, c("rd", "filename"))
+  expect_identical(res$filename, "weird_topic.Rd")
+  expect_identical(res$rd, rd_object)
+})
+
+test_that("find_rd_for_fun topic-name fallback returns the first match when multiple topics equal fun", {
+  fun_name <- "shared_topic"
+  rd_first  <- list(name = "shared_topic", id = 1L)
+  rd_second <- list(name = "shared_topic", id = 2L)
+  
+  db <- list(
+    "first.Rd"  = rd_first,
+    "second.Rd" = rd_second
+  )
+  idx <- list(
+    alias_index   = new.env(parent = emptyenv()),
+    topic_by_file = c(
+      "first.Rd"  = "shared_topic",
+      "second.Rd" = "shared_topic"
+    )
+  )
+  
+  res <- find_rd_for_fun(fun_name, db, idx)
+  
+  # Implementation uses topic_match[[1]] - i.e. first index wins.
+  expect_identical(res$filename, "first.Rd")
+  expect_identical(res$rd, rd_first)
+})
+
+test_that("find_rd_for_fun returns NULL when no branch (direct, alias, or topic) resolves", {
+  fun_name <- "absent"
+  
+  db <- list(
+    "exists.Rd" = list(name = "exists")
+  )
+  idx <- list(
+    alias_index   = new.env(parent = emptyenv()),
+    topic_by_file = c("exists.Rd" = "exists")
+  )
+  
+  # The conventional file "absent.Rd" is not in db, no alias entry
+  # maps to "absent", and no topic in topic_by_file equals "absent".
+  expect_null(find_rd_for_fun(fun_name, db, idx))
+})
+
+test_that("find_rd_for_fun builds the index on demand when idx is NULL and reaches the topic-name fallback", {
+  fun_name <- "myfun"
+  rd_real  <- list(name = "myfun", tag = "via-stub")
+  
+  db <- list("weird.Rd" = rd_real)
+  
+  built_idx <- list(
+    alias_index   = new.env(parent = emptyenv()),
+    topic_by_file = c("weird.Rd" = "myfun")
+  )
+  
+  build_mock <- mockery::mock(built_idx)
+  mockery::stub(find_rd_for_fun, "build_rd_index", build_mock)
+  
+  res <- find_rd_for_fun(fun_name, db)  # idx defaults to NULL
+  
+  mockery::expect_called(build_mock, 1)
+  build_args <- mockery::mock_args(build_mock)[[1]]
+  expect_identical(build_args[[1]], db)
+  
+  expect_identical(res$filename, "weird.Rd")
+  expect_identical(res$rd, rd_real)
+})
 
 test_that("assess_examples returns 'No documentation found' and 'no Rd file' when find_rd_for_fun() returns NULL", {
   # Bind the function object
@@ -1383,12 +1487,11 @@ test_that("assess_examples returns 'No documentation found' and 'no Rd file' whe
   # Stub rd_name (won't be called because hit is NULL)
   mockery::stub(fn, "rd_name", function(rd) stop("Should not be called"))
   
-  # Stub asNamespace and getNamespaceExports to simulate exported functions
-  mockery::stub(fn, "asNamespace", function(pkg) pkg)
-  mockery::stub(fn, "getNamespaceExports", function(ns) c("funA", "funB"))
-  
-  # Stub getExportedValue to return dummy functions
-  mockery::stub(fn, "getExportedValue", function(ns, name) function() NULL)
+  # Stub the exports helper to simulate two exported functions.
+  # (This replaces the previous asNamespace/getNamespaceExports/getExportedValue
+  # stubs - assess_examples() now delegates that work to get_exported_function_names().)
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) c("funA", "funB"))
   
   # Run the function
   result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path")
@@ -1409,9 +1512,12 @@ test_that("assess_exported_functions_docs returns empty data frame when no expor
   # Stub tools::Rd_db to return an empty Rd database
   mockery::stub(fn, "tools::Rd_db", function(dir) list())
   
-  # Stub asNamespace and getNamespaceExports to simulate no exports
-  mockery::stub(fn, "asNamespace", function(pkg) pkg)
-  mockery::stub(fn, "getNamespaceExports", function(ns) character(0))
+  # Stub the exports helper to simulate a package with no exports.
+  # (Replaces the previous asNamespace/getNamespaceExports stubs -
+  # assess_exported_functions_docs() now delegates that work to
+  # get_exported_function_names().)
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) character(0))
   
   # Run the function
   expect_message(
@@ -1438,12 +1544,12 @@ test_that("assess_exported_functions_docs returns 'No documentation found' when 
   # Stub find_rd_for_fun to always return NULL
   mockery::stub(fn, "find_rd_for_fun", function(fun, db, idx) NULL)
   
-  # Stub asNamespace and getNamespaceExports to simulate exported functions
-  mockery::stub(fn, "asNamespace", function(pkg) pkg)
-  mockery::stub(fn, "getNamespaceExports", function(ns) c("funA", "funB"))
-  
-  # Stub getExportedValue to return dummy functions
-  mockery::stub(fn, "getExportedValue", function(ns, name) function() NULL)
+  # Stub the exports helper to simulate two exported functions.
+  # (Replaces the previous asNamespace/getNamespaceExports/getExportedValue
+  # stubs - assess_exported_functions_docs() now delegates that work to
+  # get_exported_function_names().)
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) c("funA", "funB"))
   
   # Run the function
   expect_message(
@@ -1757,6 +1863,490 @@ test_that("assess exports for no help files works correctly", {
   }
   
 })
+
+# ---------------------------------------------------------------------------
+# Tests for get_exports_from_source()
+#
+# These tests cover every branch of get_exports_from_source() without
+# relying on any installed package, internet access, or files outside of
+# session tempdir(), so they are safe to run under CRAN checks.
+# parseNamespaceFile() is stubbed with mockery so the tests do not
+# depend on R version-specific behaviour of the base parser.
+# ---------------------------------------------------------------------------
+
+test_that("get_exports_from_source returns character(0) for NULL path", {
+  expect_identical(get_exports_from_source(NULL), character(0))
+})
+
+test_that("get_exports_from_source returns character(0) for empty string path", {
+  expect_identical(get_exports_from_source(""), character(0))
+})
+
+test_that("get_exports_from_source returns character(0) when path does not exist", {
+  tmp <- withr::local_tempdir()
+  missing_path <- file.path(tmp, "this_directory_does_not_exist")
+  expect_false(dir.exists(missing_path))
+  expect_identical(get_exports_from_source(missing_path), character(0))
+})
+
+test_that("get_exports_from_source returns character(0) when NAMESPACE is missing", {
+  pkg_root <- withr::local_tempdir()
+  # Intentionally do not create a NAMESPACE file.
+  expect_false(file.exists(file.path(pkg_root, "NAMESPACE")))
+  expect_identical(get_exports_from_source(pkg_root), character(0))
+})
+
+test_that("get_exports_from_source returns character(0) when parseNamespaceFile errors", {
+  pkg_root <- withr::local_tempdir()
+  writeLines("export(foo)", file.path(pkg_root, "NAMESPACE"))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) stop("simulated parse failure")
+  )
+  
+  expect_identical(get_exports_from_source(pkg_root), character(0))
+})
+
+test_that("get_exports_from_source returns character(0) when there are no exports or patterns", {
+  pkg_root <- withr::local_tempdir()
+  writeLines("# empty NAMESPACE", file.path(pkg_root, "NAMESPACE"))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) list(
+      exports = character(0),
+      exportPatterns = character(0)
+    )
+  )
+  
+  expect_identical(get_exports_from_source(pkg_root), character(0))
+})
+
+test_that("get_exports_from_source returns explicit exports when no patterns are defined", {
+  pkg_root <- withr::local_tempdir()
+  writeLines("export(foo)", file.path(pkg_root, "NAMESPACE"))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) list(
+      exports = c("foo", "bar"),
+      exportPatterns = character(0)
+    )
+  )
+  
+  out <- get_exports_from_source(pkg_root)
+  expect_type(out, "character")
+  expect_setequal(out, c("foo", "bar"))
+})
+
+test_that("get_exports_from_source skips pattern expansion when man/ is missing", {
+  pkg_root <- withr::local_tempdir()
+  writeLines('exportPattern("^my_")', file.path(pkg_root, "NAMESPACE"))
+  # Intentionally do not create a man/ directory.
+  expect_false(dir.exists(file.path(pkg_root, "man")))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) list(
+      exports = "explicit_export",
+      exportPatterns = "^my_"
+    )
+  )
+  
+  expect_identical(get_exports_from_source(pkg_root), "explicit_export")
+})
+
+test_that("get_exports_from_source expands exportPatterns against Rd files in man/", {
+  pkg_root <- withr::local_tempdir()
+  writeLines('exportPattern("^my_")', file.path(pkg_root, "NAMESPACE"))
+  dir.create(file.path(pkg_root, "man"))
+  file.create(file.path(
+    pkg_root, "man",
+    c("my_fun.Rd", "my_helper.Rd", "other.Rd", "notes.txt")
+  ))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) list(
+      exports = character(0),
+      exportPatterns = "^my_"
+    )
+  )
+  
+  out <- get_exports_from_source(pkg_root)
+  expect_setequal(out, c("my_fun", "my_helper"))
+  expect_false("other" %in% out)
+  expect_false("notes" %in% out)
+})
+
+test_that("get_exports_from_source returns the unique union of exports and pattern matches", {
+  pkg_root <- withr::local_tempdir()
+  writeLines(c('export(my_fun)', 'exportPattern("^my_")'),
+             file.path(pkg_root, "NAMESPACE"))
+  dir.create(file.path(pkg_root, "man"))
+  file.create(file.path(pkg_root, "man",
+                        c("my_fun.Rd", "my_helper.Rd")))
+  
+  mockery::stub(
+    get_exports_from_source,
+    "parseNamespaceFile",
+    function(...) list(
+      exports = "my_fun",
+      exportPatterns = "^my_"
+    )
+  )
+  
+  out <- get_exports_from_source(pkg_root)
+  expect_setequal(out, c("my_fun", "my_helper"))
+  # my_fun appears in both `exports` and as a pattern match, but the
+  # final result must be de-duplicated.
+  expect_equal(length(out), length(unique(out)))
+})
+
+# ---------------------------------------------------------------------------
+# Tests for get_exported_function_names()
+#
+# get_exported_function_names() is the shared helper used by
+# assess_examples() and assess_exported_functions_docs() to obtain the
+# list of exported function names. The happy path reads from the
+# installed namespace; the fallback parses NAMESPACE from source so
+# `R CMD INSTALL` failures (e.g. no R/ folder on stricter R versions)
+# do not abort the documentation metrics. Tests use mockery::stub() to
+# pin both branches deterministically without requiring any installed
+# package, internet access, or filesystem access beyond tempdir().
+# ---------------------------------------------------------------------------
+
+test_that("get_exported_function_names: returns only function exports when namespace is loadable", {
+  fake_ns <- new.env(parent = emptyenv())
+  
+  mockery::stub(
+    get_exported_function_names,
+    "asNamespace",
+    function(pkg) fake_ns
+  )
+  mockery::stub(
+    get_exported_function_names,
+    "getNamespaceExports",
+    function(ns) c("fun_a", "data_b", "fun_c")
+  )
+  mockery::stub(
+    get_exported_function_names,
+    "getExportedValue",
+    function(ns, name) {
+      # Only fun_a and fun_c are functions; data_b is a non-function export.
+      if (name %in% c("fun_a", "fun_c")) function() NULL else 42L
+    }
+  )
+  
+  out <- get_exported_function_names("mockpkg", "mock/path")
+  
+  expect_type(out, "character")
+  expect_setequal(out, c("fun_a", "fun_c"))
+  expect_false("data_b" %in% out)
+})
+
+test_that("get_exported_function_names: returns character(0) when namespace exports nothing", {
+  fake_ns <- new.env(parent = emptyenv())
+  
+  mockery::stub(get_exported_function_names, "asNamespace",
+                function(pkg) fake_ns)
+  mockery::stub(get_exported_function_names, "getNamespaceExports",
+                function(ns) character(0))
+  
+  out <- get_exported_function_names("mockpkg", "mock/path")
+  expect_identical(out, character(0))
+})
+
+test_that("get_exported_function_names: falls back to get_exports_from_source when namespace is missing", {
+  fallback_mock <- mockery::mock(c("foo", "bar"))
+  
+  mockery::stub(
+    get_exported_function_names,
+    "asNamespace",
+    function(pkg) stop(sprintf("there is no package called '%s'", pkg))
+  )
+  mockery::stub(
+    get_exported_function_names,
+    "get_exports_from_source",
+    fallback_mock
+  )
+  
+  out <- get_exported_function_names("missing.pkg", "mock/path")
+  
+  expect_setequal(out, c("foo", "bar"))
+  mockery::expect_called(fallback_mock, 1)
+  fb_args <- mockery::mock_args(fallback_mock)[[1]]
+  expect_equal(fb_args[[1]], "mock/path")
+})
+
+test_that("get_exported_function_names: fallback returns character(0) when NAMESPACE has no exports", {
+  mockery::stub(
+    get_exported_function_names,
+    "asNamespace",
+    function(pkg) stop("packageNotFoundError")
+  )
+  mockery::stub(
+    get_exported_function_names,
+    "get_exports_from_source",
+    function(...) character(0)
+  )
+  
+  expect_identical(
+    get_exported_function_names("missing.pkg", "mock/path"),
+    character(0)
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Tests for assess_examples() / assess_exported_functions_docs() fallback path
+#
+# These tests reproduce the Ubuntu R-release / R-devel failure where
+# the package namespace cannot be loaded (e.g. R CMD INSTALL failed
+# because the package has no R/ folder). With the fix in place,
+# assess_examples() and assess_exported_functions_docs() delegate to
+# get_exported_function_names(), which silently falls back to
+# get_exports_from_source() and lets the metrics complete instead of
+# bubbling up a packageNotFoundError.
+# ---------------------------------------------------------------------------
+
+test_that("assess_examples: completes via fallback when namespace is not loadable (no exports)", {
+  fn <- assess_examples
+  
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  # Simulate the package failing to load AND having no declared exports.
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) character(0))
+  
+  expect_message(
+    result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path"),
+    regexp = "mockpkg: no exported functions found; example score = 0.00%"
+  )
+  
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 0)
+  expect_equal(result$example_score, 0)
+})
+
+test_that("assess_examples: completes via fallback when namespace is not loadable (some exports)", {
+  fn <- assess_examples
+  
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  mockery::stub(fn, "build_rd_index",
+                function(db) list(alias_index = new.env(parent = emptyenv()),
+                                  topic_by_file = character(0)))
+  # Names produced by the source-NAMESPACE fallback.
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) c("alpha", "beta"))
+  # No Rd page for either: simulates a package whose R/ folder is missing.
+  mockery::stub(fn, "find_rd_for_fun", function(fun, db, idx) NULL)
+  
+  result <- suppressMessages(
+    fn(pkg_name = "mockpkg", pkg_source_path = "mock/path")
+  )
+  
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 2)
+  expect_setequal(result$data$function_name, c("alpha", "beta"))
+  expect_true(all(result$data$documentation_name == "No documentation found"))
+  expect_true(all(result$data$example == "no Rd file"))
+  expect_equal(result$example_score, 0)
+})
+
+test_that("assess_exported_functions_docs: completes via fallback when namespace is not loadable (no exports)", {
+  fn <- assess_exported_functions_docs
+  
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) character(0))
+  
+  expect_message(
+    result <- fn(pkg_name = "mockpkg", pkg_source_path = "mock/path"),
+    regexp = "mockpkg: no exported functions found; documentation score = 0.00%"
+  )
+  
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 0)
+  expect_equal(result$has_docs_score, 0)
+})
+
+test_that("assess_exported_functions_docs: completes via fallback when namespace is not loadable (some exports)", {
+  fn <- assess_exported_functions_docs
+  
+  mockery::stub(fn, "tools::Rd_db", function(dir) list())
+  mockery::stub(fn, "build_rd_index",
+                function(db) list(alias_index = new.env(parent = emptyenv()),
+                                  topic_by_file = character(0)))
+  mockery::stub(fn, "get_exported_function_names",
+                function(pkg_name, pkg_source_path) c("alpha", "beta"))
+  mockery::stub(fn, "find_rd_for_fun", function(fun, db, idx) NULL)
+  
+  result <- suppressMessages(
+    fn(pkg_name = "mockpkg", pkg_source_path = "mock/path")
+  )
+  
+  expect_s3_class(result$data, "data.frame")
+  expect_equal(nrow(result$data), 2)
+  expect_setequal(result$data$function_name, c("alpha", "beta"))
+  expect_true(all(result$data$documentation_name == "No documentation found"))
+  expect_true(all(is.na(result$data$documentation_location)))
+  expect_equal(result$has_docs_score, 0)
+})
+
+# ---------------------------------------------------------------------------
+# Tests for assess_export_help() error-fallback branch
+#
+# These tests target the `error = function(e) get_exports_from_source(...)`
+# handler inside assess_export_help(). getNamespaceExports() is stubbed to
+# raise a packageNotFoundError-style error so the tryCatch handler is
+# always exercised, independently of what is (or is not) installed.
+# All collaborators are mocked, so no installed package, no filesystem
+# access beyond session tempdir(), and no internet access are required.
+# ---------------------------------------------------------------------------
+
+test_that("assess_export_help falls back to get_exports_from_source when namespace is missing (no exports)", {
+  pkg_name <- "fake.pkg.no.exports"
+  pkg_source_path <- withr::local_tempdir()
+  
+  # Simulate the failure seen on Ubuntu R-release / R-devel when
+  # R CMD INSTALL has not produced a loadable namespace.
+  mockery::stub(
+    assess_export_help,
+    "getNamespaceExports",
+    function(...) stop(sprintf("there is no package called '%s'", pkg_name))
+  )
+  
+  # Fallback resolves to no declared exports.
+  mockery::stub(
+    assess_export_help,
+    "get_exports_from_source",
+    function(...) character(0)
+  )
+  
+  testthat::expect_message(
+    out <- assess_export_help(pkg_name, pkg_source_path),
+    glue::glue("No exported functions in {pkg_name}"),
+    fixed = TRUE
+  )
+  expect_identical(length(out), 1L)
+  expect_true(checkmate::check_numeric(out, any.missing = FALSE))
+  expect_equal(out, 0)
+})
+
+test_that("assess_export_help fallback path returns 1 when every parsed export is documented", {
+  pkg_name <- "fake.pkg.all.docs"
+  pkg_source_path <- withr::local_tempdir()
+  
+  mockery::stub(
+    assess_export_help,
+    "getNamespaceExports",
+    function(...) stop("packageNotFoundError")
+  )
+  mockery::stub(
+    assess_export_help,
+    "get_exports_from_source",
+    function(...) c("foo", "bar")
+  )
+  mockery::stub(
+    assess_export_help,
+    "get_func_descriptions",
+    function(...) c(foo = "desc-foo", bar = "desc-bar")
+  )
+  
+  testthat::expect_message(
+    out <- assess_export_help(pkg_name, pkg_source_path),
+    glue::glue("All exported functions have corresponding help files in {pkg_name}"),
+    fixed = TRUE
+  )
+  expect_equal(out, 1)
+})
+
+test_that("assess_export_help fallback path returns 0 when some parsed exports lack documentation", {
+  pkg_name <- "fake.pkg.partial.docs"
+  pkg_source_path <- withr::local_tempdir()
+  
+  mockery::stub(
+    assess_export_help,
+    "getNamespaceExports",
+    function(...) stop("packageNotFoundError")
+  )
+  mockery::stub(
+    assess_export_help,
+    "get_exports_from_source",
+    function(...) c("foo", "bar", "baz")
+  )
+  mockery::stub(
+    assess_export_help,
+    "get_func_descriptions",
+    function(...) c(foo = "desc-foo")  # bar and baz are undocumented
+  )
+  
+  testthat::expect_message(
+    out <- assess_export_help(pkg_name, pkg_source_path),
+    glue::glue("Some exported functions are missing help files in {pkg_name}"),
+    fixed = TRUE
+  )
+  expect_equal(out, 0)
+})
+
+test_that("assess_export_help passes pkg_source_path to the fallback exactly once on namespace error", {
+  pkg_name <- "fake.pkg.args"
+  pkg_source_path <- withr::local_tempdir()
+  
+  mockery::stub(
+    assess_export_help,
+    "getNamespaceExports",
+    function(...) stop("packageNotFoundError")
+  )
+  
+  fallback_mock <- mockery::mock(character(0))
+  mockery::stub(
+    assess_export_help,
+    "get_exports_from_source",
+    fallback_mock
+  )
+  
+  suppressMessages(assess_export_help(pkg_name, pkg_source_path))
+  
+  mockery::expect_called(fallback_mock, 1)
+  fb_args <- mockery::mock_args(fallback_mock)[[1]]
+  expect_equal(fb_args[[1]], pkg_source_path)
+})
+
+test_that("assess_export_help does NOT invoke the fallback when getNamespaceExports succeeds", {
+  pkg_name <- "fake.pkg.loaded"
+  pkg_source_path <- withr::local_tempdir()
+  
+  mockery::stub(
+    assess_export_help,
+    "getNamespaceExports",
+    function(...) c("foo")
+  )
+  
+  fallback_mock <- mockery::mock(character(0))
+  mockery::stub(
+    assess_export_help,
+    "get_exports_from_source",
+    fallback_mock
+  )
+  mockery::stub(
+    assess_export_help,
+    "get_func_descriptions",
+    function(...) c(foo = "desc-foo")
+  )
+  
+  suppressMessages(out <- assess_export_help(pkg_name, pkg_source_path))
+  
+  # The error handler must not run on the happy path.
+  mockery::expect_called(fallback_mock, 0)
+  expect_equal(out, 1)
+})
+
 
 test_that("assess exports for news works correctly", {
   

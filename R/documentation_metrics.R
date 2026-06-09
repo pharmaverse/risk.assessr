@@ -28,16 +28,10 @@ assess_examples <- function(pkg_name, pkg_source_path) {
   # Remove only the package-level Rd file (pkgname-package.Rd)
   db <- db[!names(db) %in% paste0(pkg_name, "-package.Rd")]
   
-  # Namespace and exported objects
-  ns <- asNamespace(pkg_name)
-  exported <- getNamespaceExports(ns)
-  
-  # Keep only exported functions
-  is_fun <- function(name) {
-    obj <- try(getExportedValue(ns, name), silent = TRUE)
-    is.function(obj)
-  }
-  exported_funs <- Filter(is_fun, exported)
+  # Exported function names, resilient to the package not being loadable
+  # (e.g. R CMD INSTALL failed on stricter R versions because the package
+  # has no R/ folder). See `get_exported_function_names()`.
+  exported_funs <- get_exported_function_names(pkg_name, pkg_source_path)
   
   if (length(exported_funs) == 0) {
     df <- data.frame(
@@ -311,7 +305,7 @@ extract_examples_text <- function(rd_doc) {
 #'
 #' @keywords internal
 assess_exported_functions_docs <- function(pkg_name, pkg_source_path) {
- 
+  
   # Load Rd database for the source path
   db <- tools::Rd_db(dir = pkg_source_path)
   
@@ -319,16 +313,10 @@ assess_exported_functions_docs <- function(pkg_name, pkg_source_path) {
   # Keep files like "<pkg_name>.Rd" as they may document a function with the same name.
   db <- db[!names(db) %in% paste0(pkg_name, "-package.Rd")]
   
-  # Namespace and exported objects
-  ns <- asNamespace(pkg_name)
-  exported <- getNamespaceExports(ns)
-  
-  # Keep only exported functions
-  is_fun <- function(name) {
-    obj <- try(getExportedValue(ns, name), silent = TRUE)
-    is.function(obj)
-  }
-  exported_funs <- Filter(is_fun, exported)
+  # Exported function names, resilient to the package not being loadable
+  # (e.g. R CMD INSTALL failed on stricter R versions because the package
+  # has no R/ folder). See `get_exported_function_names()`.
+  exported_funs <- get_exported_function_names(pkg_name, pkg_source_path)
   
   # --- Handle packages with NO exported functions ---------------------------
   if (length(exported_funs) == 0) {
@@ -384,7 +372,7 @@ assess_exported_functions_docs <- function(pkg_name, pkg_source_path) {
   
   return(list(data = df, has_docs_score = doc_score))
 }
-       
+
 #' Assess exported functions to namespace
 #'
 #' @description Returns 1L if the package's NAMESPACE declares any exports
@@ -408,10 +396,77 @@ assess_exports <- function(data) {
     export_calc <- 1L} 
   else { 
     export_calc <-0L
-    }
-
+  }
+  
   return(export_calc)
 } 
+
+#' Parse exported names from a package's NAMESPACE on disk.
+#'
+#' Used as a fallback when the package is not loaded as a namespace
+#' (for example when `R CMD INSTALL` failed because the package has
+#' no R/ folder on stricter R versions).
+#'
+#' @param pkg_source_path Path to the unpacked package source.
+#' @return Character vector of exported names (possibly empty).
+#' @keywords internal
+get_exports_from_source <- function(pkg_source_path) {
+  if (is.null(pkg_source_path) || !nzchar(pkg_source_path) ||
+      !dir.exists(pkg_source_path)) {
+    return(character(0))
+  }
+  ns_file <- file.path(pkg_source_path, "NAMESPACE")
+  if (!file.exists(ns_file)) return(character(0))
+  parsed <- tryCatch(
+    parseNamespaceFile(basename(pkg_source_path),
+                       dirname(pkg_source_path),
+                       mustExist = FALSE),
+    error = function(e) NULL
+  )
+  if (is.null(parsed)) return(character(0))
+  # Expand any export patterns against Rd file names in man/
+  pattern_exports <- character(0)
+  if (length(parsed$exportPatterns) > 0) {
+    rd_dir <- file.path(pkg_source_path, "man")
+    if (dir.exists(rd_dir)) {
+      rd_names <- tools::file_path_sans_ext(
+        list.files(rd_dir, pattern = "\\.Rd$")
+      )
+      pattern_exports <- unlist(lapply(parsed$exportPatterns, function(p) {
+        grep(p, rd_names, value = TRUE)
+      }))
+    }
+  }
+  unique(c(parsed$exports, pattern_exports))
+}
+
+#' Get exported function names with a NAMESPACE-source fallback.
+#'
+#' Attempts to obtain exported function names from the installed
+#' namespace. If the namespace is not available - for example when
+#' `R CMD INSTALL` failed because the package has no `R/` folder on
+#' stricter R versions - falls back to parsing `NAMESPACE` from
+#' `pkg_source_path` via [get_exports_from_source()]. In the fallback
+#' path the result includes every declared export, because
+#' function-ness cannot be verified without a loaded namespace.
+#'
+#' @param pkg_name Character scalar; package name.
+#' @param pkg_source_path Path to the unpacked package source.
+#' @return Character vector of exported names (possibly empty).
+#' @keywords internal
+get_exported_function_names <- function(pkg_name, pkg_source_path) {
+  ns <- tryCatch(asNamespace(pkg_name), error = function(e) NULL)
+  if (is.null(ns)) {
+    return(get_exports_from_source(pkg_source_path))
+  }
+  exported <- getNamespaceExports(ns)
+  is_fun <- function(name) {
+    obj <- try(getExportedValue(ns, name), silent = TRUE)
+    is.function(obj)
+  }
+  Filter(is_fun, exported)
+}
+
 
 #' assess_export_help
 #'
@@ -422,7 +477,16 @@ assess_exports <- function(data) {
 #' @keywords internal
 assess_export_help <- function(pkg_name, pkg_source_path) {
   
-  exported_functions <- getNamespaceExports(pkg_name)
+  # Prefer the installed namespace, but fall back to parsing NAMESPACE
+  # from source so packages that fail to install (e.g. no R/ folder on
+  # stricter R versions) still produce a score instead of erroring.
+  exported_functions <- tryCatch(
+    getNamespaceExports(pkg_name),
+    error = function(e) {
+      get_exports_from_source(pkg_source_path)
+    }
+  )
+  
   if (length(exported_functions) > 0) {
     
     # Use get_func_descriptions to retrieve documentation
@@ -707,7 +771,7 @@ assess_news_current <- function(pkg_name, pkg_ver, pkg_source_path) {
   news_paths <- find_news_files(pkg_source_path)
   
   if (length(news_paths) == 0) {
-  
+    
     version_found <- FALSE
   } else {
     news_content <- unlist(
@@ -963,5 +1027,3 @@ clean_license <- function(x) {
   
   return(base_license_names)
 }
-
-
