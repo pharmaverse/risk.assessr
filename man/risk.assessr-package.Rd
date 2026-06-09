@@ -6,6 +6,8 @@
 \alias{risk.assessr-package}
 \title{risk.assessr: Assessing Package Risk Metrics}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 A reliable and validated tool that captures detailed risk metrics such as R 'CMD' check, test coverage, traceability matrix, documentation, dependencies, reverse dependencies, suggested dependency analysis, repository data, and enhanced reporting for R packages that are local or stored on remote repositories such as GitHub, CRAN, and Bioconductor.
 }
 \seealso{
