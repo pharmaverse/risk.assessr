@@ -17,7 +17,7 @@ body:
       label: "✅ Quick checks"
       options:
         - label: "I searched existing issues / PRs for something similar"
-          required: true
+          required: false
 
   - type: input
     id: related
@@ -35,7 +35,7 @@ body:
       description: "What user need does this address? Who benefits and why?"
       placeholder: "This would help because..."
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: proposal
@@ -44,7 +44,7 @@ body:
       description: "What should we build/change?"
       placeholder: "I propose that we..."
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: alternatives

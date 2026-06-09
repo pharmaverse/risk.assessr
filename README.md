@@ -127,8 +127,6 @@ Note: This process can be very time-consuming and is recommended to be performed
    **Presenter:** Edward Gillian  
    **Authors:** Edward Gillian, Hugo Bottois, Paulin Charliquart, Andre Couturier    
    **Company:** Sanofi  
-   **Materials / Status:**  
-   - *Ongoing*
 
 4. **Conference:** R/Pharma 2025 APAC  
    **Location:** Online    
@@ -137,9 +135,6 @@ Note: This process can be very time-consuming and is recommended to be performed
    **Presenter:** Hugo Bottois  
    **Authors:** Edward Gillian, Hugo Bottois, Paulin Charliquart, Andre Couturier  
    **Company:** Sanofi  
-   **Materials / Status:**    
-   - *Ongoing*
-
 
 ## Citation
 
