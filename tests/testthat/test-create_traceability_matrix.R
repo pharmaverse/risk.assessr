@@ -2,7 +2,7 @@ test_that("running tm for created package in tar file with no notes", {
   skip_on_cran()
   skip_if_repo_unavailable()
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
-                    package = "sanofi.risk.assessr")
+                    package = "risk.assessr")
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -69,7 +69,7 @@ test_that("running tm for created package in tar file with no tests", {
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
                          "test.package.0004_0.1.0.tar.gz", 
-                         package = "sanofi.risk.assessr")
+                         package = "risk.assessr")
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -144,7 +144,7 @@ test_that("running tm for created package in tar file with no R directory", {
   
   dp_orig <- system.file("test-data",
                          "test.package.0006_0.1.0.tar.gz", 
-                         package = "sanofi.risk.assessr")
+                         package = "risk.assessr")
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -216,7 +216,7 @@ test_that("running tm for created package in tar file with empty R directory", {
   
   dp_orig <- system.file("test-data",
                          "test.package.0005_0.1.0.tar.gz", 
-                         package = "sanofi.risk.assessr")
+                         package = "risk.assessr")
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
