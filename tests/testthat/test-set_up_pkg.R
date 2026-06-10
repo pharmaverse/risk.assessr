@@ -2,6 +2,7 @@ test_that("set up package for tar file with default check type", {
   dp_orig <- system.file("test-data", 
                          "test.package.0001_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -26,6 +27,7 @@ test_that("set up package for tar file with default check type", {
 test_that("set up package for tar file with check type 1", {
   dp_orig <- system.file("test-data", "test.package.0001_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -48,6 +50,7 @@ test_that("set up package for tar file with check type 1", {
 test_that("set up package for tar file with check type 1", {    
   dp <- system.file("test-data", "test.package.0001_0.1.0.tar.gz", 
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   check_type <- "1"
   
@@ -74,6 +77,7 @@ test_that("set up package for tar file with check type 2", {
   dp_orig <- system.file("test-data", 
                          "test.package.0001_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
