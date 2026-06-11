@@ -542,6 +542,159 @@ test_that("create_traceability_matrix joins coverage correctly via documentation
   expect_equal(result$tm$code_script, c("R/fun1.R", "R/fun2.R"))
 })
 
+test_that("create_traceability_matrix backward compatible when Rd and covr names already match", {
+  # No R/ directory at pkg_source_path: resolution is skipped; join uses
+  # normalize_code_script_key so identical paths still match as before.
+  mock_exports_df <- data.frame(
+    exported_function = c("fun1", "fun2"),
+    class = c(NA_character_, NA_character_),
+    function_type = c(NA_character_, NA_character_),
+    function_body = c(NA_character_, NA_character_),
+    where = c("mockPkg", "mockPkg"),
+    stringsAsFactors = FALSE
+  )
+  mock_docs_result <- list(
+    data = data.frame(
+      function_name = c("fun1", "fun2"),
+      documentation_name = c("fun1", "fun2"),
+      documentation_location = c("man/fun1.Rd", "man/fun2.Rd"),
+      stringsAsFactors = FALSE
+    ),
+    has_docs_score = 1
+  )
+  func_covr <- list(
+    name = "mockPkg",
+    coverage = list(
+      filecoverage = structure(
+        c(42.5, 85.0),
+        dim = 2L,
+        dimnames = list(c("R/fun1.r", "R/fun2.R"))
+      ),
+      totalcoverage = 0.635
+    ),
+    errors = NA,
+    notes = NA
+  )
+  
+  mockery::stub(create_traceability_matrix, "contains_r_folder", function(path) TRUE)
+  mockery::stub(create_traceability_matrix, "get_exports", function(path) mock_exports_df)
+  mockery::stub(create_traceability_matrix, "assess_exported_functions_docs", function(pkg, path) mock_docs_result)
+  mockery::stub(create_traceability_matrix, "get_func_descriptions", function(pkg) list(fun1 = "desc1", fun2 = "desc2"))
+  mockery::stub(create_traceability_matrix, "fine_grained_tms", function(tm, pkg) list(tm = tm))
+  
+  result <- create_traceability_matrix(
+    "mockPkg",
+    "mock/path",
+    func_covr = func_covr,
+    execute_coverage = TRUE
+  )
+  
+  expect_equal(result$tm$code_script, c("R/fun1.R", "R/fun2.R"))
+  expect_equal(result$tm$coverage_percent, c(42.5, 85.0))
+})
+
+test_that("create_traceability_matrix joins when Rd and R source names differ", {
+  mock_exports_df <- data.frame(
+    exported_function = "geom_alluvium",
+    class = NA_character_,
+    function_type = "regular function",
+    function_body = NA_character_,
+    where = "ggalluvial",
+    stringsAsFactors = FALSE
+  )
+  mock_docs_result <- list(
+    data = data.frame(
+      function_name = "geom_alluvium",
+      documentation_name = "geom_alluvium",
+      documentation_location = "man/geom_alluvium.Rd",
+      stringsAsFactors = FALSE
+    ),
+    has_docs_score = 1
+  )
+  func_covr <- list(
+    name = "ggalluvial",
+    coverage = list(
+      filecoverage = structure(
+        53.73,
+        dim = 1L,
+        dimnames = list("R/geom-alluvium.r")
+      ),
+      totalcoverage = 53.73
+    ),
+    errors = NA,
+    notes = NA
+  )
+  mock_r_script_lookup <- c(geomalluvium = "R/geom-alluvium.r")
+  
+  mockery::stub(create_traceability_matrix, "contains_r_folder", function(path) TRUE)
+  mockery::stub(create_traceability_matrix, "get_exports", function(path) mock_exports_df)
+  mockery::stub(create_traceability_matrix, "assess_exported_functions_docs", function(pkg, path) mock_docs_result)
+  mockery::stub(create_traceability_matrix, "get_func_descriptions", function(pkg) list(geom_alluvium = "desc"))
+  mockery::stub(create_traceability_matrix, "build_r_script_lookup", function(pkg_source_path) mock_r_script_lookup)
+  mockery::stub(create_traceability_matrix, "fine_grained_tms", function(tm, pkg) list(tm = tm))
+  
+  result <- create_traceability_matrix(
+    "ggalluvial",
+    "mock/path",
+    func_covr = func_covr,
+    execute_coverage = TRUE
+  )
+  
+  expect_equal(result$tm$code_script, "R/geom-alluvium.r")
+  expect_equal(result$tm$coverage_percent, 53.73)
+})
+
+test_that("create_traceability_matrix resolves ggproto code_script from R sources", {
+  mock_exports_df <- data.frame(
+    exported_function = "GeomAlluvium",
+    class = NA_character_,
+    function_type = "ggproto",
+    function_body = NA_character_,
+    where = "ggalluvial",
+    stringsAsFactors = FALSE
+  )
+  mock_docs_result <- list(
+    data = data.frame(
+      function_name = character(0),
+      documentation_name = character(0),
+      documentation_location = character(0),
+      stringsAsFactors = FALSE
+    ),
+    has_docs_score = 0
+  )
+  func_covr <- list(
+    name = "ggalluvial",
+    coverage = list(
+      filecoverage = structure(
+        0,
+        dim = 1L,
+        dimnames = list("R/geom-alluvium.r")
+      ),
+      totalcoverage = 0
+    ),
+    errors = NA,
+    notes = NA
+  )
+  mock_r_script_lookup <- c(geomalluvium = "R/geom-alluvium.r")
+  
+  mockery::stub(create_traceability_matrix, "contains_r_folder", function(path) TRUE)
+  mockery::stub(create_traceability_matrix, "get_exports", function(path) mock_exports_df)
+  mockery::stub(create_traceability_matrix, "assess_exported_functions_docs", function(pkg, path) mock_docs_result)
+  mockery::stub(create_traceability_matrix, "get_func_descriptions", function(pkg) list())
+  mockery::stub(create_traceability_matrix, "build_r_script_lookup", function(pkg_source_path) mock_r_script_lookup)
+  mockery::stub(create_traceability_matrix, "fine_grained_tms", function(tm, pkg) list(tm = tm))
+  
+  result <- create_traceability_matrix(
+    "ggalluvial",
+    "mock/path",
+    func_covr = func_covr,
+    execute_coverage = TRUE
+  )
+  
+  expect_equal(result$tm$code_script, "R/geom-alluvium.r")
+  expect_equal(result$tm$coverage_percent, 0)
+})
+
 test_that("path normalisation strips Linux/macOS absolute temp-path prefix", {
   # covr on Linux/macOS produces paths like /tmp/RtmpXXX/<pkg>/R/fun1.R.
   # The absolute-path branch (grepl "^(/|[A-Za-z]:)") fires, the prefix up to
@@ -1274,3 +1427,4 @@ test_that("create_traceability_matrix failure-branch message interpolates pkg_na
   # Sanity check on the returned empty TM: pkg_name propagates from the caller.
   expect_equal(result$pkg_name, "data.table")
 })
+

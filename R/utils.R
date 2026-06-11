@@ -121,3 +121,64 @@ extract_short_path <- function(long_file_name) {
   }
   return(result)
 }
+
+#' Normalize an R source path for coverage join keys
+#'
+#' Strips directory/extension and ignores hyphen, underscore, and case differences
+#' so \code{man/geom_alluvium.Rd} (\code{R/geom_alluvium.R}) matches covr keys
+#' like \code{R/geom-alluvium.r}.
+#'
+#' @param path Character scalar, e.g. \code{"R/geom-alluvium.r"}.
+#' @return Normalized basename without separators, or \code{NA_character_}.
+#'
+#' @keywords internal
+normalize_code_script_key <- function(path) {
+  vapply(
+    path,
+    function(p) {
+      if (is.na(p) || !nzchar(p)) {
+        return(NA_character_)
+      }
+      short <- extract_short_path(p)
+      short <- tolower(short)
+      base <- sub("^r/", "", short)
+      base <- sub("\\.[r]+$", "", base)
+      gsub("[-_.]", "", base)
+    },
+    FUN.VALUE = character(1),
+    USE.NAMES = FALSE
+  )
+}
+
+#' Convert CamelCase identifiers to kebab-case
+#'
+#' @param x Character scalar, e.g. \code{"GeomAlluvium"}.
+#' @return Character scalar, e.g. \code{"geom-alluvium"}.
+#'
+#' @keywords internal
+camel_to_kebab <- function(x) {
+  x <- gsub("([a-z0-9])([A-Z])", "\\1-\\2", x)
+  tolower(x)
+}
+
+#' Build a lookup from normalized R script keys to actual \code{R/} paths
+#'
+#' @param pkg_source_path Path to an unpacked package source tree.
+#' @return Named character vector: normalized key -> \code{"R/<file>"}.
+#'
+#' @keywords internal
+build_r_script_lookup <- function(pkg_source_path) {
+  r_dir <- file.path(pkg_source_path, "R")
+  if (!dir.exists(r_dir)) {
+    return(setNames(character(), character()))
+  }
+  r_files <- list.files(r_dir, pattern = "\\.[Rr]$", full.names = FALSE)
+  if (!length(r_files)) {
+    return(setNames(character(), character()))
+  }
+  scripts <- paste0("R/", r_files)
+  stats::setNames(
+    scripts,
+    vapply(scripts, normalize_code_script_key, FUN.VALUE = character(1))
+  )
+}

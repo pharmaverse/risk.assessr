@@ -141,7 +141,7 @@ github_links
 
 ## Get R package source code
 
-```{r}
+```{r, eval=FALSE}
 tarball_path <- get_package_tarfile("dplyr", version = "1.0.0")
 ```
 
