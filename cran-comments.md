@@ -8,9 +8,40 @@
 -   Ubuntu 24.04.2 LTS (on GitHub Actions), R version 4.5.0 (2025-04-11)
 -   Ubuntu 24.04.2 LTS (on GitHub Actions), R version 4.4.3 (2025-02-28)
 
+## Changes in this version
+* **New dependency `test.assessr` (>= 2.1.0)** is now in `Imports`.
+  Unit-test-coverage processing has been extracted out of `risk.assessr`
+  and is now delegated to `test.assessr`. The coverage code, its
+  documentation, tests, and previous coverage-related dependencies have
+  been removed from this package accordingly. `test.assessr` is available
+  on CRAN at the required version.
+* **CRAN-safe test skip helpers (PR #54 / branch 53).**
+  Added two helpers in `tests/testthat/helper-skip_conditions.R`:
+  - `skip_if_repo_unavailable()` — skips network-dependent tests when no
+    CRAN repo is configured or the repository is unreachable (also calls
+    `skip_on_cran()`).
+  - `skip_if_test_data_missing()` — skips tests when a required test-data
+    fixture is absent (`system.file()` returns "" on CRAN check machines
+    for large tarballs not shipped with the installed package), which
+    previously caused `set_up_pkg()` / `install_package_local()` to error
+    with "object 'package_installed' not found".
+  Affected tests were updated to call these guards so they no longer fail
+  on CRAN or offline check machines.
+* **Refactored `create_traceability_matrix()` join logic (PR #52 / branch 51).**
+  Coverage results and exported-function metadata are now joined on a
+  normalized key (`.join_key`, built via `normalize_code_script_key()`)
+  instead of a raw `code_script` string. This makes the join robust to
+  differing path formats (e.g. version-prefixed paths like
+  `data.table-1.17.0/R/foo.R`, bare filenames `foo.R` vs `R/foo.R`, and
+  case/separator differences), correctly matching functions to their
+  test-coverage percentages across CRAN, Bioconductor and GitHub sources.
+
 ## R CMD check results
 
-There were no ERRORs, WARNINGs, or NOTEs.
+There were no ERRORs, WARNINGs.
+
+There was 1 NOTE: the standard CRAN incoming feasibility note for a new
+version. `test.assessr` (>= 2.1.0), a newly added import, is available on CRAN.
 
 The rationale of the `risk.assessr` package is to validate R packages. As such, it runs processes
 such as `RCMD check` and `test coverage` which may generate ERRORs, NOTEs, and WARNINGs in packages.
