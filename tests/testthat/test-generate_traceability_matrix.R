@@ -1,20 +1,12 @@
 test_that("execute_coverage=FALSE runs coverage when tests are present", {
   
-  # Safe stub: copy the fixture to a temp file
-  fake_dl <- function(...) {
-    tmp <- tempfile(fileext = ".tar.gz")
-    file.copy(
-      system.file("test-data", "stringr-1.5.1.tar.gz", 
-                  package = "risk.assessr"),
-      tmp
-    )
-    tmp
-  }
+  # Stub get_package_tarfile() directly. Stubbing its internals
+  # (check_cran_package / remotes::download_version) has no effect because
+  # mockery only intercepts calls made directly in generate_traceability_matrix(),
+  # which would otherwise make a live network request and time out.
+  tar_path <- fake_tar()
+  mockery::stub(generate_traceability_matrix, "get_package_tarfile", function(...) tar_path)
   
-  fake_setup <- function(x) list(package_installed = TRUE, pkg_source_path = tempdir())
-  
-  mockery::stub(generate_traceability_matrix, "check_cran_package", TRUE)
-  mockery::stub(generate_traceability_matrix, "remotes::download_version", fake_dl)
   
   mockery::stub(generate_traceability_matrix, "modify_description_file", function(x) x)
   mockery::stub(generate_traceability_matrix, "set_up_pkg", function(x) {
