@@ -167,3 +167,26 @@ test_that("extract_short_path behavior for NA (optional policy)", {
   safe_extract <- function(x) if (is.na(x)) NA_character_ else extract_short_path(x)
   expect_true(is.na(safe_extract(NA_character_)))
 })
+
+test_that("normalize_code_script_key ignores hyphen, underscore, and case", {
+  expect_equal(
+    normalize_code_script_key(c("R/geom_alluvium.R", "R/geom-alluvium.r")),
+    c("geomalluvium", "geomalluvium")
+  )
+  expect_true(is.na(normalize_code_script_key(NA_character_)))
+})
+
+test_that("camel_to_kebab converts ggproto-style names", {
+  expect_equal(camel_to_kebab("GeomAlluvium"), "geom-alluvium")
+  expect_equal(camel_to_kebab("StatFlow"), "stat-flow")
+})
+
+test_that("build_r_script_lookup maps normalized keys to actual R paths", {
+  mockery::stub(build_r_script_lookup, "dir.exists", function(path) TRUE)
+  mockery::stub(build_r_script_lookup, "list.files", function(path, pattern, full.names) {
+    "geom-alluvium.r"
+  })
+  
+  lookup <- build_r_script_lookup("mock/path")
+  expect_equal(unname(lookup["geomalluvium"]), "R/geom-alluvium.r")
+})

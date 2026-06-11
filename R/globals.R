@@ -1,6 +1,7 @@
 globalVariables(c(
                   ".data",
                   ".doc_key",
+                  ".join_key",
                   "Code_script",
                   "code_script",
                   "cov_env",
