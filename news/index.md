@@ -1,5 +1,19 @@
 # Changelog
 
+## risk.assessr 4.1.0
+
+### New Features
+
+- add CRAN-safe test skip helpers `skip_if_repo_unavailable()` and
+  `skip_if_test_data_missing()` to fix “package_installed not found”
+  failures
+  ([\#54](https://github.com/pharmaverse/risk.assessr/issues/54))
+- refactor
+  [`create_traceability_matrix()`](https://pharmaverse.github.io/risk.assessr/reference/create_traceability_matrix.md)
+  to join on a normalized `.join_key` for reliable coverage-to-function
+  matching across path formats
+  ([\#52](https://github.com/pharmaverse/risk.assessr/issues/52))
+
 ## risk.assessr 4.0.0
 
 ### New Features
