@@ -40,4 +40,22 @@ skip_if_repo_unavailable <- function(repo = getOption("repos")[["CRAN"]],
   invisible(TRUE)
 }
 
-  
+# Skip a test when a required test-data fixture is not available.
+# system.file() returns "" when the file is absent (e.g. large tarballs that
+# are not shipped with the installed package on CRAN check machines), which
+# otherwise causes downstream set_up_pkg()/install_package_local() calls to
+# error. Guarding here keeps such tests CRAN-safe.
+skip_if_test_data_missing <- function(path) {
+  if (length(path) != 1L || is.na(path) || !nzchar(path) ||
+      !file.exists(path)) {
+    testthat::skip(
+      paste0("test-data fixture not available: ",
+             if (length(path) == 1L && !is.na(path) && nzchar(path)) {
+               path
+             } else {
+               "<missing>"
+             })
+    )
+  }
+  invisible(TRUE)
+}

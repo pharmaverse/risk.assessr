@@ -14,6 +14,7 @@ test_that("install_package_local works correctly", {
   dp_orig <- system.file("test-data", 
                          "test.package.0001_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   

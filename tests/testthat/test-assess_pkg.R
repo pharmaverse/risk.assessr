@@ -82,6 +82,7 @@ test_that(
       "test.package.0001_0.1.0.tar.gz",
       package = "risk.assessr"
     )
+    skip_if_test_data_missing(dp_orig)
     
     dp_dir <- tempfile()
     dir.create(dp_dir, recursive = TRUE)
@@ -263,6 +264,7 @@ test_that("running assess_pkg for test package in tar file - no exports", {
   dp_orig <- system.file("test-data", 
                          "test.package.0005_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp_dir <- tempfile()
   dir.create(dp_dir, recursive = TRUE)
   dp <- file.path(dp_dir, basename(dp_orig))
@@ -435,6 +437,7 @@ test_that("running assess_pkg for test package with Config/build/clean-inst-doc:
   
   dp <- system.file("test-data", "test.package.0005_0.1.0.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # Check if the file exists before attempting to download
   if (!file.exists(dp)) {
@@ -494,6 +497,7 @@ test_that("running assess_pkg for test package fail suggest", {
     "test.package.0001_0.1.0.tar.gz",
     package = "risk.assessr"
   )
+  skip_if_test_data_missing(dp_orig)
   dp_dir <- tempfile()
   dir.create(dp_dir, recursive = TRUE)
   dp <- file.path(dp_dir, basename(dp_orig))
@@ -613,6 +617,7 @@ test_that("assess_pkg handles errors in check_suggested_exp_funcs correctly", {
     "test.package.0001_0.1.0.tar.gz",
     package = "risk.assessr"
   )
+  skip_if_test_data_missing(dp_orig)
   dp_dir <- tempfile()
   dir.create(dp_dir, recursive = TRUE)
   dp <- file.path(dp_dir, basename(dp_orig))

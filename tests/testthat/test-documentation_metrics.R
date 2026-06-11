@@ -8,6 +8,7 @@ test_that("test doc_riskmetric", {
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -325,8 +326,9 @@ test_that("parse license for tar file MIT", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -357,8 +359,9 @@ test_that("parse authors for tar file Apache License", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0001_0.1.0.tar.gz", 
+                         "test.package.0001_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -394,8 +397,9 @@ test_that("parse license not present", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0007_0.1.0.tar.gz", 
+                         "test.package.0007_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
@@ -648,6 +652,7 @@ test_that("test assess_description_file_elements for all elements present", {
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -710,8 +715,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0007_0.1.0.tar.gz", 
+                         "test.package.0007_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -1008,6 +1014,7 @@ test_that("test assess_description_file_elements for all elements present", {
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -1069,8 +1076,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0007_0.1.0.tar.gz", 
+                         "test.package.0007_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -1240,8 +1248,9 @@ test_that("assess exports for tar file works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -1278,8 +1287,9 @@ test_that("assess exports for tar file works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0006_0.1.0.tar.gz", 
+                         "test.package.0006_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -1321,8 +1331,9 @@ test_that("assess exports for examples works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -1658,8 +1669,9 @@ test_that("assess exports for packages - no exported functions works correctly",
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0005_0.1.0.tar.gz", 
+                         "test.package.0005_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -1713,8 +1725,9 @@ test_that("assess exports for help files works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -1758,8 +1771,9 @@ test_that("assess exports for missing help files works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "stringr-1.5.1.tar.gz", 
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -1809,8 +1823,9 @@ test_that("assess exports for no help files works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0006_0.1.0.tar.gz", 
+                         "test.package.0006_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -2355,8 +2370,9 @@ test_that("assess exports for news works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -2406,8 +2422,9 @@ test_that("assess exports for missing news works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0001_0.1.0.tar.gz", 
+                         "test.package.0001_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -2462,8 +2479,9 @@ test_that("assess exports for current news works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -2514,8 +2532,9 @@ test_that("assess exports for missing news works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0001_0.1.0.tar.gz", 
+                         "test.package.0001_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -2755,8 +2774,9 @@ test_that("assess vignettes for tar file with vignettes works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "here-1.0.1.tar.gz", 
+  dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -2800,8 +2820,9 @@ test_that("assess vignettes for tar file with no vignettes works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0001_0.1.0.tar.gz", 
+                         "test.package.0001_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -2852,8 +2873,9 @@ test_that("assess code base size for small package works correctly", {
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
-                         "test.package.0001_0.1.0.tar.gz", 
+                         "test.package.0001_0.1.0.tar.gz",
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
@@ -2895,8 +2917,9 @@ test_that("assess code base size for large package works correctly", {
   options(repos = r)
   skip_if_repo_unavailable()
   
-  dp <- system.file("test-data", "stringr-1.5.1.tar.gz", 
+  dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)

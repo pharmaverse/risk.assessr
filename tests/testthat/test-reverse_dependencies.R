@@ -8,6 +8,7 @@ test_that("parse deps for tar file works correctly", {
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz", 
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   install_list <- set_up_pkg(dp)
   package_installed <- install_list$package_installed

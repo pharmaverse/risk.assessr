@@ -2,6 +2,10 @@ test_that("falls back to Bioconductor if CRAN download fails", {
   # Counter to simulate first download (CRAN) failing, second (Bioc) succeeding
   call_i <- 0
   
+  # Fail the configured-repos attempt offline so it does not hit the network
+  # (utils::available.packages() otherwise warns "unable to access index").
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", TRUE)
   mockery::stub(get_package_tarfile, "check_and_fetch_cran_package", function(package_name, package_version = NULL) {
     list(package_url = sprintf("https://cran.r-project.org/src/contrib/%s_%s.tar.gz",
@@ -28,6 +32,8 @@ test_that("falls back to Bioconductor if CRAN download fails", {
 })
 
 test_that("downloads a package from Bioconductor if not on CRAN", {
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html_content")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
@@ -44,6 +50,8 @@ test_that("downloads a package from Bioconductor if not on CRAN", {
 })
 
 test_that("downloads a package from internal mirror if not on CRAN or Bioconductor", {
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
@@ -69,6 +77,8 @@ test_that("downloads a package from internal mirror if not on CRAN or Bioconduct
 })
 
 test_that("errors if package not found on CRAN, Bioconductor, or internal", {
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
@@ -89,6 +99,8 @@ test_that("errors if package not found on CRAN, Bioconductor, or internal", {
 
 
 test_that("downloads a package successfully from CRAN", {
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", TRUE)
   mockery::stub(get_package_tarfile, "check_and_fetch_cran_package", function(package_name, package_version = NULL) {
     list(package_url = sprintf("https://cran.r-project.org/src/contrib/%s_%s.tar.gz",

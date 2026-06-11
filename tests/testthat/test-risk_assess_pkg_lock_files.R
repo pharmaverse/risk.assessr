@@ -2,6 +2,7 @@ test_that("running risk_assess_pkg_lock_files with tar file", {
   
   lock_file <- system.file("test-data", "here-1.0.1.tar.gz",
                            package = "risk.assessr")
+  skip_if_test_data_missing(lock_file)
   
   expect_error(
     pak_results <-
@@ -91,7 +92,7 @@ test_that("risk_assess_pkg_lock_files processes pak.lock correctly", {
       }
     ]
   }', temp_lock_file)
-
+  
   result <- risk_assess_pkg_lock_files(temp_lock_file)
   
   testthat::expect_true("markdown_1.0" %in% names(result))

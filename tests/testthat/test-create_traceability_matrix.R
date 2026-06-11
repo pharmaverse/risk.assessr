@@ -3,6 +3,7 @@ test_that("running tm for created package in tar file with no notes", {
   skip_if_repo_unavailable()
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
+  skip_if_test_data_missing(dp)
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -70,15 +71,12 @@ test_that("running tm for created package in tar file with no tests", {
   dp_orig <- system.file("test-data", 
                          "test.package.0004_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
-  
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -87,6 +85,10 @@ test_that("running tm for created package in tar file with no tests", {
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   # install package locally to ensure test works
   package_installed <- 
@@ -145,15 +147,12 @@ test_that("running tm for created package in tar file with no R directory", {
   dp_orig <- system.file("test-data",
                          "test.package.0006_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
-  
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -162,6 +161,10 @@ test_that("running tm for created package in tar file with no R directory", {
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   if (package_installed == TRUE ) {
     
@@ -217,15 +220,12 @@ test_that("running tm for created package in tar file with empty R directory", {
   dp_orig <- system.file("test-data",
                          "test.package.0005_0.1.0.tar.gz", 
                          package = "risk.assessr")
+  skip_if_test_data_missing(dp_orig)
   dp <- tempfile(fileext = ".tar.gz")
   file.copy(dp_orig, dp)
   
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
-  
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -234,6 +234,10 @@ test_that("running tm for created package in tar file with empty R directory", {
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   if (package_installed == TRUE ) {
     

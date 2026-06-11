@@ -721,7 +721,7 @@ test_that("get_internal_package_url works correctly for latest version", {
 })
 
 test_that("get_internal_package_url works correctly for latest version", {
-
+  
   mock_repos_response <- list(
     content = charToRaw(enc2utf8('[
       {"id": 6, "name": "art-git"},
@@ -739,7 +739,7 @@ test_that("get_internal_package_url works correctly for latest version", {
     status_code = 200
   )
   
-   mock_curl_fetch_memory <- mockery::mock(
+  mock_curl_fetch_memory <- mockery::mock(
     mock_repos_response,  
     mock_package_response 
   )
@@ -866,7 +866,7 @@ test_that("get_internal_package_url returns NULLs when no last version exists an
     }')),
     status_code = 200
   )
-
+  
   mock_curl_fetch_memory <- mockery::mock(mock_response)
   local_mocked_bindings(curl_fetch_memory = mock_curl_fetch_memory, .package = "curl")
   result <- get_internal_package_url("mockpackage", base_url="https://rstudio-pm.com")
@@ -926,12 +926,12 @@ test_that("get_internal_package_url handles empty API response", {
     content = raw(0),
     status_code = 200
   )
-
+  
   mock_curl_fetch_memory <- mockery::mock(mock_response)
   local_mocked_bindings(curl_fetch_memory = mock_curl_fetch_memory, .package = "curl")
-
+  
   result <- get_internal_package_url("mockpackage")
-
+  
   expect_null(result$url)
   expect_null(result$last_version)
   expect_equal(result$all_versions, list())
@@ -942,12 +942,12 @@ test_that("get_internal_package_url handles invalid JSON response", {
     content = charToRaw("Invalid JSON"),
     status_code = 200
   )
-
+  
   mock_curl_fetch_memory <- mockery::mock(mock_response)
   local_mocked_bindings(curl_fetch_memory = mock_curl_fetch_memory, .package = "curl")
-
+  
   result <- get_internal_package_url("mockpackage")
-
+  
   expect_null(result$url)
   expect_null(result$last_version)
   expect_equal(result$all_versions, list())
@@ -958,12 +958,12 @@ test_that("get_internal_package_url handles 404 (package not found)", {
     content = charToRaw("Not Found"),
     status_code = 404
   )
-
+  
   mock_curl_fetch_memory <- mockery::mock(mock_response)
   local_mocked_bindings(curl_fetch_memory = mock_curl_fetch_memory, .package = "curl")
-
+  
   result <- get_internal_package_url("nonexistentpackage")
-
+  
   expect_null(result$url)
   expect_null(result$last_version)
   expect_equal(result$all_versions, list())
@@ -1010,7 +1010,7 @@ test_that("get_internal_package_url handles repos without INTERNAL_RSPM", {
 })
 
 test_that("get_internal_package_url handles failure in first API call", {
-
+  
   mock_curl_fetch_memory <- mockery::mock(NULL)
   local_mocked_bindings(curl_fetch_memory = mock_curl_fetch_memory, .package = "curl")
   
@@ -1193,10 +1193,10 @@ test_that("get_host_package returns correct links for valid inputs", {
       if (field == "BugReports") "https://github.com/owner1/mockpackage/issues"
     }
   ))
-
+  
   # Stub description$new
   mockery::stub(get_host_package, "description$new", mock_description)
-
+  
   # Mock other dependencies
   mock_check_cran_package <- mockery::mock(TRUE)
   mock_parse_package_info <- mockery::mock("<html>Mock Archive Content</html>")
@@ -1206,7 +1206,7 @@ test_that("get_host_package returns correct links for valid inputs", {
   ),
   cycle = TRUE
   )
-
+  
   mock_check_and_fetch_cran_package <- mockery::mock(list(
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
@@ -1217,7 +1217,7 @@ test_that("get_host_package returns correct links for valid inputs", {
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   # Use local_mocked_bindings for other dependencies
   with_mocked_bindings(
     check_cran_package = mock_check_cran_package,
@@ -1229,7 +1229,7 @@ test_that("get_host_package returns correct links for valid inputs", {
     {
       # Call the function with mocked dependencies
       result <- get_host_package("mockpackage", "1.1.0", "/path/to/source")
-
+      
       # Validate the result
       expect_equal(result$github_links, "https://github.com/owner1/mockpackage")
       expect_equal(result$cran_links, "https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
@@ -1249,10 +1249,10 @@ test_that("get_host_package with github name and CRAN name different", {
       if (field == "BugReports") "https://github.com/ow-ner1/mockpackage_no_cran/issues"
     }
   ))
-
+  
   # Stub description$new
   mockery::stub(get_host_package, "description$new", mock_description)
-
+  
   # Mock other dependencies
   mock_check_cran_package <- mockery::mock(TRUE)
   mock_parse_package_info <- mockery::mock("<html>Mock Archive Content</html>")
@@ -1262,7 +1262,7 @@ test_that("get_host_package with github name and CRAN name different", {
   ),
   cycle = TRUE
   )
-
+  
   mock_check_and_fetch_cran_package <- mockery::mock(list(
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
@@ -1273,7 +1273,7 @@ test_that("get_host_package with github name and CRAN name different", {
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   # Use local_mocked_bindings for other dependencies
   with_mocked_bindings(
     check_cran_package = mock_check_cran_package,
@@ -1285,7 +1285,7 @@ test_that("get_host_package with github name and CRAN name different", {
     {
       # Call the function with mocked dependencies
       result <- get_host_package("mockpackage", "1.1.0", "/path/to/source")
-
+      
       # Validate the result
       expect_equal(result$github_links, "https://github.com/ow-ner1/mockpackage_no_cran")
       expect_equal(result$cran_links, "https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
@@ -1306,10 +1306,10 @@ test_that("get_host_package with no github link, no bug report", {
       if (field == "BugReports") ""
     }
   ))
-
+  
   # Stub description$new
   mockery::stub(get_host_package, "description$new", mock_description)
-
+  
   # Mock other dependencies
   mock_check_cran_package <- mockery::mock(TRUE)
   mock_parse_package_info <- mockery::mock("<html>Mock Archive Content</html>")
@@ -1329,7 +1329,7 @@ test_that("get_host_package with no github link, no bug report", {
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   # Use local_mocked_bindings for other dependencies
   with_mocked_bindings(
     check_cran_package = mock_check_cran_package,
@@ -1341,7 +1341,7 @@ test_that("get_host_package with no github link, no bug report", {
     {
       # Call the function with mocked dependencies
       result <- get_host_package("mockpackage", "1.1.0", "/path/to/source")
-
+      
       # Validate the result
       expect_null(result$github_links)
       expect_equal(result$cran_links, "https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
@@ -1362,10 +1362,10 @@ test_that("get_host_package with github name, but not bug report", {
       if (field == "BugReports") "https://github.com/ow-ner1/mockpackage_no_cran/issues"
     }
   ))
-
+  
   # Stub description$new
   mockery::stub(get_host_package, "description$new", mock_description)
-
+  
   # Mock other dependencies
   mock_check_cran_package <- mockery::mock(TRUE)
   mock_parse_package_info <- mockery::mock("<html>Mock Archive Content</html>")
@@ -1375,19 +1375,19 @@ test_that("get_host_package with github name, but not bug report", {
   ),
   cycle = TRUE
   )
-
+  
   mock_check_and_fetch_cran_package <- mockery::mock(list(
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   mock_get_cran_package_url <- mockery::mock("https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
   mock_get_internal_package_url <- mockery::mock(list(
     url = "https://rstudio-pm.prod.example.com/mockpackage_1.1.0.tar.gz",
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   # Use local_mocked_bindings for other dependencies
   with_mocked_bindings(
     check_cran_package = mock_check_cran_package,
@@ -1399,7 +1399,7 @@ test_that("get_host_package with github name, but not bug report", {
     {
       # Call the function with mocked dependencies
       result <- get_host_package("mockpackage", "1.1.0", "/path/to/source")
-
+      
       # Validate the result
       expect_equal(result$github_links, "https://github.com/ow-ner1/mockpackage_no_cran")
       expect_equal(result$cran_links, "https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
@@ -1420,10 +1420,10 @@ test_that("get_host_package with no github name, but bug report", {
       if (field == "BugReports") ""
     }
   ))
-
+  
   # Stub description$new
   mockery::stub(get_host_package, "description$new", mock_description)
-
+  
   # Mock other dependencies
   mock_check_cran_package <- mockery::mock(TRUE)
   mock_parse_package_info <- mockery::mock("<html>Mock Archive Content</html>")
@@ -1443,7 +1443,7 @@ test_that("get_host_package with no github name, but bug report", {
     last_version = "1.1.0",
     all_versions = c("1.0.0", "1.1.0")
   ))
-
+  
   # Use local_mocked_bindings for other dependencies
   with_mocked_bindings(
     check_cran_package = mock_check_cran_package,
@@ -1455,7 +1455,7 @@ test_that("get_host_package with no github name, but bug report", {
     {
       # Call the function with mocked dependencies
       result <- get_host_package("mockpackage", "1.1.0", "/path/to/source")
-
+      
       # Validate the result
       expect_equal(result$github_links, "https://github.com/ow-ner1/mockpackage_no_cran")
       expect_equal(result$cran_links, "https://cran.r-project.org/src/contrib/mockpackage_1.1.0.tar.gz")
@@ -1484,6 +1484,8 @@ test_that("get_package_tarfile works with system test package via mocked downloa
   withr::defer(unlink(dp), envir = parent.frame())
   
   # Mock download.file to copy from our test package instead of downloading
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", TRUE)
   mockery::stub(get_package_tarfile, "check_and_fetch_cran_package", function(package_name, package_version = NULL) {
     list(package_url = "https://cran.r-project.org/src/contrib/test.package.0001_0.1.0.tar.gz")
@@ -1505,6 +1507,8 @@ test_that("get_package_tarfile works with system test package via mocked downloa
 })
 
 test_that("get_package_tarfile passes version to internal fallback", {
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
@@ -1551,6 +1555,8 @@ test_that("Bioconductor branch uses system test package when result_bio$url is n
   withr::defer(unlink(dp), envir = parent.frame())
   
   # Exercise Bioconductor branch: check_cran_package FALSE, result_bio$url not null
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html_content")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
@@ -1575,6 +1581,8 @@ test_that("Bioconductor branch uses system test package when result_bio$url is n
 test_that("Bioconductor download error handler runs and falls through to internal mirror", {
   # result_bio$url is not null, but download.file throws
   # Covers: tryCatch error handler with message("Bioconductor download failed:", e$message)
+  mockery::stub(get_package_tarfile, "remotes::download_version",
+                function(...) stop("simulated: package not in configured repos"))
   mockery::stub(get_package_tarfile, "check_cran_package", FALSE)
   mockery::stub(get_package_tarfile, "fetch_bioconductor_releases", function() "html_content")
   mockery::stub(get_package_tarfile, "parse_bioconductor_releases", function(html) "release_data")
