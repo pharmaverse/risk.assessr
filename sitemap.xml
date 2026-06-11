@@ -32,7 +32,9 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/average_issue_close_time.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/bioconductor_reverse_deps.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/build_dependency_tree.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/build_r_script_lookup.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/build_rd_index.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/camel_to_kebab.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/capture_cran_warning.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/check_and_fetch_cran_package.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/check_cran_package.html</loc></url>
@@ -137,6 +139,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/is_base.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/list_badges.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/modify_description_file.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/normalize_code_script_key.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/normalize_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/parse_bioconductor_releases.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/parse_dcf_dependencies.html</loc></url>

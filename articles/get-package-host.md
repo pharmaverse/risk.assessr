@@ -138,9 +138,3 @@ github_links
 
 tarball_path <- get_package_tarfile("dplyr", version = "1.0.0")
 ```
-
-    ## Checking dplyr in configured repositories...
-
-    ## Trying https://packagemanager.posit.co/cran/__linux__/noble/latest
-
-    ## Package tarball saved at: /tmp/RtmpxyH9oZ/file25f3245bbbac
