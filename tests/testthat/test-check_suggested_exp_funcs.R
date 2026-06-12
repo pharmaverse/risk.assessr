@@ -36,9 +36,11 @@ test_that("check_suggested_exp_funcs returns 2 matches", {
 })
 
 test_that("check_suggested_exp_funcs returns matches messages for S3 functions", {
+  skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
   options(repos = r)
+  skip_if_repo_unavailable()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -51,10 +53,6 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- risk.assessr::set_up_pkg(dp)
   
@@ -62,6 +60,11 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   
   # install package locally to ensure test works
@@ -97,9 +100,11 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
 })
 
 test_that("check_suggested_exp_funcs returns matches messages for S3 functions", {
+  skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
   options(repos = r)
+  skip_if_repo_unavailable()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -112,10 +117,6 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- risk.assessr::set_up_pkg(dp)
   
@@ -123,6 +124,11 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   
   # install package locally to ensure test works
@@ -158,9 +164,11 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
 })
 
 test_that("check_suggested_exp_funcs returns matches messages for S4 functions", {
+  skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
   options(repos = r)
+  skip_if_repo_unavailable()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -173,10 +181,6 @@ test_that("check_suggested_exp_funcs returns matches messages for S4 functions",
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- set_up_pkg(dp)
   
@@ -184,6 +188,11 @@ test_that("check_suggested_exp_funcs returns matches messages for S4 functions",
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   
   # install package locally to ensure test works
@@ -236,10 +245,6 @@ test_that("get_exports works correctly with R6 functions", {
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- risk.assessr::set_up_pkg(dp)
   
@@ -247,6 +252,11 @@ test_that("get_exports works correctly with R6 functions", {
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   
   # install package locally to ensure test works
@@ -284,9 +294,11 @@ test_that("get_exports works correctly with R6 functions", {
 })
 
 test_that("check_suggested_exp_funcs returns no exported functions message", {
+  skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
   options(repos = r)
+  skip_if_repo_unavailable()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -299,10 +311,6 @@ test_that("check_suggested_exp_funcs returns no exported functions message", {
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- set_up_pkg(dp)
   
@@ -310,6 +318,11 @@ test_that("check_suggested_exp_funcs returns no exported functions message", {
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   # install package locally to ensure test works
   package_installed <- 
@@ -343,9 +356,11 @@ test_that("check_suggested_exp_funcs returns no exported functions message", {
 })
 
 test_that("check_suggested_exp_funcs returns No R folder found in the package source path message", {
+  skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
   options(repos = r)
+  skip_if_repo_unavailable()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -358,10 +373,6 @@ test_that("check_suggested_exp_funcs returns No R folder found in the package so
   # Defer cleanup of copied tarball
   withr::defer(unlink(dp), envir = parent.frame())
   
-  # Defer cleanup of unpacked source directory
-  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
-               envir = parent.frame())
-  
   # set up package
   install_list <- set_up_pkg(dp)
   
@@ -369,6 +380,11 @@ test_that("check_suggested_exp_funcs returns No R folder found in the package so
   package_installed <- install_list$package_installed
   pkg_source_path <- install_list$pkg_source_path
   rcmdcheck_args <- install_list$rcmdcheck_args
+  
+  # Defer cleanup of unpacked source directory (registered after pkg_source_path
+  # is known so teardown always targets the real extracted directory).
+  withr::defer(unlink(pkg_source_path, recursive = TRUE, force = TRUE),
+               envir = parent.frame())
   
   # install package locally to ensure test works
   package_installed <- 
