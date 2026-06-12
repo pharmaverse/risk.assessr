@@ -9,14 +9,27 @@ normalize_data <- function(results) {
     name = pluck(results, "pkg_name", .default = NA_character_),
     version = pluck(results, "pkg_version", .default = NA_character_),
     dependencies_import = names(pluck(results, "dependencies", "imports", .default = list())),
-    dependencies_count = length(pluck(results, "dependencies", "imports", .default = list())),
+    dependencies_count = pluck(
+      results,
+      "dependencies_count",
+      .default = length(pluck(results, "dependencies", "imports", .default = list()))
+    ),
     
     all_versions = pluck(results, "version_info", "all_versions", .default = NULL),
     last_version = pluck(results, "version_info", "last_version", .default = NULL),
+    later_version = pluck(results, "later_version", .default = NULL),
     
     maintainer = pluck(results, "author", "maintainer", .default = NA_character_),
-    license = clean_license((pluck(results, "license_name", .default = "NOT AVAILABLE"))),
-    reverse_dependencies_count = length(pluck(results, "rev_deps", .default = list())),
+    license = clean_license(pluck(
+      results,
+      "license",
+      .default = pluck(results, "license_name", .default = "NOT AVAILABLE")
+    )),
+    reverse_dependencies_count = pluck(
+      results,
+      "reverse_dependencies_count",
+      .default = length(pluck(results, "rev_deps", .default = list()))
+    ),
     funder = pluck(results, "author", "funder", .default = NA_character_),
     authors = pluck(results, "author", "authors", .default = NULL),
     
@@ -29,12 +42,21 @@ normalize_data <- function(results) {
     has_docs            = pluck(results, "has_docs",            .default = NULL),  
     has_news            = pluck(results, "has_news",            .default = NULL),
     has_ex_docs_score   = as.numeric(pluck(results, "has_ex_docs_score", .default = NA_real_)),
+    documentation_score = pluck(results, "documentation_score", .default = NULL),
     
-    code_coverage = pluck(results, "covr", .default = 0),
-    cmd_check = pluck(results, "check", .default = 0),
+    code_coverage = pluck(results, "code_coverage", .default = pluck(results, "covr", .default = 0)),
+    cmd_check = pluck(results, "cmd_check", .default = pluck(results, "check", .default = 0)),
     
-    total_download = pluck(results, "download", "total_download", .default = 0),
-    last_month_download = pluck(results, "download", "last_month_download", .default = 0),
+    total_download = pluck(
+      results,
+      "total_download",
+      .default = pluck(results, "download", "total_download", .default = 0)
+    ),
+    last_month_download = pluck(
+      results,
+      "last_month_download",
+      .default = pluck(results, "download", "last_month_download", .default = 0)
+    ),
     
     github_links = pluck(results, "host", "github_links", .default = NULL),
     cran_links = pluck(results, "host", "cran_links", .default = NULL),
@@ -58,20 +80,25 @@ extract_risk_inputs <- function(flat_data) {
   fields <- c("has_bug_reports_url","has_maintainer","has_source_control",
               "has_website","has_vignettes","has_examples","has_news")
   
-  documentation_score <- sum(vapply(flat_data[fields], function(x) {
-    if (is.null(x)) return(0L)
+  documentation_score <- flat_data$documentation_score
+  if (is.null(documentation_score)) {
+    documentation_score <- sum(vapply(flat_data[fields], function(x) {
+      if (is.null(x)) return(0L)
 
-    if (is.numeric(x) || is.logical(x)) {
-      return(as.integer(isTRUE(as.logical(x)))) 
-    }
-    1L                                         
-  }, integer(1L)))
+      if (is.numeric(x) || is.logical(x)) {
+        return(as.integer(isTRUE(as.logical(x)))) 
+      }
+      1L                                         
+    }, integer(1L)))
+  }
   
   all_versions <- flat_data$all_versions
   current_version <- flat_data$version
   last_version <- flat_data$last_version
   
-  if (!is.null(all_versions)) {
+  if (!is.null(flat_data$later_version)) {
+    later_version <- flat_data$later_version
+  } else if (!is.null(all_versions)) {
     
     index <- which(sapply(all_versions, function(x) x$version == current_version))
     
@@ -84,13 +111,9 @@ extract_risk_inputs <- function(flat_data) {
     later_version <- NA
   }
   
-  return(c(
-    flat_data,
-    list(
-      documentation_score = documentation_score,
-      later_version = later_version
-    )
-  ))
+  flat_data$documentation_score <- documentation_score
+  flat_data$later_version <- later_version
+  flat_data
 }
 
 
@@ -179,8 +202,8 @@ compute_risk <- function(value, risk) {
 
 
 #' @title Get Risk Analysis
-#' @description Compute risk levels for the package metadata.
-#' @param data The nested package metadata.
+#' @description Compute risk levels for nested package metadata or flat risk metric input.
+#' @param data The nested package metadata, as returned by \code{assess_pkg()}, or a flat list of risk metric values.
 #' @return A named list of computed risk levels.
 #'
 #' @examples
@@ -189,7 +212,7 @@ compute_risk <- function(value, risk) {
 #'   dependencies_count = 5,
 #'   later_version = 2,
 #'   code_coverage = 0.75,
-#'   last_month_download = 150000,
+#'   total_download = 150000,
 #'   license = "MIT",
 #'   reverse_dependencies_count = 10,
 #'   documentation_score = 2,

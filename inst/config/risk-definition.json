@@ -3,6 +3,7 @@
     "label": "dependency count",
     "id": "dependencies_count",
     "key": "dependencies_count",
+    "description": "Risk is low when the package has 20 dependencies or fewer, medium when it has 40 dependencies or fewer, and high above 40 dependencies.",
     "thresholds": [
       { "level": "low", "max": 20 },
       { "level": "medium", "max": 40 },
@@ -13,6 +14,7 @@
     "label": "version deprecation",
     "id": "version_difference",
     "key": "later_version",
+    "description": "Risk is low when there are 3 newer package versions or fewer, and high when there are more than 3 newer versions.",
     "thresholds": [
       { "level": "low", "max": 3 },
       { "level": "high", "max": null }
@@ -22,6 +24,7 @@
     "label": "code coverage",
     "id": "code_coverage",
     "key": "code_coverage",
+    "description": "Risk is high when code coverage is 0.6 or lower, medium when code coverage is 0.8 or lower, and low when code coverage is above 0.8 up to 1.",
     "thresholds": [
       { "level": "high", "max": 0.6 },
       { "level": "medium", "max": 0.8 },
@@ -32,6 +35,7 @@
     "label": "popularity",
     "id": "popularity",
     "key": "total_download",
+    "description": "Risk is high when total downloads are 3,500,000 or fewer, medium when total downloads are 50,000,000 or fewer, and low above 50,000,000.",
     "thresholds": [
       { "level": "high", "max": 3500000 },
       { "level": "medium", "max": 50000000 },
@@ -42,6 +46,7 @@
     "label": "license",
     "id": "license",
     "key": "license",
+    "description": "Risk is high for AGPL, SSPL, GNU Affero GPL, CeCILL, Open Software Licence, Server Side Public License, and unavailable licenses; medium for GPL, LGPL, and Artistic licenses; and low for MIT and Apache licenses. Unknown licenses use the default high risk.",
     "default": "high",
     "thresholds": [
       {
@@ -66,6 +71,7 @@
     "label": "reverse dependencies",
     "id": "reverse_dependencies",
     "key": "reverse_dependencies_count",
+    "description": "Risk is high when the package has 5 reverse dependencies or fewer, medium when it has 15 reverse dependencies or fewer, and low above 15 reverse dependencies.",
     "thresholds": [
       { "level": "high", "max": 5 },      
       { "level": "medium", "max": 15 },  
@@ -76,6 +82,7 @@
     "label": "documentation",
     "id": "documentation",
     "key": "documentation_score",
+    "description": "Risk is high when the documentation score is 3 or lower, medium when the documentation score is 6 or lower, and low above 6.",
     "thresholds": [
       { "level": "high", "max": 3 },
       { "level": "medium", "max": 6 },
@@ -86,6 +93,7 @@
     "label": "documentation",
     "id": "documentation",
     "key": "has_ex_docs_score",
+    "description": "Risk is high when the examples and documentation score is 0.6 or lower, medium when it is 0.8 or lower, and low when it is above 0.8 up to 1.",
     "thresholds": [
       { "level": "high", "max": 0.6  },
       { "level": "medium", "max": 0.8 },
@@ -96,6 +104,7 @@
     "label": "R cmd check",
     "id": "cmd-check",
     "key": "cmd_check",
+    "description": "Risk is high when the R CMD check score is 0, medium when it is 0.8 or lower, and low when it is above 0.8 up to 1.",
     "thresholds": [
       { "level": "high", "max": 0 },
       { "level": "medium", "max": 0.8 },
