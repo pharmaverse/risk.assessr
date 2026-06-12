@@ -64,6 +64,7 @@ reference:
     contents:
       - risk_assess_pkg
       - risk_assess_pkg_lock_files
+      - get_frugal_metrics
   - title: Reports & risk definitions
     desc: HTML reports, summaries, and risk metadata.
     contents:
