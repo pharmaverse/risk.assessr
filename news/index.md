@@ -2,6 +2,8 @@
 
 ## risk.assessr 4.1.0
 
+CRAN release: 2026-06-11
+
 ### New Features
 
 - add CRAN-safe test skip helpers `skip_if_repo_unavailable()` and
