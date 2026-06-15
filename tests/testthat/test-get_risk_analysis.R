@@ -65,6 +65,22 @@ test_that("normalize_data works correctly", {
   expect_equal(normalized$last_month_download, 50000)
 })
 
+test_that("normalize_data counts multiple imported dependencies", {
+  results <- list(
+    dependencies = list(
+      imports = list(
+        rprojroot = "2.1.1",
+        cli = "3.6.5",
+        glue = "1.8.0"
+      )
+    )
+  )
+
+  normalized <- normalize_data(results)
+  expect_equal(normalized$dependencies_import, c("rprojroot", "cli", "glue"))
+  expect_equal(normalized$dependencies_count, 3)
+})
+
 test_that("documentation_score = 7 when all flags are 1 with non null key value", {
   results <- list(
     pkg_name = "mockpkg",
@@ -578,6 +594,26 @@ test_that("get_risk_analysis ignores invalid flat input keys", {
 
   expect_equal(risks$dependencies_count, "high")
   expect_false("invalid_metric" %in% names(risks))
+})
+
+test_that("get_risk_analysis returns the same risks for equivalent native and flat input", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  flat_data <- list(
+    dependencies_count = 1,
+    later_version = 0,
+    code_coverage = 0.9,
+    total_download = 10000,
+    license = "MIT",
+    reverse_dependencies_count = 3,
+    documentation_score = 7,
+    cmd_check = 0
+  )
+
+  expect_equal(
+    get_risk_analysis(flat_data),
+    get_risk_analysis(mock_data)
+  )
 })
 
 test_that("get_risk_analysis classifies total downloads by default thresholds", {
