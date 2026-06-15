@@ -60,7 +60,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Dependency tree</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/pharmaverse/risk.assessr/blob/v4.1.0/vignettes/dependency_tree.Rmd" class="external-link"><code>vignettes/dependency_tree.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/pharmaverse/risk.assessr/blob/main/vignettes/dependency_tree.Rmd" class="external-link"><code>vignettes/dependency_tree.Rmd</code></a></small>
       <div class="d-none name"><code>dependency_tree.Rmd</code></div>
     </div>
 
@@ -89,15 +89,12 @@ control for exploring dependency layers.</p>
 <p>Fetch your primary dependencies from your package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/download_and_parse_dependencies.html">download_and_parse_dependencies</a></span><span class="op">(</span><span class="st">"stringr"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: unable to access index for repository http://cran.us.r-project.org/src/contrib:</span></span>
+<span><span class="co">#&gt;   cannot open URL 'http://cran.us.r-project.org/src/contrib/PACKAGES'</span></span>
+<span><span class="co">#&gt; Failed to download or parse stringr - couldn't find package 'stringr'</span></span>
 <span><span class="co">#&gt; $dependencies</span></span>
-<span><span class="co">#&gt;                package    type parent_package</span></span>
-<span><span class="co">#&gt; 1                  cli Imports        stringr</span></span>
-<span><span class="co">#&gt; 2      glue (&gt;= 1.6.1) Imports        stringr</span></span>
-<span><span class="co">#&gt; 3 lifecycle (&gt;= 1.0.3) Imports        stringr</span></span>
-<span><span class="co">#&gt; 4             magrittr Imports        stringr</span></span>
-<span><span class="co">#&gt; 5    rlang\n(&gt;= 1.0.0) Imports        stringr</span></span>
-<span><span class="co">#&gt; 6   stringi (&gt;= 1.5.3) Imports        stringr</span></span>
-<span><span class="co">#&gt; 7     vctrs (&gt;= 0.4.0) Imports        stringr</span></span>
+<span><span class="co">#&gt; [1] package        type           parent_package</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $license</span></span>
 <span><span class="co">#&gt; [1] NA</span></span></code></pre></div>
@@ -106,163 +103,18 @@ control for exploring dependency layers.</p>
 <code class="sourceCode R"><span><span class="va">dep_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_all_dependencies.html">fetch_all_dependencies</a></span><span class="op">(</span><span class="st">"stringr"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building dependency tree for: stringr</span></span>
 <span><span class="co">#&gt; Dependency tree in progress for stringr package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for magrittr package</span></span>
-<span><span class="co">#&gt; Finished building for magrittr</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for stringi package</span></span>
-<span><span class="co">#&gt; Finished building for stringi</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for vctrs package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for vctrs</span></span>
+<span><span class="co">#&gt; Warning: unable to access index for repository http://cran.us.r-project.org/src/contrib:</span></span>
+<span><span class="co">#&gt;   cannot open URL 'http://cran.us.r-project.org/src/contrib/PACKAGES'</span></span>
+<span><span class="co">#&gt; Failed to download or parse stringr - couldn't find package 'stringr'</span></span>
 <span><span class="co">#&gt; Finished building for stringr</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dep_data</span></span>
 <span><span class="co">#&gt; $stringr</span></span>
 <span><span class="co">#&gt; $stringr$version</span></span>
-<span><span class="co">#&gt; [1] "1.6.0"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$cli</span></span>
-<span><span class="co">#&gt; $stringr$cli$version</span></span>
-<span><span class="co">#&gt; [1] "3.6.6"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$cli$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$glue</span></span>
-<span><span class="co">#&gt; $stringr$glue$version</span></span>
-<span><span class="co">#&gt; [1] "1.8.1"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$glue$methods</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$lifecycle</span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$version</span></span>
-<span><span class="co">#&gt; [1] "1.0.5"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$cli</span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$cli$version</span></span>
-<span><span class="co">#&gt; [1] "3.6.6"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$cli$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$rlang</span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$rlang$version</span></span>
-<span><span class="co">#&gt; [1] "1.2.0"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$lifecycle$rlang$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$magrittr</span></span>
-<span><span class="co">#&gt; $stringr$magrittr$version</span></span>
-<span><span class="co">#&gt; [1] "2.0.5"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$rlang</span></span>
-<span><span class="co">#&gt; $stringr$rlang$version</span></span>
-<span><span class="co">#&gt; [1] "1.2.0"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$rlang$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$stringi</span></span>
-<span><span class="co">#&gt; $stringr$stringi$version</span></span>
-<span><span class="co">#&gt; [1] "1.8.7"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$stringi$tools</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$stringi$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$stringi$stats</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs</span></span>
-<span><span class="co">#&gt; $stringr$vctrs$version</span></span>
-<span><span class="co">#&gt; [1] "0.7.3"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$cli</span></span>
-<span><span class="co">#&gt; $stringr$vctrs$cli$version</span></span>
-<span><span class="co">#&gt; [1] "3.6.6"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$cli$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$glue</span></span>
-<span><span class="co">#&gt; $stringr$vctrs$glue$version</span></span>
-<span><span class="co">#&gt; [1] "1.8.1"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$glue$methods</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$lifecycle</span></span>
-<span><span class="co">#&gt; $stringr$vctrs$lifecycle$version</span></span>
-<span><span class="co">#&gt; [1] "1.0.5"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$rlang</span></span>
-<span><span class="co">#&gt; $stringr$vctrs$rlang$version</span></span>
-<span><span class="co">#&gt; [1] "1.2.0"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $stringr$vctrs$rlang$utils</span></span>
-<span><span class="co">#&gt; [1] "base"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "1.6.0"</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/print_tree.html">print_tree</a></span><span class="op">(</span><span class="va">dep_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt; └── stringr (v1.6.0)</span></span>
-<span><span class="co">#&gt;     ├── cli (v3.6.6)</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── glue (v1.8.1)</span></span>
-<span><span class="co">#&gt;     │   └── methods (base)</span></span>
-<span><span class="co">#&gt;     ├── lifecycle (v1.0.5)</span></span>
-<span><span class="co">#&gt;     │   ├── cli (v3.6.6)</span></span>
-<span><span class="co">#&gt;     │   │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── rlang (v1.2.0)</span></span>
-<span><span class="co">#&gt;     │       └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── magrittr (v2.0.5)</span></span>
-<span><span class="co">#&gt;     ├── rlang (v1.2.0)</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── stringi (v1.8.7)</span></span>
-<span><span class="co">#&gt;     │   ├── tools (base)</span></span>
-<span><span class="co">#&gt;     │   ├── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── stats (base)</span></span>
-<span><span class="co">#&gt;     └── vctrs (v0.7.3)</span></span>
-<span><span class="co">#&gt;         ├── cli (v3.6.6)</span></span>
-<span><span class="co">#&gt;         │   └── utils (base)</span></span>
-<span><span class="co">#&gt;         ├── glue (v1.8.1)</span></span>
-<span><span class="co">#&gt;         │   └── methods (base)</span></span>
-<span><span class="co">#&gt;         ├── lifecycle (v1.0.5)</span></span>
-<span><span class="co">#&gt;         └── rlang (v1.2.0)</span></span>
-<span><span class="co">#&gt;             └── utils (base)</span></span></code></pre></div>
+<span><span class="co">#&gt; └── stringr (v1.6.0)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="license-extraction">License Extraction<a class="anchor" aria-label="anchor" href="#license-extraction"></a>
@@ -273,62 +125,13 @@ setting <code>get_license = TRUE</code>.</p>
 <code class="sourceCode R"><span><span class="va">dep_data_with_license</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_all_dependencies.html">fetch_all_dependencies</a></span><span class="op">(</span><span class="st">"stringr"</span>, get_license <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building dependency tree for: stringr</span></span>
 <span><span class="co">#&gt; Dependency tree in progress for stringr package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for magrittr package</span></span>
-<span><span class="co">#&gt; Finished building for magrittr</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for stringi package</span></span>
-<span><span class="co">#&gt; Finished building for stringi</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for vctrs package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for vctrs</span></span>
+<span><span class="co">#&gt; Warning: unable to access index for repository http://cran.us.r-project.org/src/contrib:</span></span>
+<span><span class="co">#&gt;   cannot open URL 'http://cran.us.r-project.org/src/contrib/PACKAGES'</span></span>
+<span><span class="co">#&gt; Failed to download or parse stringr - couldn't find package 'stringr'</span></span>
 <span><span class="co">#&gt; Finished building for stringr</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/print_tree.html">print_tree</a></span><span class="op">(</span><span class="va">dep_data_with_license</span><span class="op">)</span></span>
-<span><span class="co">#&gt; └── stringr (v1.6.0) MIT + file LICENSE license</span></span>
-<span><span class="co">#&gt;     ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── glue (v1.8.1) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── methods (base)</span></span>
-<span><span class="co">#&gt;     ├── lifecycle (v1.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │       └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── magrittr (v2.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     ├── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── stringi (v1.8.7) file LICENSE</span></span>
-<span><span class="co">#&gt;     │   ├── tools (base)</span></span>
-<span><span class="co">#&gt;     │   ├── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── stats (base)</span></span>
-<span><span class="co">#&gt;     └── vctrs (v0.7.3) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   └── utils (base)</span></span>
-<span><span class="co">#&gt;         ├── glue (v1.8.1) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   └── methods (base)</span></span>
-<span><span class="co">#&gt;         ├── lifecycle (v1.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         └── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;             └── utils (base)</span></span></code></pre></div>
+<span><span class="co">#&gt; └── stringr (v1.6.0)</span></span></code></pre></div>
 <p>By default, the dependency tree explores up to 3 dependency levels
 deep. You can control this using the <code>max_level</code>
 parameter:</p>
@@ -337,108 +140,23 @@ parameter:</p>
 <span><span class="va">dep_data_shallow</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_all_dependencies.html">fetch_all_dependencies</a></span><span class="op">(</span><span class="st">"stringr"</span>, get_license <span class="op">=</span> <span class="cn">TRUE</span>, max_level <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building dependency tree for: stringr</span></span>
 <span><span class="co">#&gt; Dependency tree in progress for stringr package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for magrittr package</span></span>
-<span><span class="co">#&gt; Finished building for magrittr</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for stringi package</span></span>
-<span><span class="co">#&gt; Finished building for stringi</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for vctrs package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for vctrs</span></span>
+<span><span class="co">#&gt; Warning: unable to access index for repository http://cran.us.r-project.org/src/contrib:</span></span>
+<span><span class="co">#&gt;   cannot open URL 'http://cran.us.r-project.org/src/contrib/PACKAGES'</span></span>
+<span><span class="co">#&gt; Failed to download or parse stringr - couldn't find package 'stringr'</span></span>
 <span><span class="co">#&gt; Finished building for stringr</span></span>
 <span><span class="fu"><a href="../reference/print_tree.html">print_tree</a></span><span class="op">(</span><span class="va">dep_data_shallow</span><span class="op">)</span></span>
-<span><span class="co">#&gt; └── stringr (v1.6.0) MIT + file LICENSE license</span></span>
-<span><span class="co">#&gt;     ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── glue (v1.8.1) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── methods (base)</span></span>
-<span><span class="co">#&gt;     ├── lifecycle (v1.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     ├── magrittr (v2.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     ├── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── stringi (v1.8.7) file LICENSE</span></span>
-<span><span class="co">#&gt;     │   ├── tools (base)</span></span>
-<span><span class="co">#&gt;     │   ├── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── stats (base)</span></span>
-<span><span class="co">#&gt;     └── vctrs (v0.7.3) MIT + file LICENSE</span></span></code></pre></div>
+<span><span class="co">#&gt; └── stringr (v1.6.0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Deeper exploration (5 levels)</span></span>
 <span><span class="va">dep_data_deep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_all_dependencies.html">fetch_all_dependencies</a></span><span class="op">(</span><span class="st">"stringr"</span>, get_license <span class="op">=</span> <span class="cn">TRUE</span>, max_level <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Building dependency tree for: stringr</span></span>
 <span><span class="co">#&gt; Dependency tree in progress for stringr package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for magrittr package</span></span>
-<span><span class="co">#&gt; Finished building for magrittr</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for stringi package</span></span>
-<span><span class="co">#&gt; Finished building for stringi</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for vctrs package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for glue package</span></span>
-<span><span class="co">#&gt; Finished building for glue</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for lifecycle package</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for cli package</span></span>
-<span><span class="co">#&gt; Finished building for cli</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for lifecycle</span></span>
-<span><span class="co">#&gt; Dependency tree in progress for rlang package</span></span>
-<span><span class="co">#&gt; Finished building for rlang</span></span>
-<span><span class="co">#&gt; Finished building for vctrs</span></span>
+<span><span class="co">#&gt; Warning: unable to access index for repository http://cran.us.r-project.org/src/contrib:</span></span>
+<span><span class="co">#&gt;   cannot open URL 'http://cran.us.r-project.org/src/contrib/PACKAGES'</span></span>
+<span><span class="co">#&gt; Failed to download or parse stringr - couldn't find package 'stringr'</span></span>
 <span><span class="co">#&gt; Finished building for stringr</span></span>
 <span><span class="fu"><a href="../reference/print_tree.html">print_tree</a></span><span class="op">(</span><span class="va">dep_data_deep</span><span class="op">)</span></span>
-<span><span class="co">#&gt; └── stringr (v1.6.0) MIT + file LICENSE license</span></span>
-<span><span class="co">#&gt;     ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── glue (v1.8.1) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── methods (base)</span></span>
-<span><span class="co">#&gt;     ├── lifecycle (v1.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │       └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── magrittr (v2.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     ├── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;     │   └── utils (base)</span></span>
-<span><span class="co">#&gt;     ├── stringi (v1.8.7) file LICENSE</span></span>
-<span><span class="co">#&gt;     │   ├── tools (base)</span></span>
-<span><span class="co">#&gt;     │   ├── utils (base)</span></span>
-<span><span class="co">#&gt;     │   └── stats (base)</span></span>
-<span><span class="co">#&gt;     └── vctrs (v0.7.3) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   └── utils (base)</span></span>
-<span><span class="co">#&gt;         ├── glue (v1.8.1) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   └── methods (base)</span></span>
-<span><span class="co">#&gt;         ├── lifecycle (v1.0.5) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   ├── cli (v3.6.6) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │   │   └── utils (base)</span></span>
-<span><span class="co">#&gt;         │   └── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;         │       └── utils (base)</span></span>
-<span><span class="co">#&gt;         └── rlang (v1.2.0) MIT + file LICENSE</span></span>
-<span><span class="co">#&gt;             └── utils (base)</span></span></code></pre></div>
+<span><span class="co">#&gt; └── stringr (v1.6.0)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="check-for-conflicting-dependency-versions">Check for Conflicting Dependency Versions<a class="anchor" aria-label="anchor" href="#check-for-conflicting-dependency-versions"></a>
