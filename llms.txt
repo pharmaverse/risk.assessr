@@ -184,6 +184,8 @@ repositories).
   : Assess package for risk metrics
 - [`risk_assess_pkg_lock_files()`](https://pharmaverse.github.io/risk.assessr/reference/risk_assess_pkg_lock_files.md)
   : Process lock files
+- [`get_frugal_metrics()`](https://pharmaverse.github.io/risk.assessr/reference/get_frugal_metrics.md)
+  : Compute frugal risk metrics for an R package
 
 ## Reports & risk definitions
 

@@ -107,6 +107,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_exported_function_names.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_exports.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_exports_from_source.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_frugal_metrics.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_func_descriptions.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_github_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_host_package.html</loc></url>
@@ -135,6 +136,8 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_versions.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/handle_null.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/index.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/init_frugal_covr_list.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/init_frugal_results.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/install_package_local.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/is_base.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/list_badges.html</loc></url>
