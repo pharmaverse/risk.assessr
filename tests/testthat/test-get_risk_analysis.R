@@ -65,6 +65,22 @@ test_that("normalize_data works correctly", {
   expect_equal(normalized$last_month_download, 50000)
 })
 
+test_that("normalize_data counts multiple imported dependencies", {
+  results <- list(
+    dependencies = list(
+      imports = list(
+        rprojroot = "2.1.1",
+        cli = "3.6.5",
+        glue = "1.8.0"
+      )
+    )
+  )
+
+  normalized <- normalize_data(results)
+  expect_equal(normalized$dependencies_import, c("rprojroot", "cli", "glue"))
+  expect_equal(normalized$dependencies_count, 3)
+})
+
 test_that("documentation_score = 7 when all flags are 1 with non null key value", {
   results <- list(
     pkg_name = "mockpkg",
@@ -503,6 +519,117 @@ test_that("get_risk_analysis returns expected risk levels", {
   expect_equal(risks$cmd_check, "high")
   expect_equal(risks$total_download, "high")
   expect_equal(risks$later_version, "low")
+})
+
+test_that("get_risk_analysis honors flat metric input", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  flat_data <- list(
+    dependencies_count = 300,
+    later_version = 2,
+    code_coverage = 1,
+    total_download = 150000,
+    license = "MIT",
+    reverse_dependencies_count = 10,
+    documentation_score = 2,
+    cmd_check = 0
+  )
+
+  risks <- get_risk_analysis(flat_data)
+  expect_equal(risks$dependencies_count, "high")
+  expect_equal(risks$later_version, "low")
+  expect_equal(risks$code_coverage, "low")
+  expect_equal(risks$total_download, "high")
+  expect_equal(risks$license, "low")
+  expect_equal(risks$reverse_dependencies_count, "medium")
+  expect_equal(risks$documentation_score, "high")
+  expect_equal(risks$cmd_check, "high")
+})
+
+test_that("get_risk_analysis honors documented artificial mock data", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  mock_data <- list(
+    dependencies_count = 5,
+    later_version = 2,
+    code_coverage = 0.75,
+    total_download = 150000,
+    license = "MIT",
+    reverse_dependencies_count = 10,
+    documentation_score = 2,
+    cmd_check = 0
+  )
+
+  risks <- get_risk_analysis(mock_data)
+  expect_equal(risks$dependencies_count, "low")
+  expect_equal(risks$later_version, "low")
+  expect_equal(risks$code_coverage, "medium")
+  expect_equal(risks$total_download, "high")
+  expect_equal(risks$license, "low")
+  expect_equal(risks$reverse_dependencies_count, "medium")
+  expect_equal(risks$documentation_score, "high")
+  expect_equal(risks$cmd_check, "high")
+
+  mock_data$dependencies_count <- 300
+  mock_data$code_coverage <- 1
+
+  risks <- get_risk_analysis(mock_data)
+  expect_equal(risks$dependencies_count, "high")
+  expect_equal(risks$later_version, "low")
+  expect_equal(risks$code_coverage, "low")
+  expect_equal(risks$total_download, "high")
+  expect_equal(risks$license, "low")
+  expect_equal(risks$reverse_dependencies_count, "medium")
+  expect_equal(risks$documentation_score, "high")
+  expect_equal(risks$cmd_check, "high")
+})
+
+test_that("get_risk_analysis ignores invalid flat input keys", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  risks <- get_risk_analysis(list(
+    dependencies_count = 300,
+    invalid_metric = 1
+  ))
+
+  expect_equal(risks$dependencies_count, "high")
+  expect_false("invalid_metric" %in% names(risks))
+})
+
+test_that("get_risk_analysis returns the same risks for equivalent native and flat input", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  flat_data <- list(
+    dependencies_count = 1,
+    later_version = 0,
+    code_coverage = 0.9,
+    total_download = 10000,
+    license = "MIT",
+    reverse_dependencies_count = 3,
+    documentation_score = 7,
+    cmd_check = 0
+  )
+
+  expect_equal(
+    get_risk_analysis(flat_data),
+    get_risk_analysis(mock_data)
+  )
+})
+
+test_that("get_risk_analysis classifies total downloads by default thresholds", {
+  withr::local_options(list(risk.assessr.risk_definition = NULL))
+
+  risks <- get_risk_analysis(list(total_download = 1100000))
+  expect_equal(risks$total_download, "high")
+
+  risks <- get_risk_analysis(list(total_download = 10000000))
+  expect_equal(risks$total_download, "medium")
+
+  risks <- get_risk_analysis(list(total_download = 100000000))
+  expect_equal(risks$total_download, "low")
+
+  risks <- get_risk_analysis(list(total_download = NULL))
+  expect_equal(risks$total_download, "high")
 })
 
 test_that("get_risk_analysis works end-to-end", {

@@ -7,13 +7,13 @@
 get_risk_analysis(data)
 }
 \arguments{
-\item{data}{The nested package metadata.}
+\item{data}{The nested package metadata, as returned by \code{assess_pkg()}, or a flat list of risk metric values.}
 }
 \value{
 A named list of computed risk levels.
 }
 \description{
-Compute risk levels for the package metadata.
+Compute risk levels for nested package metadata or flat risk metric input.
 }
 \examples{
 # Minimal mock input for demonstration
@@ -21,7 +21,7 @@ mock_data <- list(
   dependencies_count = 5,
   later_version = 2,
   code_coverage = 0.75,
-  last_month_download = 150000,
+  total_download = 150000,
   license = "MIT",
   reverse_dependencies_count = 10,
   documentation_score = 2,
