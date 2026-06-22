@@ -1,6 +1,7 @@
 # Get Risk Analysis
 
-Compute risk levels for the package metadata.
+Compute risk levels for nested package metadata or flat risk metric
+input.
 
 ## Usage
 
@@ -12,7 +13,9 @@ get_risk_analysis(data)
 
 - data:
 
-  The nested package metadata.
+  The nested package metadata, as returned by
+  [`assess_pkg()`](https://pharmaverse.github.io/risk.assessr/reference/assess_pkg.md),
+  or a flat list of risk metric values.
 
 ## Value
 
@@ -26,7 +29,7 @@ mock_data <- list(
   dependencies_count = 5,
   later_version = 2,
   code_coverage = 0.75,
-  last_month_download = 150000,
+  total_download = 150000,
   license = "MIT",
   reverse_dependencies_count = 10,
   documentation_score = 2,
@@ -56,19 +59,19 @@ get_risk_analysis(mock_data)
 #> [1] "low"
 #> 
 #> $later_version
-#> [1] "unknown"
+#> [1] "low"
 #> 
 #> $code_coverage
-#> [1] "high"
+#> [1] "medium"
 #> 
 #> $total_download
 #> [1] "high"
 #> 
 #> $license
-#> [1] "high"
+#> [1] "low"
 #> 
 #> $reverse_dependencies_count
-#> [1] "high"
+#> [1] "medium"
 #> 
 #> $documentation_score
 #> [1] "high"

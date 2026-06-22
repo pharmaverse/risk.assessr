@@ -29,6 +29,9 @@ print(risk_rule)
 #> [[1]]$key
 #> [1] "dependencies_count"
 #> 
+#> [[1]]$description
+#> [1] "Risk is low when the package has 20 dependencies or fewer, medium when it has 40 dependencies or fewer, and high above 40 dependencies."
+#> 
 #> [[1]]$thresholds
 #> [[1]]$thresholds[[1]]
 #> [[1]]$thresholds[[1]]$level
@@ -66,6 +69,9 @@ print(risk_rule)
 #> [[2]]$key
 #> [1] "later_version"
 #> 
+#> [[2]]$description
+#> [1] "Risk is low when there are 3 newer package versions or fewer, and high when there are more than 3 newer versions."
+#> 
 #> [[2]]$thresholds
 #> [[2]]$thresholds[[1]]
 #> [[2]]$thresholds[[1]]$level
@@ -94,6 +100,9 @@ print(risk_rule)
 #> 
 #> [[3]]$key
 #> [1] "code_coverage"
+#> 
+#> [[3]]$description
+#> [1] "Risk is high when code coverage is 0.6 or lower, medium when code coverage is 0.8 or lower, and low when code coverage is above 0.8 up to 1."
 #> 
 #> [[3]]$thresholds
 #> [[3]]$thresholds[[1]]
@@ -132,6 +141,9 @@ print(risk_rule)
 #> [[4]]$key
 #> [1] "total_download"
 #> 
+#> [[4]]$description
+#> [1] "Risk is high when total downloads are 3,500,000 or fewer, medium when total downloads are 50,000,000 or fewer, and low above 50,000,000."
+#> 
 #> [[4]]$thresholds
 #> [[4]]$thresholds[[1]]
 #> [[4]]$thresholds[[1]]$level
@@ -168,6 +180,9 @@ print(risk_rule)
 #> 
 #> [[5]]$key
 #> [1] "license"
+#> 
+#> [[5]]$description
+#> [1] "Risk is high for AGPL, SSPL, GNU Affero GPL, CeCILL, Open Software Licence, Server Side Public License, and unavailable licenses; medium for GPL, LGPL, and Artistic licenses; and low for MIT and Apache licenses. Unknown licenses use the default high risk."
 #> 
 #> [[5]]$default
 #> [1] "high"
@@ -242,6 +257,9 @@ print(risk_rule)
 #> [[6]]$key
 #> [1] "reverse_dependencies_count"
 #> 
+#> [[6]]$description
+#> [1] "Risk is high when the package has 5 reverse dependencies or fewer, medium when it has 15 reverse dependencies or fewer, and low above 15 reverse dependencies."
+#> 
 #> [[6]]$thresholds
 #> [[6]]$thresholds[[1]]
 #> [[6]]$thresholds[[1]]$level
@@ -278,6 +296,9 @@ print(risk_rule)
 #> 
 #> [[7]]$key
 #> [1] "documentation_score"
+#> 
+#> [[7]]$description
+#> [1] "Risk is high when the documentation score is 3 or lower, medium when the documentation score is 6 or lower, and low above 6."
 #> 
 #> [[7]]$thresholds
 #> [[7]]$thresholds[[1]]
@@ -316,6 +337,9 @@ print(risk_rule)
 #> [[8]]$key
 #> [1] "has_ex_docs_score"
 #> 
+#> [[8]]$description
+#> [1] "Risk is high when the examples and documentation score is 0.6 or lower, medium when it is 0.8 or lower, and low when it is above 0.8 up to 1."
+#> 
 #> [[8]]$thresholds
 #> [[8]]$thresholds[[1]]
 #> [[8]]$thresholds[[1]]$level
@@ -352,6 +376,9 @@ print(risk_rule)
 #> 
 #> [[9]]$key
 #> [1] "cmd_check"
+#> 
+#> [[9]]$description
+#> [1] "Risk is high when the R CMD check score is 0, medium when it is 0.8 or lower, and low when it is above 0.8 up to 1."
 #> 
 #> [[9]]$thresholds
 #> [[9]]$thresholds[[1]]

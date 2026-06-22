@@ -34,7 +34,7 @@ head(df_commit)
 download_bio_df <- get_package_download_bioconductor("limma")
 #> Warning: Failed to open
 #> 'https://bioconductor.org/packages/stats/bioc/limma/limma_stats.tab': The
-#> requested URL returned error: 504
+#> requested URL returned error: 404
 #> could not fetch download data for package: limma
 #> No download data found for package: limma
 head(download_bio_df$all_data)
