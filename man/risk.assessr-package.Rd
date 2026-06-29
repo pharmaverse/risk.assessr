@@ -23,6 +23,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Edward Gillian \email{edward.gillian-ext@sanofi.com} (\href{https://orcid.org/0000-0003-2732-5107}{ORCID})
   \item Hugo Bottois \email{hugo.bottois@sanofi.com} (\href{https://orcid.org/0000-0003-4674-0875}{ORCID})
   \item Paulin Charliquart \email{paulin.charliquart@sanofi.com}
   \item Andre Couturier \email{andre.couturier@sanofi.com}

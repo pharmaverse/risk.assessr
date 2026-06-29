@@ -7,7 +7,7 @@
 convert_number_to_abbreviation(value)
 }
 \arguments{
-\item{value}{}
+\item{value}{- number to be converted}
 }
 \description{
 Convert number to abbreviation
