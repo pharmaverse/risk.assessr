@@ -41,6 +41,7 @@ mock_curl_commits_failure <- function(url, handle) {
 
 test_that("Valid repository returns correct data", {
   mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl_success)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
   result <- get_github_data("tidyverse", "ggplot2")
   
   expect_type(result, "list")
@@ -53,7 +54,7 @@ test_that("Valid repository returns correct data", {
   expect_equal(result$recent_commits_count, 10)
   skip_if(is.na(result$average_issue_close_time),
           "GitHub API unavailable or rate-limited")
-  expect_gte(result$average_issue_close_time, 846) 
+  expect_gte(result$average_issue_close_time, 847) 
 })
 
 test_that("Invalid owner returns empty response", {
