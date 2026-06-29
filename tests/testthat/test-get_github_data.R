@@ -54,7 +54,7 @@ test_that("Valid repository returns correct data", {
   expect_equal(result$recent_commits_count, 10)
   skip_if(is.na(result$average_issue_close_time),
           "GitHub API unavailable or rate-limited")
-  expect_gte(result$average_issue_close_time, 847) 
+  expect_equal(result$average_issue_close_time, 847) 
 })
 
 test_that("Invalid owner returns empty response", {
@@ -84,6 +84,7 @@ test_that("Non-existent repository returns empty response on API failure", {
 
 test_that("Commits endpoint failure returns zero recent commits", {
   mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl_commits_failure)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
   result <- get_github_data("tidyverse", "ggplot2")
   
   expect_equal(result$created_at, "2015-06-17")
