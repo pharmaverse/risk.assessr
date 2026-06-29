@@ -41,6 +41,7 @@ mock_curl_commits_failure <- function(url, handle) {
 
 test_that("Valid repository returns correct data", {
   mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl_success)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
   result <- get_github_data("tidyverse", "ggplot2")
   
   expect_type(result, "list")
@@ -51,9 +52,7 @@ test_that("Valid repository returns correct data", {
   expect_equal(result$forks, 2040)
   expect_equal(result$open_issues, 42)
   expect_equal(result$recent_commits_count, 10)
-  skip_if(is.na(result$average_issue_close_time),
-          "GitHub API unavailable or rate-limited")
-  expect_gte(result$average_issue_close_time, 846) 
+  expect_equal(result$average_issue_close_time, 847)
 })
 
 test_that("Invalid owner returns empty response", {
@@ -83,6 +82,7 @@ test_that("Non-existent repository returns empty response on API failure", {
 
 test_that("Commits endpoint failure returns zero recent commits", {
   mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl_commits_failure)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
   result <- get_github_data("tidyverse", "ggplot2")
   
   expect_equal(result$created_at, "2015-06-17")
@@ -101,6 +101,58 @@ test_that("Handles both repo and commits failure gracefully", {
   expect_null(result$forks)
   expect_null(result$recent_commits_count)
   expect_null(result$open_issues)
+})
+
+# Helper: build a curl mock that serves fixed repo data and custom commits JSON
+make_repo_commits_mock <- function(commits_json) {
+  function(url, handle) {
+    if (grepl("/commits", url)) {
+      return(list(content = charToRaw(commits_json)))
+    }
+    repo <- list(
+      created_at = "2015-06-17T09:29:49Z",
+      stargazers_count = 5674,
+      forks_count = 2040,
+      open_issues_count = 42
+    )
+    list(content = charToRaw(jsonlite::toJSON(repo, auto_unbox = TRUE)))
+  }
+}
+
+test_that("recent_commits_count uses length of sha when commits is a non-data-frame list", {
+  # Single JSON object -> parsed as a list (not a data frame) with a sha element
+  mock_curl <- make_repo_commits_mock('{"sha":["a","b","c"]}')
+  mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
+  
+  result <- get_github_data("tidyverse", "ggplot2")
+  
+  expect_equal(result$recent_commits_count, 3)
+})
+
+test_that("recent_commits_count is 0 when commits list has no sha element", {
+  # JSON object without a sha field -> list without $sha -> else branch returns 0
+  mock_curl <- make_repo_commits_mock('{"message":"No commits in range"}')
+  mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
+  
+  result <- get_github_data("tidyverse", "ggplot2")
+  
+  expect_equal(result$recent_commits_count, 0)
+})
+
+test_that("recent_commits_count falls back to 0 when counting commits errors", {
+  # JSON array of scalars -> atomic vector; `$sha` on an atomic vector errors,
+  # exercising the tryCatch error handler.
+  mock_curl <- make_repo_commits_mock('["a","b"]')
+  mockery::stub(get_github_data, "curl::curl_fetch_memory", mock_curl)
+  mockery::stub(get_github_data, "average_issue_close_time", 847)
+  
+  expect_message(
+    result <- get_github_data("tidyverse", "ggplot2"),
+    "Failed to count recent commits"
+  )
+  expect_equal(result$recent_commits_count, 0)
 })
 
 
@@ -421,21 +473,70 @@ test_that("get_commits_since correctly groups commits by week", {
     list(commit = list(author = list(date = "2024-03-31T23:59:59Z"))),  # Sunday
     list(commit = list(author = list(date = "2024-04-01T00:00:00Z")))   # Monday
   )
-
+  
   mock_json <- jsonlite::toJSON(mock_commits, auto_unbox = TRUE)
-
+  
   # First call returns data, second returns empty list to stop
   mock_curl <- mockery::mock(
     list(content = charToRaw(mock_json)),
     list(content = charToRaw(jsonlite::toJSON(list(), auto_unbox = TRUE)))
   )
-
+  
   mockery::stub(get_commits_since, "curl::curl_fetch_memory", mock_curl)
-
+  
   result <- get_commits_since("someowner", "somerepo", years = 1)
-
+  
   expect_equal(nrow(result), 2)  # One commit in each week
   expect_equal(sum(result$n_commits), 2)
+})
+
+
+test_that("get_commits_since returns empty data frame when the fetch fails", {
+  # curl error on the first page -> message, NULL, loop breaks, empty result
+  mockery::stub(
+    get_commits_since, "curl::curl_fetch_memory",
+    function(url, handle) stop("network down")
+  )
+  
+  expect_message(
+    result <- get_commits_since("someowner", "somerepo", years = 1),
+    "Failed to fetch page"
+  )
+  expect_equal(nrow(result), 0)
+  expect_true(all(c("week_start", "n_commits") %in% colnames(result)))
+})
+
+
+test_that("get_commits_since returns empty data frame when JSON cannot be parsed", {
+  # Response with malformed JSON content -> parse error handler -> NULL -> break
+  mock_curl <- mockery::mock(list(content = charToRaw("INVALID{")))
+  mockery::stub(get_commits_since, "curl::curl_fetch_memory", mock_curl)
+  
+  expect_message(
+    result <- get_commits_since("someowner", "somerepo", years = 1),
+    "Error parsing JSON on page"
+  )
+  expect_equal(nrow(result), 0)
+  expect_true(all(c("week_start", "n_commits") %in% colnames(result)))
+})
+
+
+test_that("get_commits_since returns empty data frame when all commit dates are NA", {
+  # Commits present, but dates are null -> parsed as NA -> safeguard returns empty df.
+  # JSON null becomes a logical NA column, so as.Date() yields NA dates (no error).
+  mock_page1 <- '[{"commit":{"author":{"date":null}}},{"commit":{"author":{"date":null}}}]'
+  mock_empty <- jsonlite::toJSON(list(), auto_unbox = TRUE)
+  
+  mock_curl <- mockery::mock(
+    list(content = charToRaw(mock_page1)),
+    list(content = charToRaw(mock_empty))
+  )
+  mockery::stub(get_commits_since, "curl::curl_fetch_memory", mock_curl)
+  
+  result <- get_commits_since("someowner", "somerepo", years = 1)
+  
+  expect_equal(nrow(result), 0)
+  expect_true(all(c("week_start", "n_commits") %in% colnames(result)))
 })
 
 
@@ -480,6 +581,19 @@ test_that("throws an error if required columns are missing", {
     count_commits_last_months(invalid_df, months = 1, today = mock_today),
     "Data frame must have 'year', 'month', and 'n_commits' columns."
   )
+})
+
+test_that("counts commits across a year boundary (month wraparound)", {
+  # today in January with a 3-month window forces start_month <= 0,
+  # exercising the wraparound loop (start_month + 12, start_year - 1).
+  wrap_df <- data.frame(
+    year = c(2023, 2023),
+    month = c(10, 11),
+    n_commits = c(5, 3)
+  )
+  result <- count_commits_last_months(wrap_df, months = 3, today = as.Date("2024-01-15"))
+  # Window spans 2023-10 .. 2024-01, so both rows are included: 5 + 3 = 8
+  expect_equal(result, 8)
 })
 
 
