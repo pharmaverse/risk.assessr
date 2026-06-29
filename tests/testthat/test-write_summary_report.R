@@ -12,7 +12,9 @@ toy_data_risk <- list(
     example_score              = "medium",
     has_docs_score             = "low",
     has_ex_docs_score          = "low",
-    cmd_check                  = "low"
+    cmd_check                  = "low",
+    has_bug_reports_url_risk   = "low",
+    has_source_control_risk    = "high"
   ),
   
   # Numeric/structural inputs used to compute/display Risk_Value column
@@ -40,7 +42,11 @@ toy_data_risk <- list(
     # Downloads nested as list(total_download = <number>)
     download = list(
       total_download = 12345
-    )
+    ),
+    
+    # Presence fields for the new risk metrics: one present, one absent
+    has_bug_reports_url = "https://example.com/issues",
+    has_source_control  = NULL
   )
 )
 
@@ -50,7 +56,7 @@ toy_data_risk <- list(
 test_that("generate_risk_analysis works correctly", {
   result <- generate_risk_analysis(toy_data_risk)
   
-  expect_equal(nrow(result), 11)
+  expect_equal(nrow(result), 13)
   expect_equal(result$Metric[1], "CMD Check")
   expect_equal(result$Risk_Level[1], "low")
   
@@ -78,6 +84,12 @@ test_that("generate_risk_analysis works correctly", {
   expect_equal(result$Metric[9], "Reverse Dependencies Count")
   expect_equal(result$Risk_Level[9], "low")
   
+  expect_equal(result$Metric[12], "Bug Reports URL")
+  expect_equal(result$Risk_Level[12], "low")
+  
+  expect_equal(result$Metric[13], "Source Control")
+  expect_equal(result$Risk_Level[13], "high")
+  
   
   # Check Risk_Value column
   expect_equal(result$Risk_Value[1], "65%")       # check
@@ -89,6 +101,8 @@ test_that("generate_risk_analysis works correctly", {
   expect_equal(result$Risk_Value[7], "100%")          # empty
   expect_equal(result$Risk_Value[8], "87.5%")       # Combined score
   expect_equal(result$Risk_Value[9], "2")       # total_download
+  expect_equal(result$Risk_Value[12], "https://example.com/issues") # bug reports url present
+  expect_equal(result$Risk_Value[13], "N/A")        # source control absent
   
 })
 
@@ -384,9 +398,9 @@ test_that("when output_file is NULL and output_format is NULL, default extension
   
   render_calls <- list()
   mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                          output_dir, envir, params,
-                                          intermediates_dir, knit_root_dir,
-                                          clean, quiet) {
+                                                   output_dir, envir, params,
+                                                   intermediates_dir, knit_root_dir,
+                                                   clean, quiet) {
     render_calls <<- append(render_calls, list(list(
       input = input,
       output_format = output_format,
@@ -491,9 +505,9 @@ test_that("when output_file is a directory, it composes filename inside it with 
   
   render_calls <- list()
   mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                          output_dir, envir, params,
-                                          intermediates_dir, knit_root_dir,
-                                          clean, quiet) {
+                                                   output_dir, envir, params,
+                                                   intermediates_dir, knit_root_dir,
+                                                   clean, quiet) {
     render_calls <<- append(render_calls, list(list(
       input = input,
       output_format = output_format,
@@ -516,6 +530,50 @@ test_that("when output_file is a directory, it composes filename inside it with 
   expect_equal(call$output_file, "summary_report_mockpkg_0.1.0.html")
 })
 
+
+test_that("when output_format is NULL and extension is unknown, it warns and defaults to .html", {
+  wsr <- risk.assessr::write_summary_report
+  
+  mockery::stub(wsr, "generate_risk_analysis", function(results) list(ok = TRUE))
+  
+  mockery::stub(wsr, "system.file", function(..., package) "/fake/pkg/report_templates/summary.Rmd")
+  mockery::stub(wsr, "rmarkdown::html_document", function(...) "html_document")
+  mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_document")
+  
+  # Treat the supplied file as an existing absolute path so we land on the
+  # extension-inference (output_format = NULL) branch with an unknown extension.
+  mockery::stub(wsr, "dir.exists", function(path) FALSE)
+  mockery::stub(wsr, "fs::is_absolute_path", function(path) TRUE)
+  mockery::stub(wsr, "fs::path_ext_set", function(path, ext) "/reports/report.html")
+  
+  render_calls <- list()
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
+                                                   output_dir, envir, params,
+                                                   intermediates_dir, knit_root_dir,
+                                                   clean, quiet) {
+    render_calls <<- append(render_calls, list(list(
+      output_format = output_format,
+      output_file = output_file,
+      output_dir = output_dir
+    )))
+    "ok"
+  })
+  
+  # The unknown extension ".xyz" triggers the default switch branch (warning + .html)
+  expect_warning(
+    suppressMessages(
+      wsr(fake_results, output_file = "/reports/report.xyz",
+          output_format = NULL, output_dir = "/ignored")
+    ),
+    regexp = "Unknown extension; defaulting to HTML"
+  )
+  
+  expect_length(render_calls, 1)
+  call <- render_calls[[1]]
+  expect_equal(call$output_format, "html_document")     # corrected to HTML
+  expect_equal(call$output_dir, "/reports")
+  expect_equal(call$output_file, "report.html")         # extension fixed to .html
+})
 
 # Always call the package function the same way
 wsr <- getFromNamespace("write_summary_report", "risk.assessr")
@@ -807,5 +865,4 @@ test_that("explicit format overrides extension; unknown explicit format warns an
   expect_equal(args_B$output_file, "something.html") # corrected extension
   expect_equal(args_B$output_format, "html_fmt_B")
 })
-
 

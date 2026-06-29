@@ -245,6 +245,62 @@ test_that("extract_risk_inputs preserves original normalized fields", {
   expect_true(all(c("documentation_score", "later_version") %in% names(out)))
 })
 
+test_that("has_value() falls back to present (1L) for non-atomic values", {
+  # A list-valued field is not NULL/NA and not character/logical/numeric,
+  # so has_value() reaches its final fallback branch and returns 1L.
+  flat <- normalize_data(list(
+    pkg_name = "mockpkg",
+    pkg_version = "1.0.0",
+    has_bug_reports_url = list(url = "https://example.com/issues"),
+    has_source_control  = list(url = "https://github.com/mock/mockpkg")
+  ))
+  out <- extract_risk_inputs(flat)
+  expect_equal(out$has_bug_reports_url_risk, 1L)
+  expect_equal(out$has_source_control_risk, 1L)
+})
+
+test_that("get_risk_analysis scores non-atomic presence values as low", {
+  # mocked data: list-valued URL fields exercise the has_value() fallback (1L)
+  mock_data <- list(
+    pkg_name = "mockpkg",
+    pkg_version = "1.0.0",
+    has_bug_reports_url = list(url = "https://example.com/issues"),
+    has_source_control  = list(url = "https://github.com/mock/mockpkg")
+  )
+  
+  # mocked risk definition keeps the test off disk (CRAN-safe, deterministic)
+  mock_config <- list(
+    list(
+      label = "bug reports URL",
+      id = "has_bug_reports_url",
+      key = "has_bug_reports_url_risk",
+      default = "high",
+      thresholds = list(
+        list(level = "high", max = 0),
+        list(level = "medium", max = 0.5),
+        list(level = "low", max = 1)
+      )
+    ),
+    list(
+      label = "source control",
+      id = "has_source_control",
+      key = "has_source_control_risk",
+      default = "high",
+      thresholds = list(
+        list(level = "high", max = 0),
+        list(level = "medium", max = 0.5),
+        list(level = "low", max = 1)
+      )
+    )
+  )
+  
+  mockery::stub(get_risk_analysis, "get_risk_definition", function() mock_config)
+  
+  risks <- get_risk_analysis(mock_data)
+  expect_equal(risks$has_bug_reports_url_risk, "low")
+  expect_equal(risks$has_source_control_risk, "low")
+})
+
 
 # extract_risk_inputs
 
@@ -444,6 +500,49 @@ test_that("compute_risk is case-insensitive for categorical values", {
   expect_equal(compute_risk("Apache", risk_def), "low")
 })
 
+test_that("compute_risk matches categorical values for non-vector scalars", {
+  # A factor carries class/levels attributes, so is.vector() is FALSE and
+  # is.list() is FALSE -> compute_risk takes the scalar else-branch.
+  risk_def <- list(
+    thresholds = list(
+      list(level = "high", values = c("AGPL", "GPL")),
+      list(level = "low", values = c("MIT", "APACHE"))
+    ),
+    default = "unknown"
+  )
+  
+  expect_false(is.vector(factor("MIT")))
+  expect_false(is.list(factor("MIT")))
+  
+  expect_equal(compute_risk(factor("MIT"), risk_def), "low")
+  expect_equal(compute_risk(factor("GPL"), risk_def), "high")
+  # case-insensitive within the same scalar else-branch
+  expect_equal(compute_risk(factor("mit"), risk_def), "low")
+})
+
+test_that("get_risk_analysis scores non-vector scalar values via categorical match", {
+  # mocked risk definition keeps the test off disk (CRAN-safe, deterministic)
+  mock_config <- list(
+    list(
+      label = "license",
+      id = "license",
+      key = "license",
+      default = "unknown",
+      thresholds = list(
+        list(level = "high", values = c("AGPL", "GPL")),
+        list(level = "low", values = c("MIT", "APACHE"))
+      )
+    )
+  )
+  
+  # inject a factor (non-vector, non-list) so compute_risk hits the scalar else-branch
+  mockery::stub(get_risk_analysis, "get_risk_definition", function() mock_config)
+  mockery::stub(get_risk_analysis, "normalize_data", function(data) list(license = factor("MIT")))
+  mockery::stub(get_risk_analysis, "extract_risk_inputs", function(flat) flat)
+  
+  risks <- get_risk_analysis(list())
+  expect_equal(risks$license, "low")
+})
 
 test_that("compute_risk handles vector inputs with highest risk wins by level rank", {
   
@@ -607,6 +706,8 @@ test_that("get_risk_analysis returns the same risks for equivalent native and fl
     license = "MIT",
     reverse_dependencies_count = 3,
     documentation_score = 7,
+    has_bug_reports_url = 1,
+    has_source_control = 1,
     cmd_check = 0
   )
 
