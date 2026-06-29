@@ -42,6 +42,20 @@ assess_pkg_test_empty_deps_df <- function() {
   data.frame(type = character(), package = character(), stringsAsFactors = FALSE)
 }
 
+# Mock the OSV lookup so assess_pkg tests never reach the live network API
+assess_pkg_test_mock_vulnerabilities <- function(pkg_name, pkg_ver = NULL, ecosystem = "CRAN") {
+  data.frame(
+    id         = "RSEC-2023-6",
+    summary    = "Denial of Service (DoS) vulnerability",
+    details    = "Mocked vulnerability details.",
+    introduced = "0.2",
+    fixed      = "1.8",
+    modified   = "2025-05-19T19:43:47.903227Z",
+    published  = "2023-10-06T05:00:00.600Z",
+    stringsAsFactors = FALSE
+  )
+}
+
 # Minimal coverage result without calling test.assessr (avoids subprocess / orphan-cleanup messages)
 assess_pkg_test_mock_zero_coverage <- function(pkg_source_path, package_installed) {
   pkg_nm <- unname(read.dcf(file.path(pkg_source_path, "DESCRIPTION"), fields = "Package")[1, 1])
@@ -139,6 +153,12 @@ test_that(
       function(pkg_name) list()
     )
     
+    mockery::stub(
+      assess_pkg,
+      "get_security_vulnerabilities",
+      assess_pkg_test_mock_vulnerabilities
+    )
+    
     # ---- package setup ------------------------------------------------
     
     install_list <- set_up_pkg(dp)
@@ -183,12 +203,25 @@ test_that(
     expect_identical(length(assess_package), 5L)
     expect_true(checkmate::check_class(assess_package, "list"))
     
-    expect_identical(length(assess_package$results), 31L)
+    expect_identical(length(assess_package$results), 32L)
     
     expect_true(!is.na(assess_package$results$pkg_name))
     expect_true(!is.na(assess_package$results$pkg_version))
     expect_true(!is.na(assess_package$results$pkg_source_path))
     expect_true(!is.na(assess_package$results$date_time))
+    
+    # ---- vulnerabilities ----------------------------------------------
+    
+    expect_true("vulnerabilities" %in% names(assess_package$results))
+    expect_s3_class(assess_package$results$vulnerabilities, "data.frame")
+    expect_named(
+      assess_package$results$vulnerabilities,
+      c("id", "summary", "details", "introduced", "fixed", "modified", "published")
+    )
+    expect_equal(
+      assess_package$results$vulnerabilities$summary[1],
+      "Denial of Service (DoS) vulnerability"
+    )
     
     expect_true(checkmate::test_numeric(assess_package$results$covr))
     expect_gte(assess_package$results$covr, 0.7)
@@ -304,6 +337,8 @@ test_that("running assess_pkg for test package in tar file - no exports", {
   
   mockery::stub(assess_pkg, "get_risk_analysis", mock_get_risk_analysis)
   
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
+  
   
   # set up package
   install_list <- set_up_pkg(dp)
@@ -327,7 +362,9 @@ test_that("running assess_pkg for test package in tar file - no exports", {
     
     testthat::expect_true(checkmate::check_class(assess_package, "list"))
     
-    testthat::expect_identical(length(assess_package$results), 31L)
+    testthat::expect_identical(length(assess_package$results), 32L)
+    
+    testthat::expect_s3_class(assess_package$results$vulnerabilities, "data.frame")
     
     testthat::expect_true(!is.na(assess_package$results$pkg_name))
     
@@ -433,6 +470,8 @@ test_that("running assess_pkg for test package with Config/build/clean-inst-doc:
   }
   
   mockery::stub(assess_pkg, "get_risk_analysis", mock_get_risk_analysis)
+  
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   
   
   dp <- system.file("test-data", "test.package.0005_0.1.0.tar.gz",
@@ -553,6 +592,8 @@ test_that("running assess_pkg for test package fail suggest", {
     "get_risk_analysis",
     function(pkg_name) list()
   )
+  
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   
   # stub inside assess_pkg() because that's where the call appears in the function body.
   mockery::stub(
@@ -682,6 +723,8 @@ test_that("assess_pkg handles errors in check_suggested_exp_funcs correctly", {
     function(pkg_name) list()
   )
   
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
+  
   # ---- Key fix: stub the *caller* of check_suggested_exp_funcs, i.e., inside assess_pkg() ----
   mockery::stub(
     assess_pkg,
@@ -785,6 +828,8 @@ test_that("assess_pkg handles error in check_suggested_exp_funcs via withCalling
   mockery::stub(assess_pkg, "get_cran_total_downloads", function(...) 0)
   mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
   
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
+  
   # Stub check_suggested_exp_funcs to throw an error caught by withCallingHandlers
   mockery::stub(assess_pkg, "check_suggested_exp_funcs", function(...) stop("Simulated error in inner handler"))
   
@@ -828,6 +873,8 @@ test_that("assess_pkg handles error via outer tryCatch block", {
   mockery::stub(assess_pkg, "run_rcmdcheck", function(...) list(check_score = 1))
   mockery::stub(assess_pkg, "get_dependencies", function(...) assess_pkg_test_empty_deps_df())
   mockery::stub(assess_pkg, "create_empty_tm", function(...) list())
+  
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   
   # Stub withCallingHandlers to simulate an error that bypasses inner handler
   mockery::stub(
@@ -907,6 +954,7 @@ test_that("assess_pkg follows Bioconductor path and records version/revdeps", {
     )
   })
   mockery::stub(assess_pkg, "bioconductor_reverse_deps", function(pkg, version) c("pkgA", "pkgB"))
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   mockery::stub(assess_pkg, "risk.assessr::get_session_dependencies", function(...) list())
   mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
   
@@ -970,6 +1018,7 @@ test_that("assess_pkg Bioconductor path coerces empty reverse deps to 0", {
   })
   # Return empty to trigger the post-processing fallback to 0
   mockery::stub(assess_pkg, "bioconductor_reverse_deps", function(pkg, version) character(0))
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   mockery::stub(assess_pkg, "risk.assessr::get_session_dependencies", function(...) list())
   mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
   

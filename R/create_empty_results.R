@@ -51,7 +51,8 @@ results <- list(
   host = "",
   github_data = "",
   version_info = "",
-  download = ""
+  download = "",
+  vulnerabilities = ""
 )
 return(results)
 }
