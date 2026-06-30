@@ -9,8 +9,10 @@ get_security_vulnerabilities(pkg_name, pkg_ver = NULL, ecosystem = "CRAN")
 \arguments{
 \item{pkg_name}{Character. Name of the package to query.}
 
-\item{pkg_ver}{Character. Optional package version. When supplied, only
-vulnerabilities affecting that version are returned.}
+\item{pkg_ver}{Character. Optional package version. The OSV database is
+queried for every advisory affecting the package, and when a version is
+supplied only the advisories affecting that version are kept (filtered
+locally against each advisory's affected versions and ranges).}
 
 \item{ecosystem}{Character. OSV ecosystem the package belongs to. Defaults to
 `"CRAN"`.}

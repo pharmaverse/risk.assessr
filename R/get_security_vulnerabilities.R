@@ -86,8 +86,10 @@ fetch_osv_data <- function(pkg_name, pkg_ver = NULL, ecosystem = "CRAN",
 #' in `details`.
 #'
 #' @param pkg_name Character. Name of the package to query.
-#' @param pkg_ver Character. Optional package version. When supplied, only
-#'   vulnerabilities affecting that version are returned.
+#' @param pkg_ver Character. Optional package version. The OSV database is
+#'   queried for every advisory affecting the package, and when a version is
+#'   supplied only the advisories affecting that version are kept (filtered
+#'   locally against each advisory's affected versions and ranges).
 #' @param ecosystem Character. OSV ecosystem the package belongs to. Defaults to
 #'   `"CRAN"`.
 #'
@@ -130,7 +132,12 @@ get_security_vulnerabilities <- function(pkg_name, pkg_ver = NULL,
     return(empty_vulns)
   }
   
-  parsed <- fetch_osv_data(pkg_name, pkg_ver, ecosystem)
+  # Query OSV by package only (no version). A version-scoped OSV query returns
+  # an empty `{}` object whenever the supplied version is not enumerated in an
+  # advisory, which parses to a `named list()` with no `vulns` element even
+  # though the package has known advisories. Retrieving every advisory for the
+  # package and filtering by version below avoids that gap.
+  parsed <- fetch_osv_data(pkg_name, ecosystem = ecosystem)
   
   if (is.null(parsed) || is.null(parsed$vulns) || length(parsed$vulns) == 0) {
     message("No known security vulnerabilities found for ", pkg_name, ".")
@@ -152,9 +159,61 @@ get_security_vulnerabilities <- function(pkg_name, pkg_ver = NULL,
     NA_character_
   }
   
+  # decide whether the requested version falls within an advisory's affected
+  # set, using the explicit `versions` enumeration first and the
+  # introduced/fixed ranges otherwise. Advisories with no affected metadata are
+  # kept, as their applicability to the version cannot be ruled out.
+  version_is_affected <- function(vuln) {
+    if (is.null(pkg_ver) || is.na(pkg_ver) || !nzchar(pkg_ver)) return(TRUE)
+    affected <- vuln$affected
+    if (is.null(affected) || length(affected) == 0) return(TRUE)
+    
+    ver <- tryCatch(numeric_version(pkg_ver), error = function(e) NULL)
+    
+    for (a in affected) {
+      # `versions` may arrive either as an array of version strings (live OSV
+      # query API) or as an object keyed by version (aggregated advisory feed).
+      # The array form supplies the values, the object form the names; combining
+      # both handles either source.
+      enumerated <- c(unlist(a$versions, use.names = FALSE), names(a$versions))
+      if (length(enumerated) && pkg_ver %in% enumerated) return(TRUE)
+      
+      for (r in a$ranges) {
+        introduced <- NA_character_
+        fixed      <- NA_character_
+        for (e in r$events) {
+          if (!is.null(e$introduced)) introduced <- as.character(e$introduced)
+          if (!is.null(e$fixed))      fixed      <- as.character(e$fixed)
+        }
+        if (is.null(ver)) next
+        
+        intro_ver <- tryCatch(numeric_version(introduced),
+                              error = function(e) NULL)
+        fixed_ver <- tryCatch(numeric_version(fixed),
+                              error = function(e) NULL)
+        intro_ok <- is.na(introduced) || is.null(intro_ver) || ver >= intro_ver
+        fixed_ok <- is.na(fixed) || is.null(fixed_ver) || ver < fixed_ver
+        if (intro_ok && fixed_ok) return(TRUE)
+      }
+    }
+    FALSE
+  }
+  
+  vulns <- Filter(version_is_affected, parsed$vulns)
+  
+  if (length(vulns) == 0) {
+    message("No known security vulnerabilities found for ", pkg_name,
+            if (!is.null(pkg_ver) && !is.na(pkg_ver) && nzchar(pkg_ver)) {
+              paste0(" ", pkg_ver)
+            } else {
+              ""
+            }, ".")
+    return(empty_vulns)
+  }
+  
   pick <- function(x) if (is.null(x)) NA_character_ else as.character(x)
   
-  rows <- lapply(parsed$vulns, function(vuln) {
+  rows <- lapply(vulns, function(vuln) {
     data.frame(
       id         = pick(vuln$id),
       summary    = pick(vuln$summary),

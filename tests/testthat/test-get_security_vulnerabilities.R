@@ -57,6 +57,156 @@ test_that("vulnerabilities are returned as a data frame with expected columns", 
   expect_equal(result$fixed[2], "1.9.2")
 })
 
+test_that("advisories not affecting the requested version are filtered out", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_parsed_osv)
+  
+  # version 1.8 is at/after the first advisory's fixed version (1.8) but still
+  # before the second advisory's fixed version (1.9.2)
+  result <- get_security_vulnerabilities("commonmark", "1.8")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1)
+  expect_equal(result$id, "RSEC-2023-7")
+})
+
+test_that("a version after every fixed release yields an empty data frame", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_parsed_osv)
+  
+  result <- get_security_vulnerabilities("commonmark", "2.0")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+})
+
+test_that("all advisories are returned when no version is supplied", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_parsed_osv)
+  
+  result <- get_security_vulnerabilities("commonmark")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 2)
+})
+
+# an advisory whose only affected metadata is an explicit `versions`
+# enumeration in the array form returned by the live OSV query API
+fake_versions_array <- list(
+  vulns = list(
+    list(
+      id        = "RSEC-ENUM-ARR",
+      summary   = "Enumerated versions (array form)",
+      details   = "Affected versions are listed explicitly as an array.",
+      modified  = "2025-01-01T00:00:00Z",
+      published = "2024-01-01T00:00:00Z",
+      affected  = list(
+        list(versions = list("0.2", "1.5", "1.7"))
+      )
+    )
+  )
+)
+
+# the same advisory but with `versions` as an object keyed by version, the
+# shape used by the aggregated r-advisory-database feed
+fake_versions_object <- list(
+  vulns = list(
+    list(
+      id        = "RSEC-ENUM-OBJ",
+      summary   = "Enumerated versions (object form)",
+      details   = "Affected versions are listed explicitly as object keys.",
+      modified  = "2025-01-01T00:00:00Z",
+      published = "2024-01-01T00:00:00Z",
+      affected  = list(
+        list(versions = list("0.2" = list(), "1.5" = list(), "1.7" = list()))
+      )
+    )
+  )
+)
+
+test_that("version enumeration (array form) is matched by value", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_versions_array)
+  
+  expect_equal(nrow(get_security_vulnerabilities("pkg", "1.5")), 1)
+  expect_equal(nrow(get_security_vulnerabilities("pkg", "1.6")), 0)
+})
+
+test_that("version enumeration (object form) is matched by key", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_versions_object)
+  
+  expect_equal(nrow(get_security_vulnerabilities("pkg", "1.5")), 1)
+  expect_equal(nrow(get_security_vulnerabilities("pkg", "1.6")), 0)
+})
+
+# an advisory whose affected metadata is range-only (introduced/fixed), with no
+# explicit `versions` enumeration, so range comparison is the only matcher
+fake_range_only <- list(
+  vulns = list(
+    list(
+      id        = "RSEC-RANGE",
+      summary   = "Range-only advisory",
+      details   = "Affected versions are described only by an introduced/fixed range.",
+      modified  = "2025-01-01T00:00:00Z",
+      published = "2024-01-01T00:00:00Z",
+      affected  = list(
+        list(ranges = list(
+          list(events = list(
+            list(introduced = "0.2"),
+            list(fixed = "1.8")
+          ))
+        ))
+      )
+    )
+  )
+)
+
+# covers line 188: when the supplied version cannot be parsed by
+# numeric_version(), `ver` is NULL and the range comparison is skipped via
+# `next`, so a range-only advisory cannot be matched and is dropped
+test_that("an unparseable version skips range comparison and drops range-only advisories", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_range_only)
+  
+  result <- get_security_vulnerabilities("pkg", "not-a-version")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+})
+
+# also exercises the `is.null(ver)` path with a version string OSV itself uses
+# for upstream components (e.g. "0.29.0.gfm.1") that numeric_version() rejects
+test_that("an unparseable upstream-style version drops range-only advisories", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_range_only)
+  
+  result <- get_security_vulnerabilities("pkg", "0.29.0.gfm.1")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0)
+})
+
+# an advisory whose enumeration contains a version string that
+# numeric_version() cannot parse (the upstream-style "gfm" form)
+fake_enum_unparseable <- list(
+  vulns = list(
+    list(
+      id        = "RSEC-ENUM-UP",
+      summary   = "Enumeration with unparseable version",
+      details   = "Affected versions include an upstream-style version string.",
+      modified  = "2025-01-01T00:00:00Z",
+      published = "2024-01-01T00:00:00Z",
+      affected  = list(
+        list(versions = list("0.29.0.gfm.1", "1.5"))
+      )
+    )
+  )
+)
+
+# confirms the enumeration short-circuit (line 179) matches an unparseable
+# version before the range check / is.null(ver) path is reached
+test_that("an unparseable version is still matched via explicit enumeration", {
+  mockery::stub(get_security_vulnerabilities, "fetch_osv_data", fake_enum_unparseable)
+  
+  result <- get_security_vulnerabilities("pkg", "0.29.0.gfm.1")
+  
+  expect_equal(nrow(result), 1)
+})
+
 test_that("empty package name returns an empty data frame", {
   result <- get_security_vulnerabilities("")
   expect_s3_class(result, "data.frame")
