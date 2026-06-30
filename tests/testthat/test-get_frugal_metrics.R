@@ -625,6 +625,47 @@ test_that("init_frugal_results fills NULL/NA slots with safe placeholders", {
   # Check version_info placeholder
   expect_type(filled$version_info, "list")
   expect_true("all_versions" %in% names(filled$version_info))
+  
+  # Check vulnerabilities placeholder (empty 7-column data frame)
+  expect_s3_class(filled$vulnerabilities, "data.frame")
+  expect_equal(nrow(filled$vulnerabilities), 0)
+  expect_named(filled$vulnerabilities,
+               c("id", "summary", "details", "introduced",
+                 "fixed", "modified", "published"))
+})
+
+test_that("init_frugal_results replaces a non-data-frame vulnerabilities slot", {
+  results <- list(
+    pkg_name = "testpkg",
+    vulnerabilities = ""
+  )
+  
+  filled <- init_frugal_results(results)
+  
+  expect_s3_class(filled$vulnerabilities, "data.frame")
+  expect_equal(nrow(filled$vulnerabilities), 0)
+  expect_named(filled$vulnerabilities,
+               c("id", "summary", "details", "introduced",
+                 "fixed", "modified", "published"))
+})
+
+test_that("init_frugal_results preserves an existing vulnerabilities data frame", {
+  existing <- data.frame(
+    id         = "RSEC-2023-6",
+    summary    = "Denial of Service (DoS) vulnerability",
+    details    = "d",
+    introduced = "0.2",
+    fixed      = "1.8",
+    modified   = "m",
+    published  = "p",
+    stringsAsFactors = FALSE
+  )
+  results <- list(pkg_name = "testpkg", vulnerabilities = existing)
+  
+  filled <- init_frugal_results(results)
+  
+  expect_identical(filled$vulnerabilities, existing)
+  expect_equal(nrow(filled$vulnerabilities), 1)
 })
 
 test_that("init_frugal_results preserves existing non-blank values", {
