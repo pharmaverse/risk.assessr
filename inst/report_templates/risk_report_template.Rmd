@@ -216,6 +216,56 @@ if (is.data.frame(coverage_output)) {
 }
 ```
 
+```{r vulnerabilities, echo=FALSE}
+library(knitr)
+library(kableExtra)
+library(DT)
+library(htmltools)
+
+vulnerabilities_output <- get("vulnerabilities_output", envir = report_env)
+
+if (identical(names(vulnerabilities_output), "Message")) {
+
+  # No known vulnerabilities: green banner reassuring the reader
+  vulnerabilities_no_html <- knitr::kable(
+    vulnerabilities_output,
+    col.names = " ",
+    format = "html"
+  ) %>%
+    kableExtra::kable_styling("striped", position = "left", font_size = 12) %>%
+    kableExtra::row_spec(0, bold = TRUE, italic = TRUE, background = "green") %>%
+    kableExtra::row_spec(1, background = "green", color = "black") %>%
+    kableExtra::add_header_above(
+      c("Security Vulnerabilities" = 1),
+      bold = TRUE, background = "green", color = "black"
+    )
+
+  vulnerabilities_no_html
+
+} else {
+
+  # Known vulnerabilities present: red header + interactive table
+  vulnerabilities_dt <- DT::datatable(
+    vulnerabilities_output,
+    rownames = FALSE,
+    options = list(
+      pageLength = 10,
+      lengthMenu = c(10, 20, 50),
+      search = list(search = ""),
+      dom = 'Bfrtip'
+    )
+  )
+
+  htmltools::tagList(
+    htmltools::tags$h2(
+      "Security Vulnerabilities",
+      style = "font-weight: bold; background-color: red; color: black; text-align: center;"
+    ),
+    vulnerabilities_dt
+  )
+}
+```
+
 ```{r doc_metrics, echo=FALSE}
 library(knitr)
 library(kableExtra)

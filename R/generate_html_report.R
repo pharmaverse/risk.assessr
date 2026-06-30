@@ -27,7 +27,7 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
   # check input
   checkmate::assert_list(assessment_results, names = "named", any.missing = TRUE)
   checkmate::assert_list(assessment_results$results, names = "named", any.missing = TRUE)
- 
+  
   # If output_dir is not set, use the current working directory
   if (is.null(output_dir)) {
     output_dir <- getwd()
@@ -50,6 +50,9 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
   
   # Capture the output of generate_coverage_section
   coverage_output <- generate_coverage_section(assessment_results, pkg_name)
+  
+  # Capture the output of generate_vulnerabilities_section
+  vulnerabilities_output <- generate_vulnerabilities_section(assessment_results)
   
   # Capture the output of generate_doc_metrics_section
   doc_metrics_output <- generate_doc_metrics_section(assessment_results)
@@ -148,7 +151,7 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
   risk_rules <- get_risk_definition()
   code_covr_thresholds <- extract_thresholds_by_id(risk_rules, "code_coverage")
   code_covr_maxes <- get_max_thresholds(code_covr_thresholds)
- 
+  
   cmd_check_thresholds <- extract_thresholds_by_id(risk_rules, "cmd-check")
   cmd_check_maxes <- get_max_thresholds(cmd_check_thresholds)
   
@@ -177,6 +180,7 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
   report_env$risk_details_output <- risk_details_output
   report_env$rcmd_check_output  <- rcmd_check_output
   report_env$coverage_output  <- coverage_output
+  report_env$vulnerabilities_output  <- vulnerabilities_output
   report_env$doc_metrics_output  <- doc_metrics_output
   report_env$pop_metrics_output  <- pop_metrics_output
   report_env$deps_df  <- deps_output$deps_df
@@ -226,7 +230,7 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
           input = template_path,
           output_file = output_file,
           output_options = list(css = system.file("report_templates/styles.css", 
-                                                              package = "risk.assessr")),
+                                                  package = "risk.assessr")),
           envir = report_env,
           quiet = TRUE
         )
@@ -321,7 +325,7 @@ convert_number_to_percent <- function(value) {
 
 #' Helper to conditionally apply handle_null or abbreviation
 #'
-#' @param x - value - number to be converted
+#' @param x - number to be converted
 #'
 #' @keywords internal
 safe_value <- function(x) {
@@ -524,7 +528,7 @@ generate_risk_details <- function(assessment_results) {
   covr <- handle_null(assessment_results$results$covr)
   
   covr <- convert_number_to_percent(covr)
-
+  
   risk_details_table <- data.frame(
     Metric = c(
       'R CMD Check Score', 'Test Coverage Score', 'Date Time', 'Executor', 
@@ -671,6 +675,51 @@ generate_coverage_section <- function(assessment_results, pkg_name) {
   
   covr_extract <- extract_coverage_df(assessment_results$covr_list$res_cov, pkg_name)
   return(covr_extract)
+}
+
+#' Generate Security Vulnerabilities Section
+#'
+#' @description Generates the security vulnerabilities section for the HTML
+#'   report. When one or more known vulnerabilities are present (the
+#'   `vulnerabilities` data frame in the assessment results has at least one
+#'   row) a display-ready data frame is returned. Otherwise a single-row data
+#'   frame carrying the message "No security vulnerabilities" is returned so the
+#'   report can clearly state that none were found.
+#'
+#' @param assessment_results - input data
+#'
+#' @return A data frame. When vulnerabilities are present it has the columns
+#'   `ID`, `Summary`, `Details`, `Introduced`, `Fixed`, `Modified`, and
+#'   `Published`. When none are present it has a single `Message` column.
+#'
+#' @keywords internal
+generate_vulnerabilities_section <- function(assessment_results) {
+  
+  vulnerabilities <- assessment_results$results$vulnerabilities
+  
+  # No vulnerabilities found (empty/absent/malformed) -> reassuring message
+  if (is.null(vulnerabilities) ||
+      !is.data.frame(vulnerabilities) ||
+      nrow(vulnerabilities) == 0) {
+    return(data.frame(
+      Message = "No security vulnerabilities",
+      stringsAsFactors = FALSE
+    ))
+  }
+  
+  # Vulnerabilities present -> display-ready table
+  vulnerabilities_df <- data.frame(
+    ID         = vulnerabilities$id,
+    Summary    = vulnerabilities$summary,
+    Details    = vulnerabilities$details,
+    Introduced = vulnerabilities$introduced,
+    Fixed      = vulnerabilities$fixed,
+    Modified   = vulnerabilities$modified,
+    Published  = vulnerabilities$published,
+    stringsAsFactors = FALSE
+  )
+  
+  return(vulnerabilities_df)
 }
 
 #' Generate Doc Metrics Section
@@ -828,7 +877,7 @@ generate_pop_metrics_section <- function(assessment_results) {
       safe_value(assessment_results$results$download$last_month_download)
     )
   )  
- 
+  
   # Add numeric value as a new column 
   # needed for formatting in pop_metrics r chunk in `risk_report_template.Rmd`
   pop_metrics$NumericValue <- NA_real_
