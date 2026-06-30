@@ -50,7 +50,7 @@ toy_data_risk <- list(
 test_that("generate_risk_analysis works correctly", {
   result <- generate_risk_analysis(toy_data_risk)
   
-  expect_equal(nrow(result), 11)
+  expect_equal(nrow(result), 12)
   expect_equal(result$Metric[1], "CMD Check")
   expect_equal(result$Risk_Level[1], "low")
   
@@ -90,6 +90,41 @@ test_that("generate_risk_analysis works correctly", {
   expect_equal(result$Risk_Value[8], "87.5%")       # Combined score
   expect_equal(result$Risk_Value[9], "2")       # total_download
   
+  # security vulnerabilities row (none present in toy data -> Low risk, count 0)
+  expect_equal(result$Metric[12], "Security Vulnerabilities")
+  expect_equal(result$Risk_Level[12], "Low")
+  expect_equal(result$Risk_Value[12], "0")
+})
+
+test_that("generate_risk_analysis flags High risk when vulnerabilities are present", {
+  toy_data_with_vulns <- toy_data_risk
+  toy_data_with_vulns$results$vulnerabilities <- data.frame(
+    id         = c("RSEC-2023-6", "RSEC-2023-8"),
+    summary    = c("Denial of Service (DoS) vulnerability",
+                   "Denial of Service (DoS) vulnerabilities"),
+    details    = c("d1", "d2"),
+    introduced = c("0.2", "0.2"),
+    fixed      = c("1.8", "1.9.2"),
+    modified   = c("m1", "m2"),
+    published  = c("p1", "p2"),
+    stringsAsFactors = FALSE
+  )
+  
+  result <- generate_risk_analysis(toy_data_with_vulns)
+  
+  expect_equal(result$Metric[12], "Security Vulnerabilities")
+  expect_equal(result$Risk_Level[12], "High")
+  expect_equal(result$Risk_Value[12], "2")
+})
+
+test_that("generate_risk_analysis treats a non-data-frame vulnerabilities slot as none", {
+  toy_data_blank_vulns <- toy_data_risk
+  toy_data_blank_vulns$results$vulnerabilities <- ""
+  
+  result <- generate_risk_analysis(toy_data_blank_vulns)
+  
+  expect_equal(result$Risk_Level[12], "Low")
+  expect_equal(result$Risk_Value[12], "0")
 })
 
 
@@ -384,9 +419,9 @@ test_that("when output_file is NULL and output_format is NULL, default extension
   
   render_calls <- list()
   mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                          output_dir, envir, params,
-                                          intermediates_dir, knit_root_dir,
-                                          clean, quiet) {
+                                                   output_dir, envir, params,
+                                                   intermediates_dir, knit_root_dir,
+                                                   clean, quiet) {
     render_calls <<- append(render_calls, list(list(
       input = input,
       output_format = output_format,
@@ -491,9 +526,9 @@ test_that("when output_file is a directory, it composes filename inside it with 
   
   render_calls <- list()
   mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                          output_dir, envir, params,
-                                          intermediates_dir, knit_root_dir,
-                                          clean, quiet) {
+                                                   output_dir, envir, params,
+                                                   intermediates_dir, knit_root_dir,
+                                                   clean, quiet) {
     render_calls <<- append(render_calls, list(list(
       input = input,
       output_format = output_format,

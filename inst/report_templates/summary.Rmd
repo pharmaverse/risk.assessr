@@ -45,7 +45,8 @@ ordered_metrics <- c(
   "Combined Examples Documentation Score",
   "Reverse Dependencies Count",
   "Later Version Available",
-  "Total Downloads"
+  "Total Downloads",
+  "Security Vulnerabilities"
 )
 
 df <- params$analysis[match(ordered_metrics, params$analysis$Metric), , drop = FALSE]
