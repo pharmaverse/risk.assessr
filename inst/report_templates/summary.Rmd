@@ -46,6 +46,8 @@ ordered_metrics <- c(
   "Reverse Dependencies Count",
   "Later Version Available",
   "Total Downloads",
+  "Bug Reports URL",
+  "Source Control",
   "Security Vulnerabilities"
 )
 

@@ -111,8 +111,18 @@ extract_risk_inputs <- function(flat_data) {
     later_version <- NA
   }
   
+  # presence flag: 1 if a real value exists, 0 if NULL / NA / empty string
+  has_value <- function(x) {
+    if (is.null(x) || all(is.na(x))) return(0L)
+    if (is.character(x)) return(as.integer(any(nzchar(trimws(x)), na.rm = TRUE)))
+    if (is.logical(x) || is.numeric(x)) return(as.integer(isTRUE(as.logical(x))))
+    1L
+  }
+  
   flat_data$documentation_score <- documentation_score
   flat_data$later_version <- later_version
+  flat_data$has_bug_reports_url_risk <- has_value(flat_data$has_bug_reports_url)
+  flat_data$has_source_control_risk  <- has_value(flat_data$has_source_control)
   flat_data
 }
 

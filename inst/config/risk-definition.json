@@ -110,5 +110,27 @@
       { "level": "medium", "max": 0.8 },
       { "level": "low", "max": 1 }
     ]
+  },
+  {
+    "label": "bug reports URL",
+    "id": "has_bug_reports_url",
+    "key": "has_bug_reports_url_risk",
+    "description": "Risk is low when the package provides a bug reports URL and high when no bug reports URL is available (NULL or NA).",
+    "default": "high",
+    "thresholds": [
+      { "level": "high", "max": 0 },
+      { "level": "low", "max": 1 }
+    ]
+  },
+  {
+    "label": "source control",
+    "id": "has_source_control",
+    "key": "has_source_control_risk",
+    "description": "Risk is low when the package provides a source control link and high when no source control is available (NULL or NA).",
+    "default": "high",
+    "thresholds": [
+      { "level": "high", "max": 0 },
+      { "level": "low", "max": 1 }
+    ]
   }
 ]
