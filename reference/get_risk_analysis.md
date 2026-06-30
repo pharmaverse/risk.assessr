@@ -82,4 +82,10 @@ get_risk_analysis(mock_data)
 #> $cmd_check
 #> [1] "high"
 #> 
+#> $has_bug_reports_url_risk
+#> [1] "high"
+#> 
+#> $has_source_control_risk
+#> [1] "high"
+#> 
 ```

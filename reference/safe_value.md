@@ -12,4 +12,4 @@ safe_value(x)
 
 - x:
 
-  \- value
+  \- value - number to be converted

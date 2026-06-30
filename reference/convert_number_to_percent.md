@@ -11,3 +11,5 @@ convert_number_to_percent(value)
 ## Arguments
 
 - value:
+
+  \- number to be converted

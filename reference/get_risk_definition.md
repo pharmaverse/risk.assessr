@@ -407,4 +407,74 @@ print(risk_rule)
 #> 
 #> 
 #> 
+#> [[10]]
+#> [[10]]$label
+#> [1] "bug reports URL"
+#> 
+#> [[10]]$id
+#> [1] "has_bug_reports_url"
+#> 
+#> [[10]]$key
+#> [1] "has_bug_reports_url_risk"
+#> 
+#> [[10]]$description
+#> [1] "Risk is low when the package provides a bug reports URL and high when no bug reports URL is available (NULL or NA)."
+#> 
+#> [[10]]$default
+#> [1] "high"
+#> 
+#> [[10]]$thresholds
+#> [[10]]$thresholds[[1]]
+#> [[10]]$thresholds[[1]]$level
+#> [1] "high"
+#> 
+#> [[10]]$thresholds[[1]]$max
+#> [1] 0
+#> 
+#> 
+#> [[10]]$thresholds[[2]]
+#> [[10]]$thresholds[[2]]$level
+#> [1] "low"
+#> 
+#> [[10]]$thresholds[[2]]$max
+#> [1] 1
+#> 
+#> 
+#> 
+#> 
+#> [[11]]
+#> [[11]]$label
+#> [1] "source control"
+#> 
+#> [[11]]$id
+#> [1] "has_source_control"
+#> 
+#> [[11]]$key
+#> [1] "has_source_control_risk"
+#> 
+#> [[11]]$description
+#> [1] "Risk is low when the package provides a source control link and high when no source control is available (NULL or NA)."
+#> 
+#> [[11]]$default
+#> [1] "high"
+#> 
+#> [[11]]$thresholds
+#> [[11]]$thresholds[[1]]
+#> [[11]]$thresholds[[1]]$level
+#> [1] "high"
+#> 
+#> [[11]]$thresholds[[1]]$max
+#> [1] 0
+#> 
+#> 
+#> [[11]]$thresholds[[2]]
+#> [[11]]$thresholds[[2]]$level
+#> [1] "low"
+#> 
+#> [[11]]$thresholds[[2]]$max
+#> [1] 1
+#> 
+#> 
+#> 
+#> 
 ```

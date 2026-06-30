@@ -21,6 +21,9 @@ Useful links:
 
 Authors:
 
+- Edward Gillian <edward.gillian-ext@sanofi.com>
+  ([ORCID](https://orcid.org/0000-0003-2732-5107))
+
 - Hugo Bottois <hugo.bottois@sanofi.com>
   ([ORCID](https://orcid.org/0000-0003-4674-0875))
 
