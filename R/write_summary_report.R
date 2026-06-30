@@ -273,6 +273,11 @@ generate_risk_analysis <- function(assessment_results) {
   
   has_ex_docs_score <- convert_number_to_percent(has_ex_docs_score) 
   
+  # presence display for the two new metrics (NULL/NA -> "N/A")
+  bug_reports_url <- handle_null(assessment_results$results$has_bug_reports_url)
+  
+  source_control <- handle_null(assessment_results$results$has_source_control)
+  
   # get reverse dependencies number
   rev_deps <- assessment_results$results$rev_deps
   
@@ -303,7 +308,9 @@ generate_risk_analysis <- function(assessment_results) {
       "Combined Examples Documentation Score",
       "Reverse Dependencies Count",
       "Later Version Available",
-      "Total Downloads"
+      "Total Downloads",
+      "Bug Reports URL",
+      "Source Control"
     ),
     Risk_Level = c(
       get_metric(risk$cmd_check),
@@ -316,7 +323,9 @@ generate_risk_analysis <- function(assessment_results) {
       get_metric(risk$has_ex_docs_score),
       get_metric(risk$reverse_dependencies_count),
       get_metric(risk$later_version),
-      get_metric(risk$total_download)
+      get_metric(risk$total_download),
+      get_metric(risk$has_bug_reports_url_risk),
+      get_metric(risk$has_source_control_risk)
     ),
     Risk_Value = c(
       check,
@@ -329,7 +338,9 @@ generate_risk_analysis <- function(assessment_results) {
       has_ex_docs_score,
       rev_deps_no,
       "",
-      total_download_n
+      total_download_n,
+      bug_reports_url,
+      source_control
     ),
     stringsAsFactors = FALSE
   )
