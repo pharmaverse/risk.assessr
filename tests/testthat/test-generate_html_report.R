@@ -661,16 +661,16 @@ test_that("generate_doc_metrics_section works correctly", {
   result <- generate_doc_metrics_section(toy_assessment_results)
   
   expect_true(is.data.frame(result$has_examples))
-    
+  
   # Correct columns
   expect_identical(
     names(result$has_examples),
     c("function_name", "documentation_name", "documentation_location", "example")
   )
-    
+  
   # Score attribute exists
   expect_true(!is.null(attr(result$has_examples, "score")))
-    
+  
   # Score is numeric, NA allowed
   expect_true(is.numeric(attr(result$has_examples, "score")))
   
@@ -861,6 +861,68 @@ test_that("generate_rev_deps_section works correctly", {
   
   expect_equal(result$rev_deps_df$Reverse_dependencies, expected_rev_deps)
   expect_equal(result$rev_deps_summary$rev_deps_no, expected_rev_deps_no)
+})
+
+# Tests for generate_vulnerabilities_section
+
+# a results list carrying two known vulnerabilities
+toy_assessment_results_vulns <- list(
+  results = list(
+    vulnerabilities = data.frame(
+      id         = c("RSEC-2023-6", "RSEC-2023-8"),
+      summary    = c("Denial of Service (DoS) vulnerability",
+                     "Denial of Service (DoS) vulnerabilities"),
+      details    = c("Crafted markdown tables can take O(n * n) time.",
+                     "Multiple cmark-gfm vulnerabilities."),
+      introduced = c("0.2", "0.2"),
+      fixed      = c("1.8", "1.9.2"),
+      modified   = c("2025-05-19T19:43:47.903227Z", "2025-05-19T19:43:48.265479Z"),
+      published  = c("2023-10-06T05:00:00.600Z", "2023-10-06T05:00:00.600Z"),
+      stringsAsFactors = FALSE
+    )
+  )
+)
+
+test_that("generate_vulnerabilities_section returns a table when vulnerabilities are present", {
+  result <- generate_vulnerabilities_section(toy_assessment_results_vulns)
+  
+  expect_s3_class(result, "data.frame")
+  expect_named(result, c("ID", "Summary", "Details", "Introduced",
+                         "Fixed", "Modified", "Published"))
+  expect_equal(nrow(result), 2)
+  expect_equal(result$ID, c("RSEC-2023-6", "RSEC-2023-8"))
+  expect_equal(result$Fixed, c("1.8", "1.9.2"))
+})
+
+test_that("generate_vulnerabilities_section reports a message when an empty data frame is supplied", {
+  empty_results <- list(
+    results = list(
+      vulnerabilities = data.frame(
+        id         = character(0),
+        summary    = character(0),
+        details    = character(0),
+        introduced = character(0),
+        fixed      = character(0),
+        modified   = character(0),
+        published  = character(0),
+        stringsAsFactors = FALSE
+      )
+    )
+  )
+  
+  result <- generate_vulnerabilities_section(empty_results)
+  
+  expect_s3_class(result, "data.frame")
+  expect_named(result, "Message")
+  expect_equal(result$Message, "No security vulnerabilities")
+})
+
+test_that("generate_vulnerabilities_section reports a message when vulnerabilities are absent", {
+  result <- generate_vulnerabilities_section(list(results = list()))
+  
+  expect_s3_class(result, "data.frame")
+  expect_named(result, "Message")
+  expect_equal(result$Message, "No security vulnerabilities")
 })
 
 test_that("generate_trace_matrix_section works correctly with empty trace matrix", {

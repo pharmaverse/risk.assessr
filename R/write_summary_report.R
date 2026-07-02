@@ -291,6 +291,12 @@ generate_risk_analysis <- function(assessment_results) {
     assessment_results$results$download$total_download
   )
   
+  # count known security vulnerabilities (display the number, not the details);
+  # any vulnerability is treated as high risk, none as low risk
+  vulnerabilities <- assessment_results$results$vulnerabilities
+  vuln_count <- if (is.data.frame(vulnerabilities)) nrow(vulnerabilities) else 0L
+  vuln_risk_level <- if (vuln_count >= 1) "High" else "Low"
+  
   # Helper to handle NULLs
   get_metric <- function(x, default = "Not assessed") {
     if (is.null(x)) default else x
@@ -310,7 +316,9 @@ generate_risk_analysis <- function(assessment_results) {
       "Later Version Available",
       "Total Downloads",
       "Bug Reports URL",
-      "Source Control"
+      "Source Control",
+      "Security Vulnerabilities"
+
     ),
     Risk_Level = c(
       get_metric(risk$cmd_check),
@@ -325,7 +333,8 @@ generate_risk_analysis <- function(assessment_results) {
       get_metric(risk$later_version),
       get_metric(risk$total_download),
       get_metric(risk$has_bug_reports_url_risk),
-      get_metric(risk$has_source_control_risk)
+      get_metric(risk$has_source_control_risk),
+      vuln_risk_level
     ),
     Risk_Value = c(
       check,
@@ -340,7 +349,8 @@ generate_risk_analysis <- function(assessment_results) {
       "",
       total_download_n,
       bug_reports_url,
-      source_control
+      source_control,
+      vuln_count
     ),
     stringsAsFactors = FALSE
   )

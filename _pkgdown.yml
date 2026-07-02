@@ -20,6 +20,7 @@ articles:
     contents:
       - generate_html_report
       - risk.assessr_metric
+      - security_vulnerabilities
   - title: Traceability matrix
     desc: Map exported functions with coverage and documentation
     contents:
@@ -95,6 +96,7 @@ reference:
       - fetch_bioconductor_releases
       - parse_bioconductor_releases
       - fetch_bioconductor_package_info
+      - get_security_vulnerabilities
   - title: Dependencies & reverse dependencies
     desc: Dependency trees, session deps, and CRAN/Bioconductor reverse deps.
     contents:

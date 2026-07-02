@@ -12,6 +12,20 @@ get_test_tarball_path <- function() {
   dp
 }
 
+# Mock the OSV lookup so risk_assess_pkg integration tests don't hit the network
+risk_assess_pkg_test_mock_vulnerabilities <- function(pkg_name, pkg_ver = NULL, ecosystem = "CRAN") {
+  data.frame(
+    id         = character(0),
+    summary    = character(0),
+    details    = character(0),
+    introduced = character(0),
+    fixed      = character(0),
+    modified   = character(0),
+    published  = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
 test_that("risk_assess_pkg works with path to local tarball", {
   skip_on_cran()
   skip_if(
@@ -62,13 +76,20 @@ test_that("risk_assess_pkg works with path to local tarball", {
     .package = "test.assessr"
   )
   
+  local_mocked_bindings(
+    get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities,
+    .package = "risk.assessr"
+  )
+  
   risk_assess_package <- risk_assess_pkg(path = dp)
   
   testthat::expect_identical(length(risk_assess_package), 5L)
   
   testthat::expect_true(checkmate::check_class(risk_assess_package, "list"))
   
-  testthat::expect_identical(length(risk_assess_package$results), 31L)
+  testthat::expect_identical(length(risk_assess_package$results), 32L)
+  
+  testthat::expect_s3_class(risk_assess_package$results$vulnerabilities, "data.frame")
   
   testthat::expect_true(!is.na(risk_assess_package$results$pkg_name))
   
@@ -196,6 +217,7 @@ test_that("risk_assess_pkg works with path and mocked get_host_package", {
   }
   local_mocked_bindings(
     get_host_package = mock_get_host_package,
+    get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities,
     .package = "risk.assessr"
   )
   
@@ -225,6 +247,7 @@ test_that("risk_assess_pkg works with path params", {
   }
   local_mocked_bindings(
     get_host_package = mock_get_host_package,
+    get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities,
     .package = "risk.assessr"
   )
   
@@ -249,6 +272,7 @@ test_that("risk_assess_pkg works with invalid path params", {
   # Apply mocked binding for risk.assessr::get_host_package
   local_mocked_bindings(
     get_host_package = mock_get_host_package,
+    get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities,
     .package = "risk.assessr"
   )
   
@@ -272,7 +296,7 @@ test_that("risk_assess_pkg with package param uses get_package_tarfile and retur
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     list(cran = TRUE, host = "CRAN", url = "https://cran.r-project.org")
   }
-  local_mocked_bindings(get_host_package = mock_get_host_package, .package = "risk.assessr")
+  local_mocked_bindings(get_host_package = mock_get_host_package, get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities, .package = "risk.assessr")
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
@@ -303,7 +327,7 @@ test_that("risk_assess_pkg with package and version passes version to get_packag
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     list(cran = TRUE, host = "CRAN", url = "https://cran.r-project.org")
   }
-  local_mocked_bindings(get_host_package = mock_get_host_package, .package = "risk.assessr")
+  local_mocked_bindings(get_host_package = mock_get_host_package, get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities, .package = "risk.assessr")
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
@@ -337,7 +361,7 @@ test_that("risk_assess_pkg with no path or package uses file.choose and succeeds
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     list(cran = TRUE, host = "CRAN", url = "https://cran.r-project.org")
   }
-  local_mocked_bindings(get_host_package = mock_get_host_package, .package = "risk.assessr")
+  local_mocked_bindings(get_host_package = mock_get_host_package, get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities, .package = "risk.assessr")
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"

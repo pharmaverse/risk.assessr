@@ -55,8 +55,7 @@ toy_data_risk <- list(
 # Test the generate_risk_analysis function
 test_that("generate_risk_analysis works correctly", {
   result <- generate_risk_analysis(toy_data_risk)
-  
-  expect_equal(nrow(result), 13)
+  expect_equal(nrow(result), 14)
   expect_equal(result$Metric[1], "CMD Check")
   expect_equal(result$Risk_Level[1], "low")
   
@@ -104,6 +103,41 @@ test_that("generate_risk_analysis works correctly", {
   expect_equal(result$Risk_Value[12], "https://example.com/issues") # bug reports url present
   expect_equal(result$Risk_Value[13], "N/A")        # source control absent
   
+  # security vulnerabilities row (none present in toy data -> Low risk, count 0)
+  expect_equal(result$Metric[14], "Security Vulnerabilities")
+  expect_equal(result$Risk_Level[14], "Low")
+  expect_equal(result$Risk_Value[14], "0")
+})
+
+test_that("generate_risk_analysis flags High risk when vulnerabilities are present", {
+  toy_data_with_vulns <- toy_data_risk
+  toy_data_with_vulns$results$vulnerabilities <- data.frame(
+    id         = c("RSEC-2023-6", "RSEC-2023-8"),
+    summary    = c("Denial of Service (DoS) vulnerability",
+                   "Denial of Service (DoS) vulnerabilities"),
+    details    = c("d1", "d2"),
+    introduced = c("0.2", "0.2"),
+    fixed      = c("1.8", "1.9.2"),
+    modified   = c("m1", "m2"),
+    published  = c("p1", "p2"),
+    stringsAsFactors = FALSE
+  )
+  
+  result <- generate_risk_analysis(toy_data_with_vulns)
+  
+  expect_equal(result$Metric[14], "Security Vulnerabilities")
+  expect_equal(result$Risk_Level[14], "High")
+  expect_equal(result$Risk_Value[14], "2")
+})
+
+test_that("generate_risk_analysis treats a non-data-frame vulnerabilities slot as none", {
+  toy_data_blank_vulns <- toy_data_risk
+  toy_data_blank_vulns$results$vulnerabilities <- ""
+  
+  result <- generate_risk_analysis(toy_data_blank_vulns)
+  
+  expect_equal(result$Risk_Level[14], "Low")
+  expect_equal(result$Risk_Value[14], "0")
 })
 
 

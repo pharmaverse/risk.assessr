@@ -7,7 +7,7 @@
 safe_value(x)
 }
 \arguments{
-\item{x}{- value - number to be converted}
+\item{x}{- number to be converted}
 }
 \description{
 Helper to conditionally apply handle_null or abbreviation

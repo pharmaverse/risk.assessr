@@ -246,6 +246,19 @@ init_frugal_results <- function(results) {
     )
   }
   
+  if (is_blank(results$vulnerabilities) || !is.data.frame(results$vulnerabilities)) {
+    results$vulnerabilities <- data.frame(
+      id         = character(0),
+      summary    = character(0),
+      details    = character(0),
+      introduced = character(0),
+      fixed      = character(0),
+      modified   = character(0),
+      published  = character(0),
+      stringsAsFactors = FALSE
+    )
+  }
+  
   # version_info is consumed by normalize_data() / extract_risk_inputs() in
   # get_risk_analysis(); a list shape with explicit NULL/NA fields keeps
   # those helpers on their happy path.
@@ -257,7 +270,7 @@ init_frugal_results <- function(results) {
     )
   }
   
-  results
+  return(results)
 }
 
 

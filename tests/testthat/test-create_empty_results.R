@@ -5,7 +5,7 @@ test_that("test create_empty_results", {
                                                       test_pkg_source_path,
                                                       test_metadata)
 
-  expect_identical(length(results), 35L)
+  expect_identical(length(results), 36L)
   
   expect_true(checkmate::check_list(results, all.missing = FALSE))
   

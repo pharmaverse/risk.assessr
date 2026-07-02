@@ -147,6 +147,9 @@ assess_pkg <- function(
   github_data <- get_github_data(owner, pkg_name)
   results$github_data <- github_data
 
+  # get known security vulnerabilities from the OSV database
+  results$vulnerabilities <- get_security_vulnerabilities(pkg_name, pkg_ver)
+  
   download_list <- list("total_download" = get_cran_total_downloads(pkg_name),
                         "last_month_download" = get_cran_total_downloads(pkg_name, months=1)
   )
