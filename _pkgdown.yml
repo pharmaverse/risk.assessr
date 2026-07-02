@@ -20,6 +20,7 @@ articles:
     contents:
       - generate_html_report
       - risk.assessr_metric
+      - security_vulnerabilities
   - title: Traceability matrix
     desc: Map exported functions with coverage and documentation
     contents:
