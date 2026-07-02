@@ -244,6 +244,8 @@ Resolve tarballs from CRAN, Bioconductor, and internal mirrors.
   : Parse Bioconductor Release Announcements
 - [`fetch_bioconductor_package_info()`](https://pharmaverse.github.io/risk.assessr/reference/fetch_bioconductor_package_info.md)
   : Fetch Bioconductor Package Information
+- [`get_security_vulnerabilities()`](https://pharmaverse.github.io/risk.assessr/reference/get_security_vulnerabilities.md)
+  : Get security vulnerabilities for a package
 
 ## Dependencies & reverse dependencies
 
@@ -348,6 +350,8 @@ package example.
   report](https://pharmaverse.github.io/risk.assessr/articles/generate_html_report.md):
 - [risk.assessr
   metrics](https://pharmaverse.github.io/risk.assessr/articles/risk.assessr_metric.md):
+- [Security
+  vulnerabilities](https://pharmaverse.github.io/risk.assessr/articles/security_vulnerabilities.md):
 
 ### Traceability matrix
 

@@ -13,6 +13,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/articles/get-package-host.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/articles/index.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/articles/risk.assessr_metric.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/articles/security_vulnerabilities.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/authors.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/examples/risk_report_ggplot2_3.5.2.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/index.html</loc></url>
@@ -81,6 +82,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/fetch_all_dependencies.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/fetch_bioconductor_package_info.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/fetch_bioconductor_releases.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/fetch_osv_data.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/find_news_files.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/find_rd_for_fun.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/fine_grained_tms.html</loc></url>
@@ -98,6 +100,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/generate_risk_summary.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/generate_trace_matrix_section.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/generate_traceability_matrix.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/generate_vulnerabilities_section.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_all_s4_methods.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_bioconductor_package_url.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_commits_since.html</loc></url>
@@ -131,6 +134,7 @@
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_risk_definition.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_risk_metadata.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_s3_method.html</loc></url>
+<url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_security_vulnerabilities.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_session_dependencies.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_suggested_exp_funcs.html</loc></url>
 <url><loc>https://pharmaverse.github.io/risk.assessr/reference/get_versions.html</loc></url>

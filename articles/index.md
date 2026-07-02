@@ -20,6 +20,8 @@ package example.
   report](https://pharmaverse.github.io/risk.assessr/articles/generate_html_report.md):
 - [risk.assessr
   metrics](https://pharmaverse.github.io/risk.assessr/articles/risk.assessr_metric.md):
+- [Security
+  vulnerabilities](https://pharmaverse.github.io/risk.assessr/articles/security_vulnerabilities.md):
 
 ### Traceability matrix
 
