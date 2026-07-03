@@ -101,8 +101,13 @@ test_that("parse deps for tar file works correctly", {
 })
 
 test_that("parse_dcf_dependencies extracts dependencies when CRAN is available", {
-  skip_if_repo_unavailable(repo = "http://cran.us.r-project.org")
-  
+  # Force the "CRAN available" branch deterministically and stub base-package
+  # removal so the test does not depend on real network state.
+  mockery::stub(
+    parse_dcf_dependencies,
+    "capture_cran_warning",
+    list(status = "success", message = NULL)
+  )
   mockery::stub(parse_dcf_dependencies, "remove_base_packages", mock_remove_base)
   
   temp_dir <- tempdir()
@@ -130,12 +135,13 @@ test_that("parse_dcf_dependencies extracts dependencies when CRAN is available",
 })
 
 test_that("parse_dcf_dependencies extracts dependencies when CRAN is not available", {
-  # Check CRAN availability
-  cran_status <- capture_cran_warning("http://cran.us.r-project.org", "src/contrib/Meta/archive.rds")
-  
-  skip_if(
-    is.null(cran_status$message),
-    message = "Skipping test because CRAN is available"
+  # Force the "CRAN unavailable" branch deterministically so the test does not
+  # depend on real network state (which caused flaky failures on CI where the
+  # internal CRAN check disagreed with a separate availability probe).
+  mockery::stub(
+    parse_dcf_dependencies,
+    "capture_cran_warning",
+    list(status = "url_error", message = "cannot open URL (simulated offline)")
   )
   
   temp_dir <- tempdir()
