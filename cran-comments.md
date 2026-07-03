@@ -8,7 +8,7 @@
 -   Ubuntu 24.04.2 LTS (on GitHub Actions), R version 4.5.0 (2025-04-11)
 -   Ubuntu 24.04.2 LTS (on GitHub Actions), R version 4.4.3 (2025-02-28)
 
-## Changes in this version
+## Changes in version 4.1.0
 * **New dependency `test.assessr` (>= 2.1.0)** is now in `Imports`.
   Unit-test-coverage processing has been extracted out of `risk.assessr`
   and is now delegated to `test.assessr`. The coverage code, its
