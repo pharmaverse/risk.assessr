@@ -162,15 +162,15 @@ not able to unpack empty.tar.gz locally
 
 * **Cause**: 
 * covr runs in a subprocess on Windows; mocking is not reliable under
-  devtools::test() (4): test-assess_pkg.R:8:5,
-  test-risk_assess_pkg.R:13:3, test-risk_assess_pkg.R:142:3,
-  test-risk_assess_pkg.R:172:3
+  devtools::test() (4): test-assess_pkg.R:82:5,
+  test-risk_assess_pkg.R:31:3, test-risk_assess_pkg.R:202:3,
+  test-risk_assess_pkg.R:232:3
 * covr runs in a subprocess on Windows; mocking is not reliable under
-  devtools::test(). (2): test-assess_pkg.R:514:3, test-assess_pkg.R:658:3
+  devtools::test(). (2): test-assess_pkg.R:522:3, test-assess_pkg.R:644:3
 * covr runs in subprocess on Windows; not reliable under devtools::test()
-  (2): test-risk_assess_pkg.R:225:3, test-risk_assess_pkg.R:250:3
+  (2): test-risk_assess_pkg.R:287:3, test-risk_assess_pkg.R:313:3
 * file.choose mocking not reliable on Windows under devtools::test() (1):
-  test-risk_assess_pkg.R:288:3
+  test-risk_assess_pkg.R:352:3
 * Skipping test because CRAN is available (1):
   test-parse_dcf_dependencies.R:140:3
   
