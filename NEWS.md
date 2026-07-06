@@ -1,3 +1,14 @@
+# risk.assessr 4.1.1
+
+## New Features
+
+ - add `security vulnerabilities` check feature
+ - update URL for API keys in `Pubmed_data` vignette
+ - add add source control and bug URL to `risk-definition.json`
+ - fix CRAN issue with `test-get_github_data.R`
+ - add `CRAN` skips to `test-check_suggested_exp_funcs`
+ - add `frugal metrics` extraction function
+ 
 # risk.assessr 4.1.0
 
 ## New Features

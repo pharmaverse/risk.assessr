@@ -1,6 +1,6 @@
 Package: risk.assessr
 Title: Assessing Package Risk Metrics
-Version: 4.1.0
+Version: 4.1.1
 Authors@R: c(
     person("Edward", "Gillian", , "edward.gillian-ext@sanofi.com", role = c("cre", "aut"), comment = c(ORCID = "0000-0003-2732-5107")),
     person("Hugo", "Bottois", , "hugo.bottois@sanofi.com", role = "aut", comment = c(ORCID = "0000-0003-4674-0875")),
