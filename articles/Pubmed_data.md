@@ -22,7 +22,7 @@ To increase request limits and improve stability, you can use an NCBI
 API key.
 
 To add a PubMed API key (token), please follow the steps
-[Here](https://support.nlm.nih.gov/kbArticle/?pn=KA-05317)
+[Here](https://www.ncbi.nlm.nih.gov/books/NBK25497/#chapter2.API_Keys)
 
 ``` r
 
