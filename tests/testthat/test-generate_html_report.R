@@ -2,7 +2,7 @@ toy_assessment_results <- list(
   results = list(
     pkg_name = "test.package.0001",
     pkg_version = "0.1.0",
-    pkg_source_path = structure("/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001", .Names = "/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001"),
+    pkg_source_path = structure("/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001", names = "/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001"),
     date_time = "2025-01-02 09:15:18",
     executor = "u1004798",
     sysname = "Linux",
@@ -84,7 +84,7 @@ toy_assessment_results <- list(
     res_cov = list(
       name = "test.package.0001",
       coverage = list(
-        filecoverage = structure(50, .Dim = c(1L), .Dimnames = list("R/myscript.R")),
+        filecoverage = structure(50, dim = c(1L), dimnames = list("R/myscript.R")),
         totalcoverage = 50
       ),
       errors = NA,
@@ -528,8 +528,8 @@ testthat::test_that("generate_coverage_section shortens full Linux paths via ext
         coverage = list(
           filecoverage = structure(
             75,
-            .Dim    = c(1L),
-            .Dimnames = list("/tmp/RtmpXXXXXX/test.package.0001/R/myscript.R")
+            dim    = c(1L),
+            dimnames = list("/tmp/RtmpXXXXXX/test.package.0001/R/myscript.R")
           ),
           totalcoverage = 75
         ),
@@ -1124,8 +1124,8 @@ make_stubbed_html_report <- function() {
 testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
   fw1_file_cov <- structure(
     c(80, 60),
-    .Dim      = c(2L),
-    .Dimnames = list(c("R/foo.R", "R/bar.R"))
+    dim      = c(2L),
+    dimnames = list(c("R/foo.R", "R/bar.R"))
   )
   
   ar <- make_mf_assessment(list(
@@ -1139,7 +1139,7 @@ testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
       )),
       tinytest = list(res_cov = list(
         coverage = list(
-          filecoverage = structure(90, .Dim = c(1L), .Dimnames = list("R/baz.R")),
+          filecoverage = structure(90, dim = c(1L), dimnames = list("R/baz.R")),
           totalcoverage = 90
         ),
         errors = NA, notes = NA
@@ -1157,13 +1157,13 @@ testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
 testthat::test_that("multi_framework TRUE: file_coverage taken from first framework, not second", {
   fw1_file_cov <- structure(
     c(80, 60),
-    .Dim      = c(2L),
-    .Dimnames = list(c("R/foo.R", "R/bar.R"))
+    dim      = c(2L),
+    dimnames = list(c("R/foo.R", "R/bar.R"))
   )
   fw2_file_cov <- structure(
     90,
-    .Dim      = c(1L),
-    .Dimnames = list("R/baz.R")
+    dim      = c(1L),
+    dimnames = list("R/baz.R")
   )
   
   ar <- make_mf_assessment(list(
@@ -1193,8 +1193,8 @@ testthat::test_that("multi_framework TRUE: file_coverage taken from first framew
 testthat::test_that("multi_framework FALSE: falls back to top-level res_cov fields", {
   file_cov <- structure(
     55,
-    .Dim      = c(1L),
-    .Dimnames = list("R/single.R")
+    dim      = c(1L),
+    dimnames = list("R/single.R")
   )
   
   ar <- make_mf_assessment(list(
@@ -1287,5 +1287,262 @@ testthat::test_that("has_docs fallback path (NULL/other) yields empty data.frame
   sc <- attr(has_docs_df, "score")
   testthat::expect_true(is.na(sc))
   testthat::expect_identical(typeof(sc), "double")
+})
+
+# ---------------------------------------------------------------------------
+# Additional coverage for generate_html_report and its helpers.
+# All tests below are fully mocked (no rendering, no network) and CRAN-safe.
+# Coverage-array fixtures use the canonical `dim` / `dimnames` attribute names
+# (never the deprecated `.Dim` / `.Dimnames` / `.Names` special forms).
+# ---------------------------------------------------------------------------
+
+# Minimal single-framework res_cov reused by the report-body tests below.
+gh_report_test_res_cov <- function() {
+  list(
+    coverage = list(
+      filecoverage  = structure(55, dim = 1L, dimnames = list("R/single.R")),
+      totalcoverage = 55
+    ),
+    errors = NA,
+    notes  = NA
+  )
+}
+
+testthat::test_that("generate_html_report returns NULL when rmarkdown is not installed", {
+  # Covers lines 22-24: the early requireNamespace() guard.
+  fn <- generate_html_report
+  mockery::stub(fn, "requireNamespace", function(...) FALSE)
+  
+  testthat::expect_message(
+    res <- fn(toy_assessment_results, output_dir = tempdir()),
+    "Package 'rmarkdown' is required but not installed."
+  )
+  testthat::expect_null(res)
+})
+
+testthat::test_that("generate_html_report defaults output_dir to the working directory", {
+  # Covers lines 32-34: the is.null(output_dir) branch.
+  ar <- make_mf_assessment(list(
+    multi_framework = FALSE,
+    res_cov         = gh_report_test_res_cov()
+  ))
+  
+  h <- make_stubbed_html_report()
+  
+  withr::with_envvar(c(NOT_CRAN = "false"), {
+    testthat::expect_message(
+      h$fn(ar, output_dir = NULL),
+      "No output directory specified"
+    )
+  })
+})
+
+testthat::test_that("generate_html_report wraps non-data.frame trace matrices in tibbles", {
+  # Covers lines 88-89 (high risk), 125-126 (imported) and 134-135 (re-exported):
+  # the `if (!is.data.frame(...)) <- dplyr::tibble(...)` guards.  The remaining
+  # risk / function-type guards share the same shape and are covered too.
+  ar <- make_mf_assessment(list(
+    multi_framework = FALSE,
+    res_cov         = gh_report_test_res_cov()
+  ))
+  
+  # Replace every tm_list entry with a non-data.frame (a bare numeric scalar).
+  ar$tm_list$coverage$high_risk         <- 0
+  ar$tm_list$coverage$medium_risk       <- 0
+  ar$tm_list$coverage$low_risk          <- 0
+  ar$tm_list$function_type$defunct      <- 0
+  ar$tm_list$function_type$imported     <- 0
+  ar$tm_list$function_type$rexported    <- 0
+  ar$tm_list$function_type$experimental <- 0
+  
+  h <- make_stubbed_html_report()
+  
+  res <- withr::with_envvar(
+    c(NOT_CRAN = "true"),
+    h$fn(ar, output_dir = tempdir())
+  )
+  
+  # render() is stubbed to a no-op, so the stubbed path_abs() value is returned.
+  testthat::expect_identical(res, "/tmp/report.html")
+})
+
+testthat::test_that("generate_html_report skips rendering on CRAN / non-interactive sessions", {
+  # Covers lines 241-243: the else branch of the NOT_CRAN / interactive() check.
+  ar <- make_mf_assessment(list(
+    multi_framework = FALSE,
+    res_cov         = gh_report_test_res_cov()
+  ))
+  
+  h <- make_stubbed_html_report()
+  
+  withr::with_envvar(c(NOT_CRAN = "false"), {
+    testthat::expect_message(
+      res <- h$fn(ar, output_dir = tempdir()),
+      "Rendering skipped on CRAN or non-interactive environment."
+    )
+    testthat::expect_null(res)
+  })
+})
+
+testthat::test_that("generate_html_report returns NULL if rmarkdown disappears before rendering", {
+  # Covers lines 237-240: rmarkdown passes the first guard (line 22) but is
+  # unavailable at the render guard (line 226).  A stateful stub returns TRUE
+  # on the first call and FALSE on the second.
+  ar <- make_mf_assessment(list(
+    multi_framework = FALSE,
+    res_cov         = gh_report_test_res_cov()
+  ))
+  
+  h  <- make_stubbed_html_report()
+  fn <- h$fn
+  call_count <- 0L
+  mockery::stub(fn, "requireNamespace", function(...) {
+    call_count <<- call_count + 1L
+    call_count == 1L
+  })
+  
+  withr::with_envvar(c(NOT_CRAN = "true"), {
+    testthat::expect_message(
+      res <- fn(ar, output_dir = tempdir()),
+      "Package 'rmarkdown' is required but not installed."
+    )
+    testthat::expect_null(res)
+  })
+})
+
+testthat::test_that("convert_number_to_percent treats values greater than 1 as already-percentages", {
+  # Covers line 316: the else branch (value > 1).
+  testthat::expect_equal(convert_number_to_percent(75), "75%")
+  testthat::expect_equal(convert_number_to_percent(12.34), "12.3%")
+})
+
+testthat::test_that("safe_value routes non-numeric, non-NULL values through handle_null", {
+  # Covers line 337: the final else branch of safe_value().
+  testthat::expect_equal(safe_value("some string"), "some string")
+  testthat::expect_equal(safe_value(TRUE), "TRUE")
+})
+
+testthat::test_that("generate_risk_summary uses populated host links when present", {
+  # Covers lines 469 (Bioconductor), 475 (GitHub) and 481 (CRAN):
+  # the else branches that read the actual host links.
+  assessment_results <- list(
+    results = list(
+      pkg_name     = "mockpkg",
+      pkg_version  = "1.0.0",
+      license_name = "MIT",
+      host = list(
+        bioconductor_links = "https://bioconductor.org/packages/mockpkg",
+        github_links       = "https://github.com/owner/mockpkg",
+        cran_links         = "https://cran.r-project.org/package=mockpkg",
+        internal_links     = "https://internal.example.com/mockpkg"
+      )
+    )
+  )
+  
+  result <- generate_risk_summary(assessment_results)
+  
+  testthat::expect_equal(result$Value[result$Metric == "CRAN link"],
+                         "https://cran.r-project.org/package=mockpkg")
+  testthat::expect_equal(result$Value[result$Metric == "GitHub repository"],
+                         "https://github.com/owner/mockpkg")
+  testthat::expect_equal(result$Value[result$Metric == "Bioconductor Link"],
+                         "https://bioconductor.org/packages/mockpkg")
+})
+
+testthat::test_that("create_file_coverage_df maps NULL error entries to 'N/A'", {
+  # Covers line 566: the is.null(x) branch inside the sapply over a list of errors.
+  result <- create_file_coverage_df(
+    file_names    = "file1.R",
+    file_coverage = 50,
+    errors        = list(NULL),
+    notes         = "note1"
+  )
+  
+  testthat::expect_s3_class(result, "data.frame")
+  testthat::expect_equal(result$Errors[1], "N/A")
+})
+
+testthat::test_that("create_file_coverage_df flattens list-valued error entries", {
+  # Covers line 570: the is.list(x) branch inside the sapply over a list of errors.
+  result <- create_file_coverage_df(
+    file_names    = "file1.R",
+    file_coverage = 50,
+    errors        = list(list("first", "second")),
+    notes         = "note1"
+  )
+  
+  testthat::expect_s3_class(result, "data.frame")
+  testthat::expect_equal(result$Errors[1], "first; second")
+})
+
+testthat::test_that("extract_coverage_df delegates to create_file_coverage_df for structured error objects", {
+  # Covers line 630: the branch where errors is a callr-style condition list
+  # carrying all the expected names.
+  res_cov <- list(
+    coverage = list(
+      filecoverage  = structure(50, dim = 1L, dimnames = list("R/foo.R")),
+      totalcoverage = 50
+    ),
+    errors = list(
+      message      = "boom",
+      srcref       = NA,
+      status       = 1L,
+      stdout       = "",
+      stderr       = "",
+      parent_trace = NA,
+      call         = NA,
+      procsrcref   = NA,
+      parent       = NA
+    ),
+    notes = NA
+  )
+  
+  result <- extract_coverage_df(res_cov, pkg_name = "mockpkg")
+  
+  testthat::expect_s3_class(result, "data.frame")
+  testthat::expect_identical(colnames(result), c("File", "Coverage", "Errors", "Notes"))
+  testthat::expect_equal(result$File[1], "R/foo.R")
+  testthat::expect_true(grepl("boom", result$Errors[1]))
+})
+
+testthat::test_that("generate_doc_metrics_section maps NULL metric values to NA via map_flag", {
+  # Covers line 740: the is.null(x) branch of the local map_flag() helper.
+  # make_stubbed_fun() stubs handle_null() to the identity, so a NULL metric
+  # value reaches map_flag() as NULL instead of being coerced to "N/A".
+  assessment_results <- make_base_assessment(data.frame())
+  assessment_results$results$has_bug_reports_url <- NULL  # first metric -> NULL
+  
+  fn <- make_stubbed_fun()
+  out <- fn(assessment_results)
+  
+  doc_metrics <- out$doc_metrics
+  bug_row <- doc_metrics$Value[doc_metrics$Metric == "Has Bug Reports URL"]
+  testthat::expect_true(is.na(bug_row))
+})
+
+testthat::test_that("generate_pop_metrics_section sets NumericValue to NA when downloads are unavailable", {
+  # Covers line 887: the is.character(total_download_n) && == "N/A" branch.
+  assessment_results <- list(
+    results = list(
+      github_data = list(
+        created_at           = NA,
+        stars                = 0,
+        forks                = 0,
+        date                 = NA,
+        recent_commits_count = 0,
+        open_issues          = 0
+      ),
+      download = list(
+        total_download      = NULL,
+        last_month_download = 100
+      )
+    )
+  )
+  
+  result <- generate_pop_metrics_section(assessment_results)
+  
+  dl_total <- result$NumericValue[result$Metric == "Downloads Total"]
+  testthat::expect_true(is.na(dl_total))
+  testthat::expect_identical(typeof(dl_total), "double")
 })
 

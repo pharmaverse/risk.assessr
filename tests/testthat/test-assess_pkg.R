@@ -1083,3 +1083,146 @@ test_that("assess_pkg returns NULL with a warning when pkg_source_path is an emp
   )
   
 })
+
+# Shared stubs that keep assess_pkg fully offline / subprocess-free.
+# Each stub is applied against the local `assess_pkg` copy inside the test.
+assess_pkg_test_apply_common_stubs <- function(pkg_source_path) {
+  mockery::stub(assess_pkg, "get_pkg_desc", function(path, fields) {
+    list(Package = "mockpkg", Version = "0.1.0")
+  })
+  mockery::stub(assess_pkg, "get_risk_metadata", function() list())
+  mockery::stub(assess_pkg, "create_empty_results", function(...) list(suggested_deps = NULL))
+  mockery::stub(assess_pkg, "doc_riskmetric", function(...) list(
+    has_bug_reports_url = TRUE, license = TRUE, has_examples = TRUE,
+    has_docs = TRUE, has_ex_docs_score = 1, has_maintainer = TRUE,
+    size_codebase = 10, has_news = TRUE, has_source_control = TRUE,
+    has_vignettes = TRUE, has_website = TRUE, news_current = TRUE,
+    export_help = TRUE
+  ))
+  mockery::stub(assess_pkg, "test.assessr::get_package_coverage", assess_pkg_test_mock_zero_coverage)
+  mockery::stub(assess_pkg, "run_rcmdcheck", function(...) list(check_score = 1))
+  mockery::stub(assess_pkg, "get_dependencies", function(...) assess_pkg_test_empty_deps_df())
+  mockery::stub(assess_pkg, "create_empty_tm", function(...) list())
+  mockery::stub(assess_pkg, "assess_exports", function(...) list())
+  mockery::stub(assess_pkg, "risk.assessr::get_session_dependencies", function(...) list())
+  mockery::stub(assess_pkg, "get_pkg_author", function(...) list(maintainer = "Mock Author", funder = NA, authors = "Mock Author"))
+  mockery::stub(assess_pkg, "extract_license_from_description", function(...) "MIT")
+  mockery::stub(assess_pkg, "get_repo_owner", function(...) NA_character_)
+  mockery::stub(assess_pkg, "get_github_data", function(...) list(created_at = NA, stars = 0, forks = 0, date = NA, recent_commits_count = 0))
+  mockery::stub(assess_pkg, "get_cran_total_downloads", function(...) 0)
+  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
+  mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
+}
+
+assess_pkg_test_write_mock_description <- function(pkg_source_path) {
+  writeLines(c(
+    "Package: mockpkg",
+    "Version: 0.1.0",
+    "Title: Mock Package",
+    "Description: A mock package for testing.",
+    "Authors@R: c(person(given = \"Mock\", family = \"Author\", role = c(\"aut\", \"cre\")))",
+    "License: MIT"
+  ), file.path(pkg_source_path, "DESCRIPTION"))
+}
+
+test_that("assess_pkg falls back to the default suggested_deps data.frame when check_suggested_exp_funcs returns NULL", {
+  # Covers assess_pkg.R line 112: the `is.null(out)` branch returns the fallback.
+  pkg_source_path <- withr::local_tempdir()
+  assess_pkg_test_write_mock_description(pkg_source_path)
+  
+  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  mockery::stub(assess_pkg, "get_host_package", function(...) {
+    list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
+  })
+  
+  # Return NULL (no error) so the is.null(out) branch is taken.
+  mockery::stub(assess_pkg, "check_suggested_exp_funcs", function(...) NULL)
+  
+  rcmdcheck_args <- list(timeout = Inf, args = c("--no-manual"), build_args = NULL, env = "mockenv", quiet = TRUE)
+  
+  assess_package <- assess_pkg(pkg_source_path, rcmdcheck_args)
+  
+  suggested_deps <- assess_package$results$suggested_deps
+  expect_s3_class(suggested_deps, "data.frame")
+  expect_identical(nrow(suggested_deps), 1L)
+  expect_identical(names(suggested_deps), c("source", "suggested_function", "message", "where"))
+  expect_identical(suggested_deps$source, "mockpkg")
+  expect_identical(suggested_deps$message, "Error in checking suggested functions")
+  # NA_character_ fields are coerced to 0 by the trailing rapply() calls.
+  expect_identical(suggested_deps$suggested_function, 0)
+  expect_identical(suggested_deps$where, 0)
+})
+
+test_that("assess_pkg falls back to the default suggested_deps data.frame when check_suggested_exp_funcs returns a non-data.frame", {
+  # Covers assess_pkg.R line 117: the final `else` branch (helper returns another type).
+  pkg_source_path <- withr::local_tempdir()
+  assess_pkg_test_write_mock_description(pkg_source_path)
+  
+  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  mockery::stub(assess_pkg, "get_host_package", function(...) {
+    list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
+  })
+  
+  # Return a value that is neither NULL nor a data.frame so the else branch is taken.
+  mockery::stub(assess_pkg, "check_suggested_exp_funcs", function(...) list(unexpected = "shape"))
+  
+  rcmdcheck_args <- list(timeout = Inf, args = c("--no-manual"), build_args = NULL, env = "mockenv", quiet = TRUE)
+  
+  assess_package <- assess_pkg(pkg_source_path, rcmdcheck_args)
+  
+  suggested_deps <- assess_package$results$suggested_deps
+  expect_s3_class(suggested_deps, "data.frame")
+  expect_identical(nrow(suggested_deps), 1L)
+  expect_identical(names(suggested_deps), c("source", "suggested_function", "message", "where"))
+  expect_identical(suggested_deps$source, "mockpkg")
+  expect_identical(suggested_deps$message, "Error in checking suggested functions")
+  expect_identical(suggested_deps$suggested_function, 0)
+  expect_identical(suggested_deps$where, 0)
+})
+
+test_that("assess_pkg uses the last CRAN version when the current version is not found in all_versions", {
+  # Covers assess_pkg.R line 200: index <- length(all_versions) when which() finds no match.
+  pkg_source_path <- withr::local_tempdir()
+  writeLines(c(
+    "Package: mockpkg",
+    "Version: 3.0.0",                    # deliberately absent from all_versions below
+    "Title: Mock Package",
+    "Description: A mock package for testing.",
+    "Authors@R: c(person(given = \"Mock\", family = \"Author\", role = c(\"aut\", \"cre\")))",
+    "License: MIT"
+  ), file.path(pkg_source_path, "DESCRIPTION"))
+  
+  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  # get_pkg_desc must report the unmatched version.
+  mockery::stub(assess_pkg, "get_pkg_desc", function(path, fields) {
+    list(Package = "mockpkg", Version = "3.0.0")
+  })
+  # Force the CRAN branch.
+  mockery::stub(assess_pkg, "get_host_package", function(...) {
+    list(cran_links = "CRAN", github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
+  })
+  mockery::stub(assess_pkg, "check_suggested_exp_funcs", function(...) NULL)
+  mockery::stub(assess_pkg, "cran_revdep", function(...) character(0))
+  # all_versions has no "3.0.0"; the last element (index = length) dates to 2022-01-01.
+  mockery::stub(assess_pkg, "check_and_fetch_cran_package", function(pkg_name, pkg_ver) {
+    list(
+      all_versions = list(
+        list(version = "0.9.0", date = "2021-06-01"),
+        list(version = "1.0.0", date = "2022-01-01")
+      ),
+      last_version = list(version = "2.0.0", date = "2023-01-01")
+    )
+  })
+  
+  rcmdcheck_args <- list(timeout = Inf, args = c("--no-manual"), build_args = NULL, env = "mockenv", quiet = TRUE)
+  
+  assess_package <- assess_pkg(pkg_source_path, rcmdcheck_args)
+  
+  version_info <- assess_package$results$version_info
+  # index fell back to length(all_versions) == 2 -> current_date "2022-01-01",
+  # last_date "2023-01-01" -> 12 month spans between them.
+  expect_equal(version_info$difference_version_months, 12)
+  expect_equal(version_info$last_version$version, "2.0.0")
+  # Empty reverse deps are coerced to numeric 0.
+  expect_identical(assess_package$results$rev_deps, 0)
+})

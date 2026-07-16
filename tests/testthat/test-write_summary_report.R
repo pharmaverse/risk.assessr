@@ -2,19 +2,19 @@
 toy_data_risk <- list(
   # Qualitative risk levels used for the "Risk_Level" column in the table
   risk_analysis = list(
-    dependencies_count         = "low",
-    later_version              = "low",
-    code_coverage              = "low",
-    total_download             = "medium",
-    license                    = "low",
+    dependencies_count = "low",
+    later_version = "low",
+    code_coverage = "low",
+    total_download = "medium",
+    license = "low",
     reverse_dependencies_count = "low",
-    documentation_score        = "low",
-    example_score              = "medium",
-    has_docs_score             = "low",
-    has_ex_docs_score          = "low",
-    cmd_check                  = "low",
-    has_bug_reports_url_risk   = "low",
-    has_source_control_risk    = "high"
+    documentation_score = "low",
+    example_score = "medium",
+    has_docs_score = "low",
+    has_ex_docs_score = "low",
+    cmd_check = "low",
+    has_bug_reports_url_risk = "low",
+    has_source_control_risk = "high"
   ),
   
   # Numeric/structural inputs used to compute/display Risk_Value column
@@ -898,5 +898,144 @@ test_that("explicit format overrides extension; unknown explicit format warns an
   expect_equal(args_B$output_dir, base_dir)
   expect_equal(args_B$output_file, "something.html") # corrected extension
   expect_equal(args_B$output_format, "html_fmt_B")
+})
+
+# ---------------------------------------------------------------------------
+# Additional targeted coverage for write_summary_report.
+# All tests are fully mocked (no rendering, no network) and CRAN-safe, and
+# avoid the deprecated structure() special names (.Dim/.Dimnames/.Names/etc.).
+# ---------------------------------------------------------------------------
+
+testthat::test_that("write_summary_report re-raises get_pkg_desc failures with a descriptive error", {
+  # Covers lines 95-99: the tryCatch error handler around get_pkg_desc().
+  wsr <- write_summary_report
+  
+  mockery::stub(wsr, "find.package", function(...) "/fake/pkg/path")
+  mockery::stub(wsr, "get_pkg_desc", function(...) stop("desc read failed"))
+  
+  testthat::expect_error(
+    wsr(fake_results),
+    "Failed to retrieve package description for 'risk.assessr': desc read failed"
+  )
+})
+
+testthat::test_that("write_summary_report errors when the Version field is absent from the description", {
+  # Covers lines 104-107: the is.null(tool_version$Version) guard.
+  wsr <- write_summary_report
+  
+  mockery::stub(wsr, "find.package", function(...) "/fake/pkg/path")
+  # A description list that lacks a 'Version' element.
+  mockery::stub(wsr, "get_pkg_desc", function(...) list(Package = "risk.assessr"))
+  
+  testthat::expect_error(
+    wsr(fake_results),
+    "does not contain a valid 'Version' field"
+  )
+})
+
+testthat::test_that("write_summary_report defaults extension to html for an unknown explicit output_format when output_file is NULL", {
+  # Covers line 133: the `else \"html\"` outcome of the default_ext block
+  # (output_file is NULL and output_format is not one of html/md).
+  wsr <- write_summary_report
+  
+  mockery::stub(wsr, "find.package", function(...) "/fake/pkg/path")
+  mockery::stub(wsr, "get_pkg_desc", function(...) list(Version = "9.9.9"))
+  mockery::stub(wsr, "generate_risk_analysis", function(...) "analysis")
+  mockery::stub(wsr, "getwd", function() "/tmp/render_root")
+  mockery::stub(wsr, "fs::path_abs", function(path, start = ".") file.path(start, path))
+  mockery::stub(wsr, "fs::path_ext_set", function(path, ext) sub("\\.[^.]*$", paste0(".", ext), path))
+  mockery::stub(wsr, "system.file", function(...) "TEMPLATE.Rmd")
+  mockery::stub(wsr, "rmarkdown::html_document", function(...) "html_fmt")
+  mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_fmt")
+  
+  captured <- NULL
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file, output_dir, ...) {
+    captured <<- list(output_format = output_format, output_file = output_file, output_dir = output_dir)
+    NULL
+  })
+  
+  # Unknown format ("pdf") also trips the later Unknown-'output_format' warning.
+  testthat::expect_warning(
+    suppressMessages(
+      wsr(fake_results, output_file = NULL, output_format = "pdf", output_dir = NULL)
+    ),
+    "Unknown 'output_format'; defaulting to HTML"
+  )
+  
+  # default_ext resolved to "html" -> auto-named .html file, HTML format object.
+  testthat::expect_equal(captured$output_format, "html_fmt")
+  testthat::expect_equal(captured$output_file, "summary_report_mockpkg_0.1.0.html")
+})
+
+testthat::test_that("write_summary_report warns and falls back to html for an unknown file extension", {
+  # Covers lines 195-198: the default switch branch when inferring format from
+  # an unknown extension (output_format is NULL).
+  wsr <- write_summary_report
+  
+  mockery::stub(wsr, "find.package", function(...) "/fake/pkg/path")
+  mockery::stub(wsr, "get_pkg_desc", function(...) list(Version = "9.9.9"))
+  mockery::stub(wsr, "generate_risk_analysis", function(...) "analysis")
+  mockery::stub(wsr, "system.file", function(...) "TEMPLATE.Rmd")
+  mockery::stub(wsr, "dir.exists", function(...) FALSE)
+  mockery::stub(wsr, "fs::is_absolute_path", function(...) TRUE)
+  mockery::stub(wsr, "fs::path_ext_set", function(path, ext) sub("\\.[^.]*$", paste0(".", ext), path))
+  mockery::stub(wsr, "rmarkdown::html_document", function(...) "html_fmt")
+  mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_fmt")
+  
+  captured <- NULL
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file, output_dir, ...) {
+    captured <<- list(output_format = output_format, output_file = output_file, output_dir = output_dir)
+    NULL
+  })
+  
+  testthat::expect_warning(
+    suppressMessages(
+      wsr(fake_results, output_file = "/reports/report.xyz",
+          output_format = NULL, output_dir = "/ignored")
+    ),
+    "Unknown extension; defaulting to HTML"
+  )
+  
+  testthat::expect_equal(captured$output_format, "html_fmt")
+  testthat::expect_equal(captured$output_file, "report.html")
+})
+
+testthat::test_that("write_summary_report infers the md format from a .md extension and sets md knitr options", {
+  # Covers lines 203-205: the identical(final_ext, \"md\") knitr configuration
+  # inside the extension-inference branch (output_format is NULL).
+  wsr <- write_summary_report
+  
+  # Preserve and restore any knitr options the md branch mutates so this test
+  # does not leak global state into other tests.
+  old_allow_html <- knitr::opts_knit$get("always_allow_html")
+  old_dev        <- knitr::opts_chunk$get("dev")
+  old_fig_ext    <- knitr::opts_chunk$get("fig.ext")
+  withr::defer({
+    knitr::opts_knit$set(always_allow_html = old_allow_html)
+    knitr::opts_chunk$set(dev = old_dev, fig.ext = old_fig_ext)
+  })
+  
+  mockery::stub(wsr, "find.package", function(...) "/fake/pkg/path")
+  mockery::stub(wsr, "get_pkg_desc", function(...) list(Version = "9.9.9"))
+  mockery::stub(wsr, "generate_risk_analysis", function(...) "analysis")
+  mockery::stub(wsr, "system.file", function(...) "TEMPLATE.Rmd")
+  mockery::stub(wsr, "dir.exists", function(...) FALSE)
+  mockery::stub(wsr, "fs::is_absolute_path", function(...) TRUE)
+  mockery::stub(wsr, "rmarkdown::html_document", function(...) "html_fmt")
+  mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_fmt")
+  
+  captured <- NULL
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file, output_dir, ...) {
+    captured <<- list(output_format = output_format, output_file = output_file, output_dir = output_dir)
+    NULL
+  })
+  
+  suppressMessages(
+    wsr(fake_results, output_file = "/reports/report.md",
+        output_format = NULL, output_dir = "/ignored")
+  )
+  
+  testthat::expect_equal(captured$output_format, "md_fmt")
+  testthat::expect_equal(captured$output_file, "report.md")
 })
 
