@@ -16,7 +16,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/pharmaverse/risk.assessr/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/pharmaverse/risk.assessr/blob/v4.1.2/DESCRIPTION)
 
 Gillian E, Bottois H, Charliquart P, Couturier A (2026). *risk.assessr:
 Assessing Package Risk Metrics*. R package version 4.1.2,
