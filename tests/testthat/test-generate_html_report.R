@@ -2,7 +2,7 @@ toy_assessment_results <- list(
   results = list(
     pkg_name = "test.package.0001",
     pkg_version = "0.1.0",
-    pkg_source_path = structure("/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001", .Names = "/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001"),
+    pkg_source_path = structure("/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001", names = "/tmp/Rtmpnn3wNN/temp_file_7b003b884e49/test.package.0001"),
     date_time = "2025-01-02 09:15:18",
     executor = "u1004798",
     sysname = "Linux",
@@ -84,7 +84,7 @@ toy_assessment_results <- list(
     res_cov = list(
       name = "test.package.0001",
       coverage = list(
-        filecoverage = structure(50, .Dim = c(1L), .Dimnames = list("R/myscript.R")),
+        filecoverage = structure(50, .Dim = c(1L), dimnames = list("R/myscript.R")),
         totalcoverage = 50
       ),
       errors = NA,
@@ -528,8 +528,8 @@ testthat::test_that("generate_coverage_section shortens full Linux paths via ext
         coverage = list(
           filecoverage = structure(
             75,
-            .Dim    = c(1L),
-            .Dimnames = list("/tmp/RtmpXXXXXX/test.package.0001/R/myscript.R")
+            dim    = c(1L),
+            dimnames = list("/tmp/RtmpXXXXXX/test.package.0001/R/myscript.R")
           ),
           totalcoverage = 75
         ),
@@ -1124,8 +1124,8 @@ make_stubbed_html_report <- function() {
 testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
   fw1_file_cov <- structure(
     c(80, 60),
-    .Dim      = c(2L),
-    .Dimnames = list(c("R/foo.R", "R/bar.R"))
+    dim      = c(2L),
+    dimnames = list(c("R/foo.R", "R/bar.R"))
   )
   
   ar <- make_mf_assessment(list(
@@ -1139,7 +1139,7 @@ testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
       )),
       tinytest = list(res_cov = list(
         coverage = list(
-          filecoverage = structure(90, .Dim = c(1L), .Dimnames = list("R/baz.R")),
+          filecoverage = structure(90, dim = c(1L), dimnames = list("R/baz.R")),
           totalcoverage = 90
         ),
         errors = NA, notes = NA
@@ -1157,13 +1157,13 @@ testthat::test_that("multi_framework TRUE: total_coverage = total_cov * 100", {
 testthat::test_that("multi_framework TRUE: file_coverage taken from first framework, not second", {
   fw1_file_cov <- structure(
     c(80, 60),
-    .Dim      = c(2L),
-    .Dimnames = list(c("R/foo.R", "R/bar.R"))
+    dim      = c(2L),
+    dimnames = list(c("R/foo.R", "R/bar.R"))
   )
   fw2_file_cov <- structure(
     90,
-    .Dim      = c(1L),
-    .Dimnames = list("R/baz.R")
+    dim      = c(1L),
+    dimnames = list("R/baz.R")
   )
   
   ar <- make_mf_assessment(list(
@@ -1193,8 +1193,8 @@ testthat::test_that("multi_framework TRUE: file_coverage taken from first framew
 testthat::test_that("multi_framework FALSE: falls back to top-level res_cov fields", {
   file_cov <- structure(
     55,
-    .Dim      = c(1L),
-    .Dimnames = list("R/single.R")
+    dim      = c(1L),
+    dimnames = list("R/single.R")
   )
   
   ar <- make_mf_assessment(list(
