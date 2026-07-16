@@ -1,3 +1,12 @@
+# risk.assessr 4.1.2
+
+## New Features
+
+ - fix CRAN issue with `test-generate_html_report`
+ - increase test coverage for `test-assess_pkg`, `test-generate_html_report`, 
+ - `test-get_session_dependencies`, `test-write_summary_report`
+ - add `frugal metrics` extraction function
+
 # risk.assessr 4.1.1
 
 ## New Features
