@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">risk.assessr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Get popularity metrics from CRAN or Bioconductor package</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/pharmaverse/risk.assessr/blob/v4.1.1/vignettes/Popularity_metric.Rmd" class="external-link"><code>vignettes/Popularity_metric.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/pharmaverse/risk.assessr/blob/main/vignettes/Popularity_metric.Rmd" class="external-link"><code>vignettes/Popularity_metric.Rmd</code></a></small>
       <div class="d-none name"><code>Popularity_metric.Rmd</code></div>
     </div>
 
@@ -90,13 +90,21 @@
 </h2>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">download_bio_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_package_download_bioconductor.html">get_package_download_bioconductor</a></span><span class="op">(</span><span class="st">"limma"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Failed to open</span></span>
-<span><span class="co">#&gt; 'https://bioconductor.org/packages/stats/bioc/limma/limma_stats.tab': The</span></span>
-<span><span class="co">#&gt; requested URL returned error: 404</span></span>
-<span><span class="co">#&gt; could not fetch download data for package: limma</span></span>
-<span><span class="co">#&gt; No download data found for package: limma</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">download_bio_df</span><span class="op">$</span><span class="va">all_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt; NULL</span></span></code></pre></div>
+<span><span class="co">#&gt;         Date Year Month Nb_of_distinct_IPs Nb_of_downloads Cumulative_downloads</span></span>
+<span><span class="co">#&gt; 1 2009-01-01 2009   Jan               3341            7053                 7053</span></span>
+<span><span class="co">#&gt; 2 2009-02-01 2009   Feb               3229            6681                13734</span></span>
+<span><span class="co">#&gt; 3 2009-03-01 2009   Mar               3753            8021                21755</span></span>
+<span><span class="co">#&gt; 4 2009-04-01 2009   Apr               4025            8583                30338</span></span>
+<span><span class="co">#&gt; 5 2009-05-01 2009   May               3476            7524                37862</span></span>
+<span><span class="co">#&gt; 6 2009-06-01 2009   Jun               3763            7725                45587</span></span>
+<span><span class="co">#&gt;   Cumulative_IPs</span></span>
+<span><span class="co">#&gt; 1           3341</span></span>
+<span><span class="co">#&gt; 2           6570</span></span>
+<span><span class="co">#&gt; 3          10323</span></span>
+<span><span class="co">#&gt; 4          14348</span></span>
+<span><span class="co">#&gt; 5          17824</span></span>
+<span><span class="co">#&gt; 6          21587</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">download_bio_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_package_download_bioconductor.html">get_package_download_bioconductor</a></span><span class="op">(</span><span class="st">"DESeq2"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">download_bio_df</span><span class="op">$</span><span class="va">all_data</span><span class="op">)</span></span></code></pre></div>
@@ -112,7 +120,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

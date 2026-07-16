@@ -117,7 +117,7 @@ dep_data
 #> 
 #> $stringr$lifecycle$rlang
 #> $stringr$lifecycle$rlang$version
-#> [1] "1.2.0"
+#> [1] "1.3.0"
 #> 
 #> $stringr$lifecycle$rlang$utils
 #> [1] "base"
@@ -131,7 +131,7 @@ dep_data
 #> 
 #> $stringr$rlang
 #> $stringr$rlang$version
-#> [1] "1.2.0"
+#> [1] "1.3.0"
 #> 
 #> $stringr$rlang$utils
 #> [1] "base"
@@ -178,7 +178,7 @@ dep_data
 #> 
 #> $stringr$vctrs$rlang
 #> $stringr$vctrs$rlang$version
-#> [1] "1.2.0"
+#> [1] "1.3.0"
 #> 
 #> $stringr$vctrs$rlang$utils
 #> [1] "base"
@@ -195,10 +195,10 @@ print_tree(dep_data)
 #>     ├── lifecycle (v1.0.5)
 #>     │   ├── cli (v3.6.6)
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.2.0)
+#>     │   └── rlang (v1.3.0)
 #>     │       └── utils (base)
 #>     ├── magrittr (v2.0.5)
-#>     ├── rlang (v1.2.0)
+#>     ├── rlang (v1.3.0)
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7)
 #>     │   ├── tools (base)
@@ -210,7 +210,7 @@ print_tree(dep_data)
 #>         ├── glue (v1.8.1)
 #>         │   └── methods (base)
 #>         ├── lifecycle (v1.0.5)
-#>         └── rlang (v1.2.0)
+#>         └── rlang (v1.3.0)
 #>             └── utils (base)
 ```
 
@@ -266,10 +266,10 @@ print_tree(dep_data_with_license)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
 #>     │   ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.2.0) MIT + file LICENSE
+#>     │   └── rlang (v1.3.0) MIT + file LICENSE
 #>     │       └── utils (base)
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
-#>     ├── rlang (v1.2.0) MIT + file LICENSE
+#>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
@@ -281,7 +281,7 @@ print_tree(dep_data_with_license)
 #>         ├── glue (v1.8.1) MIT + file LICENSE
 #>         │   └── methods (base)
 #>         ├── lifecycle (v1.0.5) MIT + file LICENSE
-#>         └── rlang (v1.2.0) MIT + file LICENSE
+#>         └── rlang (v1.3.0) MIT + file LICENSE
 #>             └── utils (base)
 ```
 
@@ -323,7 +323,7 @@ print_tree(dep_data_shallow)
 #>     │   └── methods (base)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
-#>     ├── rlang (v1.2.0) MIT + file LICENSE
+#>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
@@ -378,10 +378,10 @@ print_tree(dep_data_deep)
 #>     ├── lifecycle (v1.0.5) MIT + file LICENSE
 #>     │   ├── cli (v3.6.6) MIT + file LICENSE
 #>     │   │   └── utils (base)
-#>     │   └── rlang (v1.2.0) MIT + file LICENSE
+#>     │   └── rlang (v1.3.0) MIT + file LICENSE
 #>     │       └── utils (base)
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
-#>     ├── rlang (v1.2.0) MIT + file LICENSE
+#>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
 #>     ├── stringi (v1.8.7) file LICENSE
 #>     │   ├── tools (base)
@@ -395,9 +395,9 @@ print_tree(dep_data_deep)
 #>         ├── lifecycle (v1.0.5) MIT + file LICENSE
 #>         │   ├── cli (v3.6.6) MIT + file LICENSE
 #>         │   │   └── utils (base)
-#>         │   └── rlang (v1.2.0) MIT + file LICENSE
+#>         │   └── rlang (v1.3.0) MIT + file LICENSE
 #>         │       └── utils (base)
-#>         └── rlang (v1.2.0) MIT + file LICENSE
+#>         └── rlang (v1.3.0) MIT + file LICENSE
 #>             └── utils (base)
 ```
 
