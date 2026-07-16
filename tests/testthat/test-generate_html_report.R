@@ -84,7 +84,7 @@ toy_assessment_results <- list(
     res_cov = list(
       name = "test.package.0001",
       coverage = list(
-        filecoverage = structure(50, .Dim = c(1L), dimnames = list("R/myscript.R")),
+        filecoverage = structure(50, dim = c(1L), dimnames = list("R/myscript.R")),
         totalcoverage = 50
       ),
       errors = NA,
