@@ -441,6 +441,20 @@ generate_rcmd_check_section <- function(assessment_results) {
     notes <- "No notes"
   }
   
+  # Find the maximum length
+  max_len <- max(length(rcmd_check_message),
+                 length(rcmd_check_score),
+                 length(errors),
+                 length(warnings),
+                 length(notes))
+  
+  # Extend all vectors to max_len (fills with NA)
+  length(rcmd_check_message) <- max_len
+  length(rcmd_check_score) <- max_len
+  length(errors) <- max_len
+  length(warnings) <- max_len
+  length(notes) <- max_len
+  
   # Create a data frame for R CMD Check results
   rcmd_check_df <- data.frame(
     Message = rcmd_check_message,
@@ -449,6 +463,9 @@ generate_rcmd_check_section <- function(assessment_results) {
     Warnings = warnings,
     Notes = notes
   )
+  
+  # Replace NA with empty strings
+  rcmd_check_df[is.na(rcmd_check_df)] <- ""
   
   return(rcmd_check_df)
 }
