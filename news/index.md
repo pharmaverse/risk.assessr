@@ -2,6 +2,8 @@
 
 ## risk.assessr 4.1.2
 
+CRAN release: 2026-07-16
+
 ### New Features
 
 - fix CRAN issue with `test-generate_html_report`
