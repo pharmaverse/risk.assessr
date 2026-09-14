@@ -96,6 +96,10 @@ reference:
       - fetch_bioconductor_releases
       - parse_bioconductor_releases
       - fetch_bioconductor_package_info
+  - title: Security vulnerabilities
+    desc: Report on security vulnerabilities.
+    contents:
+      - generate_security_vulnerabilities
       - get_security_vulnerabilities
   - title: Dependencies & reverse dependencies
     desc: Dependency trees, session deps, and CRAN/Bioconductor reverse deps.
