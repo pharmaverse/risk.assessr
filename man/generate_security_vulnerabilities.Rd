@@ -14,14 +14,18 @@ generate_security_vulnerabilities(pkg_name, pkg_ver = NULL, ecosystem = "CRAN")
 \item{ecosystem}{A character string specifying the OSV ecosystem the package belongs to. Default is `"CRAN"`.}
 }
 \value{
-A data frame of known security vulnerabilities for the package, with columns
-`id`, `summary`, `details`, `introduced`, `fixed`, `modified`, and `published`. An
+A list of known security vulnerabilities for the package, with columns
+`pkg_name`, `pkg_ver`, `ecosystem`, `id`, `summary`, `details`, `introduced`, 
+`fixed`, `modified`, and `published`. An
 empty data frame with the same columns is returned when there are no known
 vulnerabilities.
 }
 \description{
-This function retrieves known security vulnerabilities for `pkg_name` and
+This standalone function retrieves known security vulnerabilities for `pkg_name` and
 `pkg_ver` from the Open Source Vulnerabilities database.
+}
+\details{
+See the `security vulnerabilities` vignette for more details on the ecosystems
 }
 \examples{
 \dontrun{
@@ -35,10 +39,20 @@ print(results)
 
 results_multi <- c("haven", "commonmark") |>
   rlang::set_names() |>
-  purrr::map(generate_security_vulnerabilities) |>
+  purrr::map(\(x) {
+    res <- generate_security_vulnerabilities(x)
+    
+    # 1. Convert NULL to NA so it has a valid size of 1
+    if (is.null(res$pkg_ver)) res$pkg_ver <- NA_character_
+    
+    # 2. Explicitly wrap the vulnerabilities object in a list to form a list-column
+    res$vulnerabilities <- list(res$vulnerabilities)
+    
+    tibble::as_tibble_row(res)
+  }) |>
   purrr::list_rbind(names_to = "pkg")
 
-  print(results_multi)
+print(results_multi)
 }
 
 }

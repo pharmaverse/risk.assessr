@@ -5,8 +5,10 @@ test_that("returns the data frame produced by get_security_vulnerabilities()", {
   
   result <- generate_security_vulnerabilities("commonmark", pkg_ver = "1.7")
   
-  expect_s3_class(result, "data.frame")
-  expect_equal(result$id, "RSEC-2023-6")
+  expect_equal(result$pkg_name, "commonmark")
+  expect_equal(result$pkg_ver, "1.7")
+  expect_equal(result$ecosystem, "CRAN")
+  expect_s3_class(result$vulnerabilities, "data.frame")
 })
 
 test_that("passes pkg_name, pkg_ver, and ecosystem to get_security_vulnerabilities()", {

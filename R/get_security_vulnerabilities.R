@@ -93,6 +93,8 @@ fetch_osv_data <- function(pkg_name, pkg_ver = NULL, ecosystem = "CRAN",
 #' @param ecosystem Character. OSV ecosystem the package belongs to. Defaults to
 #'   `"CRAN"`.
 #'
+#' @details See the `security vulnerabilities` vignette for more details on the ecosystems
+#'
 #' @return A data frame with one row per vulnerability and the columns:
 #' \describe{
 #'   \item{id}{OSV / advisory identifier (e.g. `"RSEC-2023-6"`).}
