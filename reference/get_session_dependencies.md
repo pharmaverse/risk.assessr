@@ -52,7 +52,7 @@ get_session_dependencies(deps_list)
 #> [1] "3.3.2"
 #> 
 #> $suggests$knitr
-#> [1] "1.51"
+#> [1] "1.52"
 #> 
 #> 
 # }

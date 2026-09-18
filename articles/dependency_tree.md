@@ -139,7 +139,7 @@ dep_data
 #> 
 #> $stringr$stringi
 #> $stringr$stringi$version
-#> [1] "1.8.7"
+#> [1] "1.8.9"
 #> 
 #> $stringr$stringi$tools
 #> [1] "base"
@@ -200,7 +200,7 @@ print_tree(dep_data)
 #>     ├── magrittr (v2.0.5)
 #>     ├── rlang (v1.3.0)
 #>     │   └── utils (base)
-#>     ├── stringi (v1.8.7)
+#>     ├── stringi (v1.8.9)
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
@@ -271,7 +271,7 @@ print_tree(dep_data_with_license)
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
 #>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
-#>     ├── stringi (v1.8.7) file LICENSE
+#>     ├── stringi (v1.8.9) file LICENSE
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
@@ -325,7 +325,7 @@ print_tree(dep_data_shallow)
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
 #>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
-#>     ├── stringi (v1.8.7) file LICENSE
+#>     ├── stringi (v1.8.9) file LICENSE
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
@@ -383,7 +383,7 @@ print_tree(dep_data_deep)
 #>     ├── magrittr (v2.0.5) MIT + file LICENSE
 #>     ├── rlang (v1.3.0) MIT + file LICENSE
 #>     │   └── utils (base)
-#>     ├── stringi (v1.8.7) file LICENSE
+#>     ├── stringi (v1.8.9) file LICENSE
 #>     │   ├── tools (base)
 #>     │   ├── utils (base)
 #>     │   └── stats (base)
