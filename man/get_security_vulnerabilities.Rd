@@ -45,6 +45,8 @@ example `"Denial of Service (DoS) vulnerability"`,
 `"NULL pointer dereference vulnerability"`, or
 `"Cross-site Request Forgery (CSRF) vulnerability"`) and a fuller description
 in `details`.
+
+See the `security vulnerabilities` vignette for more details on the ecosystems
 }
 \examples{
 \dontrun{
