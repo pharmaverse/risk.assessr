@@ -1,3 +1,11 @@
+# risk.assessr 4.1.3
+
+## New Features
+
+ - fix CRAN Note by moving `tools` to `Imports`
+ - add `generate_security_vulnerabilities` extraction function
+ - add `OSV data base - Defined ecosystems` to security vulnerabilities vignette
+
 # risk.assessr 4.1.2
 
 ## New Features
