@@ -69,6 +69,14 @@ Resolve tarballs from CRAN, Bioconductor, and internal mirrors.
   : Parse Bioconductor Release Announcements
 - [`fetch_bioconductor_package_info()`](https://pharmaverse.github.io/risk.assessr/reference/fetch_bioconductor_package_info.md)
   : Fetch Bioconductor Package Information
+
+## Security vulnerabilities
+
+Report on security vulnerabilities.
+
+- [`generate_security_vulnerabilities()`](https://pharmaverse.github.io/risk.assessr/reference/generate_security_vulnerabilities.md)
+  : Assess an R package's security vulnerabilities from package name and
+  version
 - [`get_security_vulnerabilities()`](https://pharmaverse.github.io/risk.assessr/reference/get_security_vulnerabilities.md)
   : Get security vulnerabilities for a package
 

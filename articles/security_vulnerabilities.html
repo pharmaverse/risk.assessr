@@ -74,11 +74,15 @@ disclosed vulnerabilities in the R package being assessed. It is
 accessed through:</p>
 <ul>
 <li>
+<code><a href="../reference/generate_security_vulnerabilities.html">generate_security_vulnerabilities()</a></code> — the exported
+stand-alone function that retrieves advisories for a package.</li>
+<li>
 <code><a href="../reference/get_security_vulnerabilities.html">get_security_vulnerabilities()</a></code> — the exported function
 that retrieves advisories for a package.</li>
 </ul>
-<p>It also runs automatically as part of a full assessment via
-<code><a href="../reference/risk_assess_pkg.html">risk_assess_pkg()</a></code> / <code><a href="../reference/assess_pkg.html">assess_pkg()</a></code>.</p>
+<p>This latter function is run automatically as part of a full
+assessment via <code><a href="../reference/risk_assess_pkg.html">risk_assess_pkg()</a></code> /
+<code><a href="../reference/assess_pkg.html">assess_pkg()</a></code>.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -95,6 +99,407 @@ ecosystem. All advisories for the package are fetched, then filtered
 locally against the installed version. Querying by name (rather than
 name + version) avoids missing range-based advisories that a
 version-scoped OSV query can silently omit.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="osv-data-base---defined-ecosystems">OSV data base - Defined ecosystems<a class="anchor" aria-label="anchor" href="#osv-data-base---defined-ecosystems"></a>
+</h2>
+<p>The functions can query the defined ecosystemsin
+<code>OSV</code>.</p>
+<p>The defined ecosystems are:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Ecosystem</th>
+<th align="left">Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>AlmaLinux</strong></td>
+<td align="left">AlmaLinux package ecosystem; the name is the name of
+the source package. The ecosystem string might optionally have a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular AlmaLinux release. <code>&lt;RELEASE&gt;</code> is a numeric
+version.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Alpaquita</strong></td>
+<td align="left">BellSoft Alpaquita Linux package ecosystem; the name is
+the name of the source package. The ecosystem string has a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Alpaquita Linux release. <code>&lt;RELEASE&gt;</code> is the
+id of the particular Alpaquita Linux release. Examples:
+<code>Alpaquita:23</code>, <code>Alpaquita:stream</code>.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Alpine</strong></td>
+<td align="left">The Alpine package ecosystem; the name is the name of
+the source package. The ecosystem string must have a
+<code>:v&lt;RELEASE-NUMBER&gt;</code> suffix to scope the package to a
+particular Alpine release branch (the v prefix is required). E.g.
+<code>v3.16</code>.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Android</strong></td>
+<td align="left">The Android ecosystem. Android organizes code using <a href="https://gerrit.googlesource.com/git-repo/+/HEAD/README.md" class="external-link">repo
+tool</a>, which manages multiple git projects under one or more remote
+git servers, where each project is identified by its name in <a href="https://gerrit.googlesource.com/git-repo/+/HEAD/docs/manifest-format.md#Element-project" class="external-link">repo
+configuration</a> (e.g. <code>platform/frameworks/base</code>). The name
+field should contain the name of that affected git project/submodule.
+One exception is when the project contains the Linux kernel source code,
+in which case name field will be <code>:linux_kernel:</code>, followed
+by an optional SoC vendor name e.g. <code>:linux_kernel:Qualcomm</code>.
+The list of recognized SoC vendors is listed in the <a href="https://ossf.github.io/osv-schema/#android-soc-vendors" class="external-link">Appendix</a>.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Azure Linux</strong></td>
+<td align="left">The Azure Linux package ecosystem; the name is the name
+of the source package. The ecosystem string has a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Azure Linux release. <code>&lt;RELEASE&gt;</code> is a
+numeric version.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>BellSoft Hardened Containers</strong></td>
+<td align="left">BellSoft Hardened Containers package ecosystem; the
+name is the name of the source package. The ecosystem string has a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Hardened Containers release. <code>&lt;RELEASE&gt;</code> is
+the id of the particular Hardened Containers release. Examples:
+<code>BellSoft Hardened Containers:23</code>,
+<code>BellSoft Hardened Containers:stream</code>.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Bioconductor</strong></td>
+<td align="left">The biological R package ecosystem. The name is an R
+package name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Bitnami</strong></td>
+<td align="left">Bitnami package ecosystem; the name is the name of the
+affected component.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Chainguard</strong></td>
+<td align="left">The Chainguard package ecosystem; the name is the name
+of the package.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>CleanStart</strong></td>
+<td align="left">The CleanStart package ecosystem; the name is the name
+of the package.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>ConanCenter</strong></td>
+<td align="left">The ConanCenter ecosystem for C and C++; the name field
+is a Conan package name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>CRAN</strong></td>
+<td align="left">The R package ecosystem. The name is an R package
+name.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>crates.io</strong></td>
+<td align="left">The crates.io ecosystem for Rust; the name field is a
+crate name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Debian</strong></td>
+<td align="left">The Debian package ecosystem; the name is the name of
+the source package. The ecosystem string might optionally have a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Debian release. <code>&lt;RELEASE&gt;</code> is a numeric
+version specified in the <a href="https://debian.pages.debian.net/distro-info-data/debian.csv" class="external-link">Debian
+distro-info-data</a>. For example, the ecosystem string “Debian:7”
+refers to the Debian 7 (wheezy) release. For versions without a numeric
+version, use the string in the series column of the distro-info-data
+CSV, e.g. “Debian:sid”.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Docker Hardened Images</strong></td>
+<td align="left">The Docker Hardened Images package ecosystem; the name
+is the name of the package.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Echo</strong></td>
+<td align="left">The Echo package ecosystem; the name is the name of the
+source package.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>FreeBSD</strong></td>
+<td align="left">The FreeBSD ecosystem consists of three main
+components: the base system, kernel, and ports. For ports, the name
+refers to the name of a package managed by <code>pkg(8)</code>, which is
+the FreeBSD package manager. Ecosystem strings can include
+<code>:ports</code>, indicating that an issue pertains to ports (e.g.,
+‘FreeBSD:ports’). Base system issues should be categorized under
+<code>:base</code>. The <code>ranges[].events</code> versions correspond
+to specific FreeBSD releases, such as ‘FreeBSD:base:14.3’.
+Kernel-related issues are denoted by <code>:kernel</code>, with examples
+like ‘FreeBSD:kernel’. Every namespace can have optional
+<code>:&lt;RELEASE&gt;</code> segment at last, which can be used to
+specify that an issue applies only to a particular FreeBSD release
+like.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>GHC</strong></td>
+<td align="left">The Haskell compiler ecosystem. The name field is the
+name of a component of the GHC compiler ecosystem (e.g.,
+<code>compiler</code>, <code>GHCI</code>, <code>RTS</code>).</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>GitHub Actions</strong></td>
+<td align="left">The GitHub Actions ecosystem; the name field is the
+action’s repository name with owner
+e.g. <code>{owner}/{repo}</code>.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Go</strong></td>
+<td align="left">The Go ecosystem; the name field is a Go module
+path.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Hackage</strong></td>
+<td align="left">The Haskell package ecosystem. The name field is a
+Haskell package name as published on Hackage.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Hex</strong></td>
+<td align="left">The package manager for the Erlang ecosystem; the name
+is a Hex package name.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Homebrew</strong></td>
+<td align="left">The Homebrew package manager for macOS and Linux; the
+name is the formula name (e.g. <code>openssl@3</code>). Casks are not
+currently in scope. Without a <code>:&lt;tap&gt;</code> suffix the
+formula is assumed to come from the default <code>homebrew/core</code>
+tap. A version is the formula version as reported by
+<code>brew info</code> with an <code>_N</code> suffix when the formula
+revision is nonzero (e.g. <code>1.81.6_6</code>), matching the version
+component of a <code>pkg:brew</code> purl. The ECOSYSTEM version
+ordering is Homebrew’s PkgVersion comparison: the version segment
+compared by Homebrew’s Version class, then the numeric revision suffix.
+The database uses introduced and fixed boundaries.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Julia</strong></td>
+<td align="left">The Julia Programming Language ecosystem; the name is a
+registered package in the General registry.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Kubernetes</strong></td>
+<td align="left">The Kubernetes ecosystem; name is the Go module name
+associated with the relevant Kubernetes component
+(e.g. <code>k8s.io/apiserver</code>)</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Linux</strong></td>
+<td align="left">The Linux kernel. The only supported name is
+Kernel.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Mageia</strong></td>
+<td align="left">The Mageia Linux package ecosystem; the name is the
+name of the source package. The ecosystem string must have a
+<code>:&lt;RELEASE-NUMBER&gt;</code> suffix to scope the package to a
+particular Mageia release. Eg <code>Mageia:9</code>.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Maven</strong></td>
+<td align="left">The Maven Java package ecosystem. The name field is a
+Maven package name in the format <code>groupId:artifactId</code>. The
+ecosystem string might optionally have a
+<code>:&lt;REMOTE-REPO-URL&gt;</code> suffix to denote the remote
+repository URL that best represents the source of truth for this
+package, without a trailing slash
+(e.g. <code>Maven:https://maven.google.com</code>). If this is omitted,
+this is assumed to be the Maven Central repository
+(<code>https://repo.maven.apache.org/maven2</code>).</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>MinimOS</strong></td>
+<td align="left">The MinimOS package ecosystem; the name is the name of
+the package.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>npm</strong></td>
+<td align="left">The NPM ecosystem; the name field is an NPM package
+name.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>NuGet</strong></td>
+<td align="left">The NuGet package ecosystem. The name field is a NuGet
+package name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>opam</strong></td>
+<td align="left">The OCaml package manager ecosystem. The name field is
+an opam package name.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>openEuler</strong></td>
+<td align="left">The openEuler ecosystem; source RPM name field, with
+<code>&lt;RELEASE&gt;</code> (<code>YY.MM</code>) LTS suffix details,
+scope notes, and <code>ecosystem_specific</code> package info.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>openSUSE</strong></td>
+<td align="left">The openSUSE ecosystem; <code>:&lt;RELEASE&gt;</code>
+suffix matching <code>PRETTY_NAME</code>, source RPM with purl, binary
+arrays, and RPM version ordering.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>OSS-Fuzz</strong></td>
+<td align="left">For reports from the OSS-Fuzz project that have no more
+appropriate ecosystem; the name field is the name assigned by the
+OSS-Fuzz project, as recorded in the submitted fuzzing
+configuration.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Packagist</strong></td>
+<td align="left">The PHP package manager ecosystem; the name is a
+package name. The ecosystem string might optionally have a
+<code>:&lt;REMOTE-REPO-URL&gt;</code> suffix to denote the remote
+repository URL that best represents the source of truth for this
+package, without a trailing slash
+(e.g. <code>Packagist:https://packages.drupal.org/8</code>). If this is
+omitted, this is assumed to be the Packagist repository
+(<code>https://packagist.org</code>).</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Photon OS</strong></td>
+<td align="left">The Photon OS package ecosystem; the name is the name
+of the RPM package. The ecosystem string must have a
+<code>:&lt;RELEASE-NUMBER&gt;</code> suffix to scope the package to a
+particular Photon OS release. Eg <code>Photon OS:3.0</code>.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Pub</strong></td>
+<td align="left">The package manager for the Dart ecosystem; the name
+field is a Dart package name.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>PyPI</strong></td>
+<td align="left">The Python PyPI ecosystem; the name field is a
+normalized PyPI package name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Red Hat</strong></td>
+<td align="left">The Red Hat package ecosystem; the name field is the
+name of a binary or source RPM. The ecosystem string has a
+<code>:&lt;CPE&gt;</code> suffix to scope the RPM to a specific Red Hat
+product stream. <code>&lt;CPE&gt;</code> is a translation of a Red Hat
+<a href="https://cpe.mitre.org/" class="external-link">Common Platform Enumerations</a> (CPE)
+with the <code>cpe/:[oa]:(redhat):</code> prefix removed (for example,
+<code>Red Hat:rhel_aus:8.4::appstream</code> translates to
+<code>cpe:/a:redhat:rhel_aus:8.4::appstream</code>). Red Hat ecosystem
+identifiers can be used to identify vulnerable RPMs installed on a Red
+Hat system as explained <a href="https://www.redhat.com/en/blog/how-accurately-match-oval-security-data-installed-rpms" class="external-link">here</a>.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Rocky Linux</strong></td>
+<td align="left">The Rocky Linux package ecosystem; the name is the name
+of the source package. The ecosystem string might optionally have a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Rocky Linux release. <code>&lt;RELEASE&gt;</code> is a
+numeric version.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>Root</strong></td>
+<td align="left">The Root container security ecosystem. Root provides
+patched container images across multiple base distributions. The
+ecosystem uses hierarchical variants:
+<code>Root:{BaseDistro}:{Version}</code> for OS packages (e.g.,
+<code>Root:Alpine:3.18</code>, <code>Root:Debian:12</code>) and
+<code>Root:{PackageManager}</code> for application packages (e.g.,
+<code>Root:PyPI</code>, <code>Root:npm</code>). Package names use
+Root-specific prefixes (<code>root-{package}</code> for most,
+<code>@root/{package}</code> for npm).</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>RubyGems</strong></td>
+<td align="left">The RubyGems ecosystem; the name field is a gem
+name.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>SUSE</strong></td>
+<td align="left">The SUSE ecosystem; The ecosystem string has a
+<code>:&lt;RELEASE&gt;</code> suffix representing the marketing name of
+the SUSE product. <code>&lt;RELEASE&gt;</code> matches the value in the
+<code>/etc/os-release</code> <code>PRETTY_NAME</code> field. The name
+field is the name of the source RPM and accompanied by a purl. There is
+a <code>ecosystem_specific</code> specific array binaries of the
+associated RPM binary packages in this specific SUSE product. The
+ECOSYSTEM version ordering is the RPM versioncompare ordering, and the
+database uses the introduced and fixed boundaries.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>SwiftURL</strong></td>
+<td align="left">The Swift Package Manager ecosystem. The name is a Git
+URL to the source of the package. Versions are Git tags that conform to
+<a href="https://docs.swift.org/package-manager/PackageDescription/PackageDescription.html#version" class="external-link">SemVer
+2.0</a>.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>TuxCare</strong></td>
+<td align="left">TuxCare package ecosystem; the name is the name of the
+source package. The ecosystem string might optionally have a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular TuxCare release. <code>&lt;RELEASE&gt;</code> is a numeric
+version.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>Ubuntu</strong></td>
+<td align="left">The Ubuntu package ecosystem; the name field is the
+name of the source package. The ecosystem string has a
+<code>:&lt;RELEASE&gt;</code> suffix to scope the package to a
+particular Ubuntu release. <code>&lt;RELEASE&gt;</code> is a numeric
+(“YY.MM”) version as specified in Ubuntu Releases, with a mandatory
+<code>:LTS</code> suffix if the release is marked as LTS. The release
+version may also be prefixed with <code>:Pro:</code> to denote Ubuntu
+Pro (aka Expanded Security Maintenance (ESM)) updates. For example, the
+ecosystem string “Ubuntu:22.04:LTS” refers to Ubuntu 22.04 LTS (jammy),
+while “Ubuntu:Pro:18.04:LTS” refers to fixes that landed in Ubuntu 18.04
+LTS (bionic) under Ubuntu Pro/ESM.</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>vcpkg</strong></td>
+<td align="left">The vcpkg ecosystem for Microsoft’s C/C++ package
+manager; the name is the vcpkg port name (e.g. <code>bzip2</code>,
+<code>ffmpeg</code>). The ecosystem string has no release suffix. A
+version is the upstream port version; the integer
+<code>port-version</code> (incremented when the port packaging changes)
+is carried in the purl <code>port_version</code> qualifier. The default
+registry is <code>microsoft/vcpkg</code>; non-default registries are
+denoted by the purl <code>repository_url</code> /
+<code>repository_revision</code> qualifiers.</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>VSCode</strong></td>
+<td align="left">The Visual Studio Code extensions ecosystem; the name
+is the <code>&lt;publisher&gt;.&lt;name&gt;</code> string which uniquely
+identifies a package. This identifier is composed from the Publisher and
+Id attributes of the Identity element in the package’s
+<code>.vsixmanifest</code> file. It also corresponds to the
+<code>itemName</code> parameter of the package as found on the [Visual
+Studio Marketplace for VS Code] link -
+<code>https://marketplace.visualstudio.com/vscode</code> extensions
+page, or the namespace and name fields of the <a href="https://open-vsx.org/" class="external-link">OpenVSX</a> API response for the target
+package. The ecosystem string might optionally have a
+<code>:&lt;REMOTE-REPO-URL&gt;</code> suffix to denote the remote
+repository URL that best represents the source of truth for this
+package, without a trailing slash
+(e.g. <code>VSCode:https://open-vsx.org</code>). If this is omitted,
+this is assumed to be the Visual Studio Marketplace for [VSCode] link -
+<code>https://marketplace.visualstudio.com/vscode</code>.</td>
+</tr>
+</tbody>
+</table>
 <hr>
 </div>
 <div class="section level2">
@@ -134,11 +539,24 @@ package.</p>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="stand-alone-assessment">Stand-alone assessment<a class="anchor" aria-label="anchor" href="#stand-alone-assessment"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generate_security_vulnerabilities.html">generate_security_vulnerabilities</a></span><span class="op">(</span></span>
+<span>   <span class="st">"commonmark"</span>,</span>
+<span>   pkg_ver <span class="op">=</span> <span class="st">"1.7"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
+<p>The function returns a data frame with one row per advisory plus
+package name and version.</p>
+</div>
+<div class="section level2">
 <h2 id="within-a-full-assessment">Within a full assessment<a class="anchor" aria-label="anchor" href="#within-a-full-assessment"></a>
 </h2>
 <p>When you assess a package, the vulnerabilities are stored in the
 results object:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/risk_assess_pkg.html">risk_assess_pkg</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"commonmark"</span>, version <span class="op">=</span> <span class="st">"1.7"</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">vulnerabilities</span></span></code></pre></div>
 <hr>
