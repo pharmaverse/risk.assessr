@@ -19,13 +19,13 @@ Source:
 [`DESCRIPTION`](https://github.com/pharmaverse/risk.assessr/blob/main/DESCRIPTION)
 
 Gillian E, Bottois H, Charliquart P, Couturier A (2026). *risk.assessr:
-Assessing Package Risk Metrics*. R package version 4.1.2,
+Assessing Package Risk Metrics*. R package version 4.1.3,
 <https://pharmaverse.github.io/risk.assessr/>.
 
     @Manual{,
       title = {risk.assessr: Assessing Package Risk Metrics},
       author = {Edward Gillian and Hugo Bottois and Paulin Charliquart and Andre Couturier},
       year = {2026},
-      note = {R package version 4.1.2},
+      note = {R package version 4.1.3},
       url = {https://pharmaverse.github.io/risk.assessr/},
     }
