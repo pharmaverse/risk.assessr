@@ -1,28 +1,29 @@
 #' Retrieve raw vulnerability data from the OSV API
 #'
-#' Sub-function that queries the Open Source Vulnerabilities (OSV) database
-#' (\url{https://osv.dev/#use-the-api}) for a single package using `curl`.
-#' The query is sent as a POST request to the OSV `query` endpoint. All network
-#' and parsing steps are wrapped in `tryCatch` so that an unavailable API or a
-#' request time-out reports a message and returns `NULL` rather than stopping
-#' the calling function.
+#' Internal helper that queries the Open Source Vulnerabilities (OSV) database
+#' (\url{https://osv.dev/#use-the-api}) for a package using `curl`.
+#' The query is sent as a POST request to the OSV `query` endpoint. When the
+#' OSV API paginates results, all pages are retrieved automatically and merged
+#' into a single response before being returned.
+#'
+#' All network and JSON parsing operations are wrapped in `tryCatch` so that an
+#' unavailable API, request timeout, parsing failure, or non-success HTTP
+#' response reports a message and returns `NULL` rather than stopping the
+#' calling function.
 #'
 #' @param pkg_name Character. Name of the package to query.
 #' @param pkg_ver Character. Optional package version. When supplied, OSV only
-#'   returns vulnerabilities affecting that version.
+#' returns vulnerabilities affecting that version.
 #' @param ecosystem Character. OSV ecosystem the package belongs to. Defaults to
-#'   `"CRAN"`.
-#' @param timeout Numeric. Maximum number of seconds to wait for the request.
-#'   Defaults to 30.
+#' `"CRAN"`.
+#' @param timeout Numeric. Maximum number of seconds to wait for each API
+#' request. Defaults to 30.
 #'
-#' @return A list parsed from the OSV JSON response (with a `vulns` element when
-#'   vulnerabilities are found), or `NULL` if the API is unavailable, times out,
-#'   or returns an error status.
-#'
-#' @examples
-#' \dontrun{
-#' fetch_osv_data("commonmark", ecosystem = "CRAN")
-#' }
+#' @return A list parsed from the OSV JSON response. When vulnerabilities are
+#' found, the returned object contains a `vulns` element comprising
+#' vulnerabilities aggregated across all response pages. Returns `NULL` if the
+#' API is unavailable, a request fails, the response cannot be parsed, or the
+#' API returns a non-success status.
 #'
 #' @importFrom curl curl_fetch_memory new_handle handle_setheaders handle_setopt
 #' @importFrom jsonlite toJSON fromJSON
@@ -31,43 +32,114 @@ fetch_osv_data <- function(pkg_name, pkg_ver = NULL, ecosystem = "CRAN",
                            timeout = 30) {
   url <- "https://api.osv.dev/v1/query"
   
-  # build the OSV query body; include the version only when it is available
+  # build the base OSV query body; include the version only when available
   pkg <- list(name = pkg_name, ecosystem = ecosystem)
-  if (!is.null(pkg_ver) && !is.na(pkg_ver) && nzchar(pkg_ver)) {
-    body <- list(version = pkg_ver, package = pkg)
+  
+  base_body <- if (!is.null(pkg_ver) &&
+                   !is.na(pkg_ver) &&
+                   nzchar(pkg_ver)) {
+    list(version = pkg_ver, package = pkg)
   } else {
-    body <- list(package = pkg)
-  }
-  body_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
-  
-  handle <- curl::new_handle(connecttimeout = 10, timeout = timeout)
-  curl::handle_setheaders(handle, "Content-Type" = "application/json")
-  curl::handle_setopt(handle, post = TRUE, postfields = body_json)
-  
-  resp <- tryCatch(
-    curl::curl_fetch_memory(url, handle = handle),
-    error = function(e) {
-      message("Failed to reach OSV API: ", conditionMessage(e))
-      NULL
-    }
-  )
-  
-  if (is.null(resp)) return(NULL)
-  
-  if (resp$status_code != 200) {
-    message("OSV API returned status ", resp$status_code, ".")
-    return(NULL)
+    list(package = pkg)
   }
   
-  parsed <- tryCatch(
-    jsonlite::fromJSON(rawToChar(resp$content), simplifyVector = FALSE),
-    error = function(e) {
-      message("Failed to parse OSV response: ", conditionMessage(e))
-      NULL
-    }
+  handle <- curl::new_handle(
+    connecttimeout = 10,
+    timeout = timeout
   )
   
-  return(parsed)
+  curl::handle_setheaders(
+    handle,
+    "Content-Type" = "application/json"
+  )
+  
+  all_vulns <- list()
+  page_token <- NULL
+  page_count <- 0L
+  
+  repeat {
+    body <- base_body
+    
+    if (!is.null(page_token) &&
+        !is.na(page_token) &&
+        nzchar(page_token)) {
+      body$page_token <- page_token
+    }
+    
+    body_json <- jsonlite::toJSON(
+      body,
+      auto_unbox = TRUE
+    )
+    
+    curl::handle_setopt(
+      handle,
+      post = TRUE,
+      postfields = body_json
+    )
+    
+    resp <- tryCatch(
+      curl::curl_fetch_memory(url, handle = handle),
+      error = function(e) {
+        message("Failed to reach OSV API: ", conditionMessage(e))
+        NULL
+      }
+    )
+    
+    if (is.null(resp)) {
+      return(NULL)
+    }
+    
+    if (resp$status_code != 200) {
+      message("OSV API returned status ", resp$status_code, ".")
+      return(NULL)
+    }
+    
+    parsed <- tryCatch(
+      jsonlite::fromJSON(
+        rawToChar(resp$content),
+        simplifyVector = FALSE
+      ),
+      error = function(e) {
+        message(
+          "Failed to parse OSV response: ",
+          conditionMessage(e)
+        )
+        NULL
+      }
+    )
+    
+    if (is.null(parsed)) {
+      return(NULL)
+    }
+    
+    if (!is.null(parsed$vulns) &&
+        length(parsed$vulns) > 0) {
+      all_vulns <- c(all_vulns, parsed$vulns)
+    }
+    
+    page_count <- page_count + 1L
+    
+    # OSV supplies a continuation token when additional pages exist
+    page_token <- parsed$next_page_token
+    
+    has_next_page <- !is.null(page_token) &&
+      !is.na(page_token) &&
+      nzchar(page_token)
+    
+    if (!has_next_page) {
+      parsed$vulns <- all_vulns
+      return(parsed)
+    }
+    
+    # Defensive guard against unexpected API behaviour
+    if (page_count >= 1000L) {
+      warning(
+        "OSV pagination exceeded 1000 pages; stopping early."
+      )
+      parsed$vulns <- all_vulns
+      return(parsed)
+    }
+  }
 }
 
 #' Get security vulnerabilities for a package

@@ -34,6 +34,32 @@ fake_parsed_osv <- list(
   )
 )
 
+fake_page1 <- list(
+  vulns = list(
+    list(
+      id = "RSEC-PAGE-1",
+      summary = "First page vulnerability",
+      details = "First page details.",
+      modified = "2025-01-01T00:00:00Z",
+      published = "2024-01-01T00:00:00Z"
+    )
+  ),
+  next_page_token = "page2"
+)
+
+fake_page2 <- list(
+  vulns = list(
+    list(
+      id = "RSEC-PAGE-2",
+      summary = "Second page vulnerability",
+      details = "Second page details.",
+      modified = "2025-01-02T00:00:00Z",
+      published = "2024-01-02T00:00:00Z"
+    )
+  )
+)
+
+
 # build a raw curl response from a list, mimicking curl::curl_fetch_memory
 make_osv_resp <- function(obj, status_code = 200) {
   content <- jsonlite::toJSON(obj, auto_unbox = TRUE)
@@ -308,4 +334,179 @@ test_that("fetch_osv_data returns NULL when the response cannot be parsed", {
   expect_message(parsed <- fetch_osv_data("commonmark", "1.7"),
                  "Failed to parse OSV response")
   expect_null(parsed)
+})
+
+test_that("fetch_osv_data aggregates vulnerabilities across pages", {
+  
+  calls <- 0L
+  
+  mockery::stub(
+    fetch_osv_data,
+    "curl::curl_fetch_memory",
+    function(url, handle) {
+      calls <<- calls + 1L
+      
+      if (calls == 1L) {
+        make_osv_resp(fake_page1)
+      } else {
+        make_osv_resp(fake_page2)
+      }
+    }
+  )
+  
+  parsed <- fetch_osv_data("commonmark")
+  
+  expect_type(parsed, "list")
+  expect_length(parsed$vulns, 2)
+  
+  expect_equal(parsed$vulns[[1]]$id, "RSEC-PAGE-1")
+  expect_equal(parsed$vulns[[2]]$id, "RSEC-PAGE-2")
+  
+  expect_equal(calls, 2L)
+})
+
+test_that("fetch_osv_data aggregates vulnerabilities across pages", {
+  
+  calls <- 0L
+  
+  mockery::stub(
+    fetch_osv_data,
+    "curl::curl_fetch_memory",
+    function(url, handle) {
+      calls <<- calls + 1L
+      
+      if (calls == 1L) {
+        make_osv_resp(fake_page1)
+      } else {
+        make_osv_resp(fake_page2)
+      }
+    }
+  )
+  
+  parsed <- fetch_osv_data("commonmark")
+  
+  expect_type(parsed, "list")
+  expect_length(parsed$vulns, 2)
+  
+  expect_equal(parsed$vulns[[1]]$id, "RSEC-PAGE-1")
+  expect_equal(parsed$vulns[[2]]$id, "RSEC-PAGE-2")
+  
+  expect_equal(calls, 2L)
+})
+
+test_that("fetch_osv_data stops when next_page_token is absent", {
+  
+  calls <- 0L
+  
+  mockery::stub(
+    fetch_osv_data,
+    "curl::curl_fetch_memory",
+    function(url, handle) {
+      calls <<- calls + 1L
+      make_osv_resp(fake_page2)
+    }
+  )
+  
+  parsed <- fetch_osv_data("commonmark")
+  
+  expect_length(parsed$vulns, 1)
+  expect_equal(calls, 1L)
+})
+
+test_that("fetch_osv_data handles an empty final page", {
+  
+  empty_page <- list(
+    vulns = list()
+  )
+  
+  calls <- 0L
+  
+  mockery::stub(
+    fetch_osv_data,
+    "curl::curl_fetch_memory",
+    function(url, handle) {
+      calls <<- calls + 1L
+      
+      if (calls == 1L) {
+        make_osv_resp(fake_page1)
+      } else {
+        make_osv_resp(empty_page)
+      }
+    }
+  )
+  
+  parsed <- fetch_osv_data("commonmark")
+  
+  expect_length(parsed$vulns, 1)
+  expect_equal(parsed$vulns[[1]]$id, "RSEC-PAGE-1")
+  
+  expect_equal(calls, 2L)
+})
+
+test_that("get_security_vulnerabilities processes vulnerabilities from all pages", {
+  
+  aggregated <- list(
+    vulns = c(
+      fake_page1$vulns,
+      fake_page2$vulns
+    )
+  )
+  
+  mockery::stub(
+    get_security_vulnerabilities,
+    "fetch_osv_data",
+    aggregated
+  )
+  
+  result <- get_security_vulnerabilities("commonmark")
+  
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 2)
+  
+  expect_equal(
+    result$id,
+    c("RSEC-PAGE-1", "RSEC-PAGE-2")
+  )
+})
+
+test_that("fetch_osv_data stops pagination after 1000 pages", {
+  
+  calls <- 0L
+  
+  mockery::stub(
+    fetch_osv_data,
+    "curl::curl_fetch_memory",
+    function(url, handle) {
+      calls <<- calls + 1L
+      list(
+        status_code = 200L,
+        content = charToRaw("{}")
+      )
+    }
+  )
+  
+  mockery::stub(
+    fetch_osv_data,
+    "jsonlite::fromJSON",
+    function(...) {
+      list(
+        vulns = list(
+          list(id = paste0("RSEC-", calls))
+        ),
+        next_page_token = "more"
+      )
+    }
+  )
+  
+  result <- NULL
+  
+  expect_warning(
+    result <- fetch_osv_data("commonmark"),
+    "OSV pagination exceeded 1000 pages"
+  )
+  
+  expect_equal(calls, 1000L)
+  expect_length(result$vulns, 1000L)
+  expect_equal(result$vulns[[1]]$id, "RSEC-1")
+  expect_equal(result$vulns[[1000]]$id, "RSEC-1000")
 })
