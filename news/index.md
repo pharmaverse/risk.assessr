@@ -2,6 +2,8 @@
 
 ## risk.assessr 4.1.3
 
+CRAN release: 2026-09-22
+
 ### New Features
 
 - fix CRAN Note by moving `tools` to `Imports`
