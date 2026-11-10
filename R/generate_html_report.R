@@ -230,7 +230,8 @@ generate_html_report <- function(assessment_results, output_dir = NULL) {
           input = template_path,
           output_file = output_file,
           output_options = list(css = system.file("report_templates/styles.css", 
-                                                  package = "risk.assessr")),
+                                                  package = "risk.assessr"),
+                                mathjax = NULL),
           envir = report_env,
           quiet = TRUE
         )
