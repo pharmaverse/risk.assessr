@@ -50,7 +50,41 @@ toy_data_risk <- list(
   )
 )
 
-
+# Top-level fixture used by write_summary_report tests throughout this file.
+# Provides the minimum structure the function requires: pkg_name, pkg_version,
+# and all fields consumed by generate_risk_analysis().
+fake_results <- list(
+  results = list(
+    pkg_name    = "mockpkg",
+    pkg_version = "0.1.0",
+    covr        = 0.80,
+    check       = 1.00,
+    license_name = "MIT",
+    has_examples = list(example_score = 1.0),
+    has_docs     = list(has_docs_score = 1.0),
+    has_ex_docs_score = 1.0,
+    rev_deps    = character(0),
+    download    = list(total_download = 0L),
+    has_bug_reports_url = NULL,
+    has_source_control  = NULL,
+    vulnerabilities     = data.frame()
+  ),
+  risk_analysis = list(
+    dependencies_count        = "low",
+    later_version             = "low",
+    code_coverage             = "low",
+    total_download            = "low",
+    license                   = "low",
+    reverse_dependencies_count = "low",
+    documentation_score       = "low",
+    example_score             = "low",
+    has_docs_score            = "low",
+    has_ex_docs_score         = "low",
+    cmd_check                 = "low",
+    has_bug_reports_url_risk  = "low",
+    has_source_control_risk   = "low"
+  )
+)
 
 # Test the generate_risk_analysis function
 test_that("generate_risk_analysis works correctly", {
@@ -338,61 +372,38 @@ test_that("write_summary_report uses HTML format and resolves relative output pa
   
   # Fix the working directory so relative path resolution is deterministic
   mockery::stub(write_summary_report, "getwd", "/tmp")
-  
+  mockery::stub(write_summary_report, "fs::path_abs", function(path, start = ".") file.path(start, path))
+  mockery::stub(write_summary_report, "fs::is_absolute_path", function(path) FALSE)
   
   # Stub get_pkg_desc to return a fake version
   mockery::stub(write_summary_report, "get_pkg_desc", list(Version = "3.0.1"))
   
-  
-  # Capture the args actually passed to rmarkdown::render and return a known path
+  # Capture the args actually passed to rmarkdown::render (HTML path: full output_file + output_options)
   captured <- NULL
   mockery::stub(write_summary_report, "rmarkdown::render",
-                function(input,
-                         output_format,
-                         output_file,
-                         output_dir,
-                         envir,
-                         params,
-                         intermediates_dir,
-                         knit_root_dir,
-                         clean,
-                         quiet) {
+                function(input, output_file, output_options, params, envir, clean, quiet) {
                   captured <<- list(
-                    input             = input,
-                    output_format     = output_format,
-                    output_file       = output_file,       # basename
-                    output_dir        = output_dir,        # directory
-                    envir             = envir,
-                    params            = params,
-                    intermediates_dir = intermediates_dir,
-                    knit_root_dir     = knit_root_dir,
-                    clean             = clean,
-                    quiet             = quiet
+                    input          = input,
+                    output_file    = output_file,
+                    output_options = output_options,
+                    params         = params,
+                    envir          = envir,
+                    clean          = clean,
+                    quiet          = quiet
                   )
-                  # Simulate rmarkdown returning a path (the function ignores this and returns its own)
-                  return(file.path(output_dir, output_file))
+                  return(output_file)
                 }
   )
   
   # Act
   result <- write_summary_report(results = fake_results, output_file = output_file)
   
-  # Assert: function returns the final absolute path in /tmp
-  # expect_equal(result, "/tmp/my-report.html")
-  
   # rmarkdown::render is called with our mocked template
   expect_equal(captured$input, "mock_template.Rmd")
   
-  # Format chosen by ".html" extension
-  expect_equal(captured$output_format, "HTML_FORMAT")
-  
-  # Since the function now passes basename + output_dir separately:
-  expect_equal(captured$output_file, "my-report.html")
-  expect_equal(captured$output_dir, "/tmp")
-  
-  # Intermediates and knit root are set to the same output_dir
-  expect_equal(captured$intermediates_dir, "/tmp")
-  expect_equal(captured$knit_root_dir, "/tmp")
+  # HTML path: full absolute path, output_options carries mathjax = NULL
+  expect_equal(captured$output_file, file.path("/tmp", "my-report.html"))
+  expect_equal(captured$output_options, list(mathjax = NULL))
   
   # Clean and quiet flags are enabled
   expect_true(isTRUE(captured$clean))
@@ -431,20 +442,15 @@ test_that("when output_file is NULL and output_format is NULL, default extension
   mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_document")
   
   render_calls <- list()
-  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                                   output_dir, envir, params,
-                                                   intermediates_dir, knit_root_dir,
-                                                   clean, quiet) {
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_file, output_options,
+                                                   params, envir, clean, quiet) {
     render_calls <<- append(render_calls, list(list(
-      input = input,
-      output_format = output_format,
-      output_file = output_file,
-      output_dir = output_dir,
-      params = params,
-      intermediates_dir = intermediates_dir,
-      knit_root_dir = knit_root_dir,
-      clean = clean,
-      quiet = quiet
+      input          = input,
+      output_file    = output_file,
+      output_options = output_options,
+      params         = params,
+      clean          = clean,
+      quiet          = quiet
     )))
     "ok"
   })
@@ -460,11 +466,9 @@ test_that("when output_file is NULL and output_format is NULL, default extension
   call <- render_calls[[1]]
   
   expect_equal(call$input, "/fake/pkg/report_templates/summary.Rmd")
-  expect_equal(call$output_format, "html_document")
-  expect_equal(call$output_dir, "/tmp/render_root")
-  expect_equal(call$output_file, "summary_report_mockpkg_0.1.0.html")  # basename only
-  expect_equal(call$intermediates_dir, "/tmp/render_root")
-  expect_equal(call$knit_root_dir, "/tmp/render_root")
+  # HTML path: full absolute path, no output_dir/output_format
+  expect_equal(call$output_file, file.path("/tmp/render_root", "summary_report_mockpkg_0.1.0.html"))
+  expect_equal(call$output_options, list(mathjax = NULL))
   expect_true(call$clean)
   expect_true(call$quiet)
   expect_equal(call$params$name, "mockpkg")
@@ -538,15 +542,12 @@ test_that("when output_file is a directory, it composes filename inside it with 
   mockery::stub(wsr, "dir.exists", function(path) TRUE)
   
   render_calls <- list()
-  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                                   output_dir, envir, params,
-                                                   intermediates_dir, knit_root_dir,
-                                                   clean, quiet) {
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_file, output_options,
+                                                   params, envir, clean, quiet) {
     render_calls <<- append(render_calls, list(list(
-      input = input,
-      output_format = output_format,
-      output_file = output_file,
-      output_dir = output_dir
+      input          = input,
+      output_file    = output_file,
+      output_options = output_options
     )))
     "ok"
   })
@@ -559,9 +560,9 @@ test_that("when output_file is a directory, it composes filename inside it with 
   
   expect_length(render_calls, 1)
   call <- render_calls[[1]]
-  expect_equal(call$output_format, "html_document")
-  expect_equal(call$output_dir, "/reports")
-  expect_equal(call$output_file, "summary_report_mockpkg_0.1.0.html")
+  # HTML path: full absolute path composed inside the directory
+  expect_equal(call$output_file, file.path("/reports", "summary_report_mockpkg_0.1.0.html"))
+  expect_equal(call$output_options, list(mathjax = NULL))
 })
 
 
@@ -581,14 +582,11 @@ test_that("when output_format is NULL and extension is unknown, it warns and def
   mockery::stub(wsr, "fs::path_ext_set", function(path, ext) "/reports/report.html")
   
   render_calls <- list()
-  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file,
-                                                   output_dir, envir, params,
-                                                   intermediates_dir, knit_root_dir,
-                                                   clean, quiet) {
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_file, output_options,
+                                                   params, envir, clean, quiet) {
     render_calls <<- append(render_calls, list(list(
-      output_format = output_format,
-      output_file = output_file,
-      output_dir = output_dir
+      output_file    = output_file,
+      output_options = output_options
     )))
     "ok"
   })
@@ -604,9 +602,9 @@ test_that("when output_format is NULL and extension is unknown, it warns and def
   
   expect_length(render_calls, 1)
   call <- render_calls[[1]]
-  expect_equal(call$output_format, "html_document")     # corrected to HTML
-  expect_equal(call$output_dir, "/reports")
-  expect_equal(call$output_file, "report.html")         # extension fixed to .html
+  # fs::path_ext_set is stubbed to return "/reports/report.html"; HTML path passes it as full path
+  expect_equal(call$output_file, "/reports/report.html")
+  expect_equal(call$output_options, list(mathjax = NULL))
 })
 
 # Always call the package function the same way
@@ -720,16 +718,13 @@ test_that("uses getwd when output_dir is NULL and defaults to .html when format 
   expect_length(render_calls, 1)
   args <- render_calls[[1]]
   
-  # Output directory is the working dir we set
-  expect_identical(
-    fs::path_real(args$output_dir),
+  # HTML path: full absolute path (directory prefix = working dir, basename = auto-name)
+  expect_equal(basename(args$output_file), "summary_report_pkgA_0.1.0.html")
+  expect_equal(
+    fs::path_real(dirname(args$output_file)),
     fs::path_real(tmp)
   )
-  
-  
-  # The auto-name should be summary_report_pkgA_0.1.0.html
-  expect_equal(args$output_file, "summary_report_pkgA_0.1.0.html")
-  expect_equal(args$output_format, "html_fmt")
+  expect_equal(args$output_options, list(mathjax = NULL))
 })
 
 test_that("explicit output_format = 'md' yields .md file and sets md_document()", {
@@ -796,9 +791,9 @@ test_that("treats output_file as directory if it exists and uses default .html t
   expect_length(render_calls, 1)
   args <- render_calls[[1]]
   
-  expect_equal(file.path(args$output_dir, args$output_file),
-               file.path(out_dir_as_file, "summary_report_pkgC_0.3.0.html"))
-  expect_equal(args$output_format, "html_fmt")
+  # HTML path: full absolute path composed via fs_path_abs(filename, start = out_dir_as_file)
+  expect_equal(args$output_file, fs_path_abs("summary_report_pkgC_0.3.0.html", start = out_dir_as_file))
+  expect_equal(args$output_options, list(mathjax = NULL))
 })
 
 test_that("resolves relative output_file against output_dir when not absolute", {
@@ -832,9 +827,9 @@ test_that("resolves relative output_file against output_dir when not absolute", 
   expect_length(render_calls, 1)
   args <- render_calls[[1]]
   
-  expect_equal(args$output_dir, file.path(base_dir, "out"))
-  expect_equal(args$output_file, "report.html")
-  expect_equal(args$output_format, "html_fmt")
+  # HTML path: full absolute path = fs_path_abs(rel_path, start = base_dir)
+  expect_equal(args$output_file, fs_path_abs(rel_path, start = base_dir))
+  expect_equal(args$output_options, list(mathjax = NULL))
 })
 
 test_that("explicit format overrides extension; unknown explicit format warns and defaults to html", {
@@ -895,9 +890,10 @@ test_that("explicit format overrides extension; unknown explicit format warns an
   
   expect_length(render_calls, 1)
   args_B <- render_calls[[1]]
-  expect_equal(args_B$output_dir, base_dir)
-  expect_equal(args_B$output_file, "something.html") # corrected extension
-  expect_equal(args_B$output_format, "html_fmt_B")
+  # HTML path: full absolute path; fs_path_ext_set("something.md", "html") = "something.html",
+  # then fs_path_abs("something.html", start = base_dir) = file.path(base_dir, "something.html")
+  expect_equal(args_B$output_file, fs_path_abs("something.html", start = base_dir))
+  expect_equal(args_B$output_options, list(mathjax = NULL))
 })
 
 # ---------------------------------------------------------------------------
@@ -949,8 +945,8 @@ testthat::test_that("write_summary_report defaults extension to html for an unkn
   mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_fmt")
   
   captured <- NULL
-  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file, output_dir, ...) {
-    captured <<- list(output_format = output_format, output_file = output_file, output_dir = output_dir)
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_file, output_options, ...) {
+    captured <<- list(output_file = output_file, output_options = output_options)
     NULL
   })
   
@@ -962,9 +958,12 @@ testthat::test_that("write_summary_report defaults extension to html for an unkn
     "Unknown 'output_format'; defaulting to HTML"
   )
   
-  # default_ext resolved to "html" -> auto-named .html file, HTML format object.
-  testthat::expect_equal(captured$output_format, "html_fmt")
-  testthat::expect_equal(captured$output_file, "summary_report_mockpkg_0.1.0.html")
+  # HTML path: full absolute path, output_options carries mathjax = NULL.
+  testthat::expect_equal(captured$output_options, list(mathjax = NULL))
+  testthat::expect_equal(
+    captured$output_file,
+    file.path("/tmp/render_root", "summary_report_mockpkg_0.1.0.html")
+  )
 })
 
 testthat::test_that("write_summary_report warns and falls back to html for an unknown file extension", {
@@ -983,8 +982,8 @@ testthat::test_that("write_summary_report warns and falls back to html for an un
   mockery::stub(wsr, "rmarkdown::md_document", function(...) "md_fmt")
   
   captured <- NULL
-  mockery::stub(wsr, "rmarkdown::render", function(input, output_format, output_file, output_dir, ...) {
-    captured <<- list(output_format = output_format, output_file = output_file, output_dir = output_dir)
+  mockery::stub(wsr, "rmarkdown::render", function(input, output_file, output_options, ...) {
+    captured <<- list(output_file = output_file, output_options = output_options)
     NULL
   })
   
@@ -996,8 +995,9 @@ testthat::test_that("write_summary_report warns and falls back to html for an un
     "Unknown extension; defaulting to HTML"
   )
   
-  testthat::expect_equal(captured$output_format, "html_fmt")
-  testthat::expect_equal(captured$output_file, "report.html")
+  # HTML path: fs::path_ext_set is stubbed to replace extension in-place
+  testthat::expect_equal(captured$output_options, list(mathjax = NULL))
+  testthat::expect_equal(captured$output_file, "/reports/report.html")
 })
 
 testthat::test_that("write_summary_report infers the md format from a .md extension and sets md knitr options", {

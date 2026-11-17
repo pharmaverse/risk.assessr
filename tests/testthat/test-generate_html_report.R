@@ -1368,12 +1368,15 @@ testthat::test_that("generate_html_report wraps non-data.frame trace matrices in
 
 testthat::test_that("generate_html_report skips rendering on CRAN / non-interactive sessions", {
   # Covers lines 241-243: the else branch of the NOT_CRAN / interactive() check.
+  # interactive() must be stubbed to FALSE so that NOT_CRAN = "false" reliably
+  # triggers the else branch regardless of whether the test runner is interactive.
   ar <- make_mf_assessment(list(
     multi_framework = FALSE,
     res_cov         = gh_report_test_res_cov()
   ))
   
   h <- make_stubbed_html_report()
+  mockery::stub(h$fn, "interactive", function() FALSE)
   
   withr::with_envvar(c(NOT_CRAN = "false"), {
     testthat::expect_message(

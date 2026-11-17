@@ -163,12 +163,12 @@ write_summary_report <- function(results, output_file = NULL, output_format = NU
     
     fmt_obj <- switch(
       fmt,
-      html = rmarkdown::html_document(),
+      html = NULL,
       md   = rmarkdown::md_document(),
       {
         warning("Unknown 'output_format'; defaulting to HTML (only 'html' and 'md' are supported).")
         fmt <- "html"
-        rmarkdown::html_document()
+        NULL
       }
     )
     
@@ -189,13 +189,13 @@ write_summary_report <- function(results, output_file = NULL, output_format = NU
     # Original behavior: infer from the file extension (and fix unknowns to .html)
     fmt_obj <- switch(
       final_ext,
-      html = rmarkdown::html_document(),
+      html = NULL,
       md   = rmarkdown::md_document(),
       {
         warning("Unknown extension; defaulting to HTML (only '.html' and '.md' are supported).")
         output_file <- fs::path_ext_set(output_file, "html")
         final_ext <- "html"
-        rmarkdown::html_document()
+        NULL
       }
     )
     
@@ -208,25 +208,40 @@ write_summary_report <- function(results, output_file = NULL, output_format = NU
     fmt_obj
   }
   
-  # Render in a single target directory to avoid extra artifacts near template
   render_dir  <- dirname(output_file)
   render_name <- basename(output_file)
-  template_path <- system.file("report_templates", 
-                               "summary.Rmd", 
+  template_path <- system.file("report_templates",
+                               "summary.Rmd",
                                package = "risk.assessr")
   
-  do.call(rmarkdown::render, list(
-    input              = template_path,
-    output_format      = output_format_obj,
-    output_file        = render_name,        # basename only
-    output_dir         = render_dir,         # final output placed here
-    envir              = new.env(),
-    params             = params,
-    intermediates_dir  = render_dir,         # intermediates here, not in template dir
-    knit_root_dir      = render_dir,         # force chunk outputs under render_dir
-    clean              = TRUE,               # remove intermediates after successful render
-    quiet              = TRUE                # suppress knit/pandoc progress lines
-  ))
+  if (identical(final_ext, "html")) {
+    # Mirror generate_html_report.R: pass output_file as full path with
+    # output_options so rmarkdown merges mathjax = NULL into the YAML-declared
+    # html_document format. Pandoc 3.11+ (R 4.6.1) warns on --mathjax;
+    # summary.Rmd has no LaTeX math so disabling MathJax is safe.
+    rmarkdown::render(
+      input          = template_path,
+      output_file    = output_file,
+      output_options = list(mathjax = NULL),
+      params         = params,
+      envir          = new.env(),
+      clean          = TRUE,
+      quiet          = TRUE
+    )
+  } else {
+    do.call(rmarkdown::render, list(
+      input             = template_path,
+      output_file       = render_name,
+      output_dir        = render_dir,
+      output_format     = output_format_obj,
+      envir             = new.env(),
+      params            = params,
+      intermediates_dir = render_dir,
+      knit_root_dir     = render_dir,
+      clean             = TRUE,
+      quiet             = TRUE
+    ))
+  }
   
   # Final, single message confirming the actual output file
   message("Output created: ", file.path(render_dir, render_name))
@@ -318,7 +333,7 @@ generate_risk_analysis <- function(assessment_results) {
       "Bug Reports URL",
       "Source Control",
       "Security Vulnerabilities"
-
+      
     ),
     Risk_Level = c(
       get_metric(risk$cmd_check),
