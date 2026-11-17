@@ -37,6 +37,41 @@ assess_pkg_test_mock_get_package_coverage <- function(pkg_source_path, package_i
   )
 }
 
+# Shared stubs that keep assess_pkg fully offline / subprocess-free.
+# mockery::stub() binds the stubbed copy in the calling frame, so the copy is
+# returned and must be reassigned: assess_pkg <- assess_pkg_test_apply_common_stubs(assess_pkg)
+assess_pkg_test_apply_common_stubs <- function(fn) {
+  mockery::stub(fn, "get_pkg_desc", function(path, fields) {
+    list(Package = "mockpkg", Version = "0.1.0")
+  })
+  mockery::stub(fn, "get_risk_metadata", function() list())
+  mockery::stub(fn, "create_empty_results", function(...) list(suggested_deps = NULL))
+  mockery::stub(fn, "doc_riskmetric", function(...) list(
+    has_bug_reports_url = TRUE, license = TRUE, has_examples = TRUE,
+    has_docs = TRUE, has_ex_docs_score = 1, has_maintainer = TRUE,
+    size_codebase = 10, has_news = TRUE, has_source_control = TRUE,
+    has_vignettes = TRUE, has_website = TRUE, news_current = TRUE,
+    export_help = TRUE
+  ))
+  mockery::stub(fn, "test.assessr::get_package_coverage", assess_pkg_test_mock_zero_coverage)
+  mockery::stub(fn, "run_rcmdcheck", function(...) list(check_score = 1))
+  mockery::stub(fn, "get_dependencies", function(...) assess_pkg_test_empty_deps_df())
+  mockery::stub(fn, "create_empty_tm", function(...) list())
+  mockery::stub(fn, "assess_exports", function(...) list())
+  mockery::stub(fn, "risk.assessr::get_session_dependencies", function(...) list())
+  mockery::stub(fn, "get_pkg_author", function(...) list(maintainer = "Mock Author", funder = NA, authors = "Mock Author"))
+  mockery::stub(fn, "extract_license_from_description", function(...) "MIT")
+  mockery::stub(fn, "get_host_package", function(...) {
+    list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
+  })
+  mockery::stub(fn, "get_repo_owner", function(...) NA_character_)
+  mockery::stub(fn, "get_github_data", function(...) list(created_at = NA, stars = 0, forks = 0, date = NA, recent_commits_count = 0))
+  mockery::stub(fn, "get_cran_total_downloads", function(...) 0)
+  mockery::stub(fn, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
+  mockery::stub(fn, "get_risk_analysis", function(...) list())
+  return(fn)
+}
+
 # Empty dependency table as returned by parse_dcf_dependencies / get_dependencies
 assess_pkg_test_empty_deps_df <- function() {
   data.frame(type = character(), package = character(), stringsAsFactors = FALSE)
@@ -87,8 +122,8 @@ test_that(
     # ---- repo setup ----
     r <- getOption("repos")
     r["CRAN"] <- "http://cran.us.r-project.org"
-    options(repos = r)
-    skip_if_repo_unavailable()
+    withr::local_options(repos = r)
+    local_offline_network()
     
     # ---- copy test tarball ----
     dp_orig <- system.file(
@@ -290,8 +325,8 @@ test_that("running assess_pkg for test package in tar file - no exports", {
   skip_on_cran()
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -443,6 +478,7 @@ test_that("running assess_pkg for test package in tar file - no exports", {
 
 test_that("running assess_pkg for test package with Config/build/clean-inst-doc: false", {
   skip_on_cran()
+  local_offline_network()
   
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     return(list(cran_links = "CRAN", github_links = NULL, bioconductor_links = NULL, internal_links= NULL))
@@ -527,8 +563,8 @@ test_that("running assess_pkg for test package fail suggest", {
   # ---- repo setup ----
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   # ---- copy test tarball ----
   dp_orig <- system.file(
@@ -649,8 +685,8 @@ test_that("assess_pkg handles errors in check_suggested_exp_funcs correctly", {
   # ---- CRAN repo setup (if your helpers install deps) ----
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   # ---- copy test tarball ----
   dp_orig <- system.file(
@@ -855,28 +891,8 @@ test_that("assess_pkg handles error via outer tryCatch block", {
     "License: MIT"
   ), desc_path)
   
-  # Stub get_pkg_desc to return mock name/version
-  mockery::stub(assess_pkg, "get_pkg_desc", function(path, fields) {
-    list(Package = "mockpkg", Version = "0.1.0")
-  })
-  
-  # Stub all other required functions to return minimal valid data
-  mockery::stub(assess_pkg, "get_risk_metadata", function() list())
-  mockery::stub(assess_pkg, "create_empty_results", function(...) list(suggested_deps = NULL))
-  mockery::stub(assess_pkg, "doc_riskmetric", function(...) list(
-    has_bug_reports_url = TRUE, license = TRUE, has_examples = TRUE,
-    has_maintainer = TRUE, size_codebase = 10, has_news = TRUE,
-    has_source_control = TRUE, has_vignettes = TRUE, has_website = TRUE,
-    news_current = TRUE, export_help = TRUE
-  ))
-  mockery::stub(assess_pkg, "test.assessr::get_package_coverage", assess_pkg_test_mock_zero_coverage)
-  mockery::stub(assess_pkg, "run_rcmdcheck", function(...) list(check_score = 1))
-  mockery::stub(assess_pkg, "get_dependencies", function(...) assess_pkg_test_empty_deps_df())
-  mockery::stub(assess_pkg, "create_empty_tm", function(...) list())
-  
-  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
-  
-  # Stub withCallingHandlers to simulate an error that bypasses inner handler
+  # Stub every collaborator (incl. get_host_package) so no CRAN/GitHub/cranlogs call is made
+  assess_pkg <- assess_pkg_test_apply_common_stubs(assess_pkg)
   mockery::stub(
     assess_pkg,
     "check_suggested_exp_funcs",
@@ -1021,6 +1037,7 @@ test_that("assess_pkg Bioconductor path coerces empty reverse deps to 0", {
   mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
   mockery::stub(assess_pkg, "risk.assessr::get_session_dependencies", function(...) list())
   mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
+  mockery::stub(assess_pkg, "get_cran_total_downloads", function(...) 0)
   
   res <- assess_pkg(pkg_source_path, rcmdcheck_args)
   
@@ -1084,35 +1101,6 @@ test_that("assess_pkg returns NULL with a warning when pkg_source_path is an emp
   
 })
 
-# Shared stubs that keep assess_pkg fully offline / subprocess-free.
-# Each stub is applied against the local `assess_pkg` copy inside the test.
-assess_pkg_test_apply_common_stubs <- function(pkg_source_path) {
-  mockery::stub(assess_pkg, "get_pkg_desc", function(path, fields) {
-    list(Package = "mockpkg", Version = "0.1.0")
-  })
-  mockery::stub(assess_pkg, "get_risk_metadata", function() list())
-  mockery::stub(assess_pkg, "create_empty_results", function(...) list(suggested_deps = NULL))
-  mockery::stub(assess_pkg, "doc_riskmetric", function(...) list(
-    has_bug_reports_url = TRUE, license = TRUE, has_examples = TRUE,
-    has_docs = TRUE, has_ex_docs_score = 1, has_maintainer = TRUE,
-    size_codebase = 10, has_news = TRUE, has_source_control = TRUE,
-    has_vignettes = TRUE, has_website = TRUE, news_current = TRUE,
-    export_help = TRUE
-  ))
-  mockery::stub(assess_pkg, "test.assessr::get_package_coverage", assess_pkg_test_mock_zero_coverage)
-  mockery::stub(assess_pkg, "run_rcmdcheck", function(...) list(check_score = 1))
-  mockery::stub(assess_pkg, "get_dependencies", function(...) assess_pkg_test_empty_deps_df())
-  mockery::stub(assess_pkg, "create_empty_tm", function(...) list())
-  mockery::stub(assess_pkg, "assess_exports", function(...) list())
-  mockery::stub(assess_pkg, "risk.assessr::get_session_dependencies", function(...) list())
-  mockery::stub(assess_pkg, "get_pkg_author", function(...) list(maintainer = "Mock Author", funder = NA, authors = "Mock Author"))
-  mockery::stub(assess_pkg, "extract_license_from_description", function(...) "MIT")
-  mockery::stub(assess_pkg, "get_repo_owner", function(...) NA_character_)
-  mockery::stub(assess_pkg, "get_github_data", function(...) list(created_at = NA, stars = 0, forks = 0, date = NA, recent_commits_count = 0))
-  mockery::stub(assess_pkg, "get_cran_total_downloads", function(...) 0)
-  mockery::stub(assess_pkg, "get_security_vulnerabilities", assess_pkg_test_mock_vulnerabilities)
-  mockery::stub(assess_pkg, "get_risk_analysis", function(...) list())
-}
 
 assess_pkg_test_write_mock_description <- function(pkg_source_path) {
   writeLines(c(
@@ -1130,7 +1118,7 @@ test_that("assess_pkg falls back to the default suggested_deps data.frame when c
   pkg_source_path <- withr::local_tempdir()
   assess_pkg_test_write_mock_description(pkg_source_path)
   
-  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  assess_pkg <- assess_pkg_test_apply_common_stubs(assess_pkg)
   mockery::stub(assess_pkg, "get_host_package", function(...) {
     list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
   })
@@ -1158,7 +1146,7 @@ test_that("assess_pkg falls back to the default suggested_deps data.frame when c
   pkg_source_path <- withr::local_tempdir()
   assess_pkg_test_write_mock_description(pkg_source_path)
   
-  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  assess_pkg <- assess_pkg_test_apply_common_stubs(assess_pkg)
   mockery::stub(assess_pkg, "get_host_package", function(...) {
     list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
   })
@@ -1192,7 +1180,7 @@ test_that("assess_pkg uses the last CRAN version when the current version is not
     "License: MIT"
   ), file.path(pkg_source_path, "DESCRIPTION"))
   
-  assess_pkg_test_apply_common_stubs(pkg_source_path)
+  assess_pkg <- assess_pkg_test_apply_common_stubs(assess_pkg)
   # get_pkg_desc must report the unmatched version.
   mockery::stub(assess_pkg, "get_pkg_desc", function(path, fields) {
     list(Package = "mockpkg", Version = "3.0.0")
