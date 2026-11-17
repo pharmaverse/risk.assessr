@@ -38,8 +38,8 @@ test_that("risk_assess_pkg works with path to local tarball", {
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   # filecoverage keys from real covr use R source file names (e.g. "R/myscript.R"),
   # but code_script in exports_df is derived from Rd file names (e.g. "R/myfunction.R").
@@ -77,6 +77,9 @@ test_that("risk_assess_pkg works with path to local tarball", {
   )
   
   local_mocked_bindings(
+    get_host_package = function(pkg_name, pkg_ver, pkg_source_path) {
+      list(cran_links = NULL, github_links = NULL, bioconductor_links = NULL, internal_links = NULL)
+    },
     get_security_vulnerabilities = risk_assess_pkg_test_mock_vulnerabilities,
     .package = "risk.assessr"
   )
@@ -209,8 +212,8 @@ test_that("risk_assess_pkg works with path and mocked get_host_package", {
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     list(cran = TRUE, host = "CRAN", url = "https://cran.r-project.org")
@@ -239,8 +242,8 @@ test_that("risk_assess_pkg works with path params", {
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   mock_get_host_package <- function(pkg_name, pkg_ver, pkg_source_path) {
     list(cran = TRUE, host = "CRAN", url = "https://cran.r-project.org")
@@ -260,7 +263,7 @@ test_that("risk_assess_pkg works with invalid path params", {
   
   r = getOption("repos")
   r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = r)
   
   dp <- "invaled_path/"
   
@@ -300,8 +303,8 @@ test_that("risk_assess_pkg with package param uses get_package_tarfile and retur
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   out <- risk_assess_pkg(package = "here")
   testthat::expect_true(is.list(out))
@@ -331,8 +334,8 @@ test_that("risk_assess_pkg with package and version passes version to get_packag
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   risk_assess_pkg(package = "here", version = "1.0.1")
   testthat::expect_identical(captured$version, "1.0.1")
@@ -365,8 +368,8 @@ test_that("risk_assess_pkg with no path or package uses file.choose and succeeds
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
+  local_offline_network()
   
   out <- risk_assess_pkg()
   testthat::expect_true(is.list(out))
@@ -420,8 +423,7 @@ test_that("risk_assess_pkg returns NULL with message when install_package_local 
   
   r <- getOption("repos")
   r["CRAN"] <- "http://cran.us.r-project.org"
-  options(repos = r)
-  skip_if_repo_unavailable()
+  withr::local_options(repos = r)
   
   expect_message(out <- risk_assess_pkg(path = dp), "Package installation failed")
   testthat::expect_null(out)

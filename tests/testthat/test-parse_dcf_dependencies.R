@@ -1,10 +1,3 @@
-# Mock function for remove_base_packages to avoid network calls
-mock_remove_base <- function(df) {
-  base_rec_pkgs <- c("base", "compiler", "datasets", "graphics", "grDevices", 
-                     "grid", "methods", "parallel", "splines", "stats", 
-                     "stats4", "tcltk", "tools", "utils")
-  df[!(df$package == "R" | df$package %in% base_rec_pkgs), ]
-}
 
 test_that("parse deps for tar file works correctly", {
   skip_on_cran()

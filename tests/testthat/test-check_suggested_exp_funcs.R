@@ -1,9 +1,8 @@
 test_that("check_suggested_exp_funcs returns 2 matches", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -37,10 +36,9 @@ test_that("check_suggested_exp_funcs returns 2 matches", {
 
 test_that("check_suggested_exp_funcs returns matches messages for S3 functions", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -101,10 +99,9 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
 
 test_that("check_suggested_exp_funcs returns matches messages for S3 functions", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -165,10 +162,9 @@ test_that("check_suggested_exp_funcs returns matches messages for S3 functions",
 
 test_that("check_suggested_exp_funcs returns matches messages for S4 functions", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -229,10 +225,9 @@ test_that("check_suggested_exp_funcs returns matches messages for S4 functions",
 
 test_that("get_exports works correctly with R6 functions", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -295,10 +290,9 @@ test_that("get_exports works correctly with R6 functions", {
 
 test_that("check_suggested_exp_funcs returns no exported functions message", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -357,10 +351,9 @@ test_that("check_suggested_exp_funcs returns no exported functions message", {
 
 test_that("check_suggested_exp_funcs returns No R folder found in the package source path message", {
   skip_on_cran()
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
