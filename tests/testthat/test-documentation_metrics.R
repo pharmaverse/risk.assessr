@@ -1,10 +1,9 @@
 test_that("test doc_riskmetric", {
   
   # set CRAN repo 
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
@@ -321,10 +320,9 @@ RoxygenNote: 7.3.3
 
 test_that("parse license for tar file MIT", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -352,10 +350,9 @@ test_that("parse license for tar file MIT", {
 
 test_that("parse authors for tar file Apache License", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -389,10 +386,9 @@ test_that("parse authors for tar file Apache License", {
 
 test_that("parse license not present", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   
   # Copy test package to a temp file
@@ -645,10 +641,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   library(risk.assessr)
   # set CRAN repo 
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
@@ -708,10 +703,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   library(risk.assessr)
   # set CRAN repo 
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -1007,10 +1001,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   library(risk.assessr)
   # set CRAN repo 
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
@@ -1069,10 +1062,9 @@ test_that("test assess_description_file_elements for all elements present", {
   
   library(risk.assessr)
   # set CRAN repo 
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -1243,10 +1235,9 @@ Packaged: Mon Sep 24 13:01:39 2007; smyth
 
 test_that("assess exports for tar file works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -1280,10 +1271,9 @@ test_that("assess exports for tar file works correctly", {
 
 test_that("assess exports for tar file works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -1326,10 +1316,9 @@ test_that("assess exports for tar file works correctly", {
 
 test_that("assess exports for examples works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -1579,10 +1568,9 @@ test_that("assess_exported_functions_docs returns 'No documentation found' when 
 
 test_that("assess exports for missing examples works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   
   # Ensure installs during this test go to a temp lib that stays on .libPaths()
@@ -1662,10 +1650,9 @@ test_that("assess exports for missing examples works correctly", {
 
 test_that("assess exports for packages - no exported functions works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -1720,10 +1707,9 @@ test_that("assess exports for packages - no exported functions works correctly",
 
 test_that("assess exports for help files works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -1766,10 +1752,9 @@ test_that("assess exports for help files works correctly", {
 
 test_that("assess exports for missing help files works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
@@ -1816,10 +1801,9 @@ test_that("assess exports for missing help files works correctly", {
 
 test_that("assess exports for no help files works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -2365,10 +2349,9 @@ test_that("assess_export_help does NOT invoke the fallback when getNamespaceExpo
 
 test_that("assess exports for news works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -2415,10 +2398,9 @@ test_that("assess exports for news works correctly", {
 
 test_that("assess exports for missing news works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -2474,10 +2456,9 @@ test_that("assess exports for missing news works correctly", {
 
 test_that("assess exports for current news works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -2525,10 +2506,9 @@ test_that("assess exports for current news works correctly", {
 
 test_that("assess exports for missing news works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -2769,10 +2749,9 @@ test_that("assess_news does not match non-utils NEWS filenames", {
 
 test_that("assess vignettes for tar file with vignettes works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "here-1.0.1.tar.gz",
                     package = "risk.assessr")
@@ -2813,10 +2792,9 @@ test_that("assess vignettes for tar file with vignettes works correctly", {
 
 test_that("assess vignettes for tar file with no vignettes works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -2866,10 +2844,9 @@ test_that("assess vignettes for tar file with no vignettes works correctly", {
 
 test_that("assess code base size for small package works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
   dp_orig <- system.file("test-data", 
@@ -2912,10 +2889,9 @@ test_that("assess code base size for small package works correctly", {
 
 test_that("assess code base size for large package works correctly", {
   
-  r = getOption("repos")
-  r["CRAN"] = "http://cran.us.r-project.org"
-  options(repos = r)
+  withr::local_options(repos = c(getOption("repos"), CRAN = "http://cran.us.r-project.org"))
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")

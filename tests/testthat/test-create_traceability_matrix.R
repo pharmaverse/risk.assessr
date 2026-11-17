@@ -1,6 +1,7 @@
 test_that("running tm for created package in tar file with no notes", {
   skip_on_cran()
   skip_if_repo_unavailable()
+  local_offline_network()
   dp <- system.file("test-data", "stringr-1.5.1.tar.gz",
                     package = "risk.assessr")
   skip_if_test_data_missing(dp)
@@ -66,9 +67,10 @@ test_that("running tm for created package in tar file with no notes", {
 test_that("running tm for created package in tar file with no tests", {
   skip_on_cran()
   skip_if_repo_unavailable()
+  local_offline_network()
   
   # Copy test package to a temp file
-  dp_orig <- system.file("test-data", 
+  dp_orig <- system.file("test-data",
                          "test.package.0004_0.1.0.tar.gz", 
                          package = "risk.assessr")
   skip_if_test_data_missing(dp_orig)
@@ -143,6 +145,7 @@ test_that("running tm for created package in tar file with no tests", {
 test_that("running tm for created package in tar file with no R directory", {
   skip_on_cran()
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp_orig <- system.file("test-data",
                          "test.package.0006_0.1.0.tar.gz", 
@@ -216,6 +219,7 @@ test_that("running tm for created package in tar file with no R directory", {
 test_that("running tm for created package in tar file with empty R directory", {
   skip_on_cran()
   skip_if_repo_unavailable()
+  local_offline_network()
   
   dp_orig <- system.file("test-data",
                          "test.package.0005_0.1.0.tar.gz", 
