@@ -908,3 +908,176 @@ test_that("detects S4 generics from exportMethods", {
   expect_equal(sort(result$function_type), c("S4 generic", "S4 generic"))
   expect_true(all(is.na(result$class)))
 })
+
+
+# ---------------------------------------------------------------------------
+# Pure-mock unit tests for previously uncovered branches
+# ---------------------------------------------------------------------------
+
+test_that("get_r6_methods_details returns '<not a function>' for non-function members", {
+  result <- get_r6_methods_details(make_r6_generator_with_non_func())
+  nf <- Filter(function(x) x$name == "non_func_slot", result)
+  expect_equal(nf[[1]]$body, "<not a function>")
+  real <- Filter(function(x) x$name == "real_method", result)
+  expect_true(any(grepl("x", real[[1]]$body)))
+})
+
+test_that("function_is_ggproto returns TRUE for ggproto objects and FALSE otherwise", {
+  expect_true(risk.assessr:::function_is_ggproto(make_fake_ggproto()))
+  expect_false(risk.assessr:::function_is_ggproto(function(x) x))
+})
+
+test_that("extract_exported_function_info preserves unresolved exports for helper packages", {
+  mockery::stub(
+    extract_exported_function_info,
+    "parseNamespaceFile",
+    function(...) list(exports = c(".data"))
+  )
+  mockery::stub(
+    extract_exported_function_info,
+    "getExportedValue",
+    function(pkg, name) NULL
+  )
+  
+  result <- extract_exported_function_info("/fake/path/rlang", "rlang")
+  
+  ue_rows <- result[result$exported_function == ".data", ]
+  expect_equal(ue_rows$function_type, "unresolved or helper")
+  expect_true(is.na(ue_rows$class))
+})
+
+test_that("classify_function_body handles S7 generic with non-empty methods", {
+  row <- list(
+    exported_function = "my_s7_gen",
+    class             = NA,
+    function_type     = "S7 generic",
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get", function(name, envir, ...) {
+    if (name == "my_s7_gen") make_fake_s7_generic_with_methods()
+    else if (name == "methods") function(obj) list(function(x) x + 99L)
+    else NULL
+  })
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "S7 generic")
+  expect_true(grepl("x \\+ 99L", result$function_body))
+})
+
+test_that("classify_function_body handles S7 generic with empty methods", {
+  row <- list(
+    exported_function = "empty_s7_gen",
+    class             = NA,
+    function_type     = "S7 generic",
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get", function(name, envir, ...) {
+    if (name == "empty_s7_gen") make_fake_s7_generic_no_methods()
+    else if (name == "methods") function(obj) list()
+    else NULL
+  })
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "S7 generic")
+  expect_true(grepl("x \\* 7L", result$function_body))
+})
+
+test_that("classify_function_body handles S7 class type", {
+  row <- list(
+    exported_function = "MyS7Class",
+    class             = NA,
+    function_type     = NA,
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get_s3_method",      function(g, cl, p) NULL)
+  mockery::stub(classify_function_body, "get",                function(name, envir, ...) make_fake_s7_class())
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "S7 class")
+  expect_equal(result$function_body, "<S7 class definition>")
+})
+
+test_that("classify_function_body handles rlang fake data pronoun", {
+  row <- list(
+    exported_function = ".data",
+    class             = NA,
+    function_type     = NA,
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get_s3_method",      function(g, cl, p) NULL)
+  mockery::stub(classify_function_body, "get",                function(name, envir, ...) make_fake_rlang_pronoun())
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "rlang tidy eval")
+  expect_equal(result$function_body, "<pronoun> - refer to rlang")
+})
+
+test_that("classify_function_body warning handler is reached when body() warns", {
+  row <- list(
+    exported_function = "warn_func",
+    class             = NA,
+    function_type     = NA,
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  call_n <- 0L
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get_s3_method",      function(g, cl, p) NULL)
+  mockery::stub(classify_function_body, "get",                function(name, envir, ...) function(x) x)
+  mockery::stub(classify_function_body, "body", function(f) {
+    call_n <<- call_n + 1L
+    if (call_n == 1L) NULL
+    else { warning("argument is not a function"); NULL }
+  })
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "regular function")
+})
+
+test_that("classify_function_body error handler is reached when body() errors", {
+  row <- list(
+    exported_function = "error_func",
+    class             = NA,
+    function_type     = NA,
+    function_body     = NA,
+    where             = "mypkg"
+  )
+  
+  call_n <- 0L
+  mockery::stub(classify_function_body, "methods::isGeneric", function(n) FALSE)
+  mockery::stub(classify_function_body, "asNamespace",        function(x) globalenv())
+  mockery::stub(classify_function_body, "get_s3_method",      function(g, cl, p) NULL)
+  mockery::stub(classify_function_body, "get",                function(name, envir, ...) function(x) x)
+  mockery::stub(classify_function_body, "body", function(f) {
+    call_n <<- call_n + 1L
+    if (call_n == 1L) NULL
+    else stop("simulated body error")
+  })
+  
+  result <- classify_function_body(row, "mypkg")
+  
+  expect_equal(result$function_type, "regular function")
+})
